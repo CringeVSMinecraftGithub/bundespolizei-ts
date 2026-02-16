@@ -6,8 +6,11 @@ import Dashboard from './pages/Dashboard';
 import IncidentReportPage from './pages/IncidentReportPage';
 import CriminalComplaintPage from './pages/CriminalComplaintPage';
 import AdminPanel from './pages/AdminPanel';
+import FleetPage from './pages/FleetPage';
+import EvidencePage from './pages/EvidencePage';
+import WarrantPage from './pages/WarrantPage';
 import Header from './components/Header';
-import { User, Permission, Role } from './types';
+import { User, Permission } from './types';
 import { DEFAULT_ADMIN } from './constants';
 import { db, dbCollections, getDocs, setDoc, doc } from './firebase';
 
@@ -56,7 +59,6 @@ const App: React.FC = () => {
   });
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  // Firestore Seeding: Stellt sicher, dass Thomas Mueller existiert
   useEffect(() => {
     const initDatabase = async () => {
       try {
@@ -66,10 +68,9 @@ const App: React.FC = () => {
 
         if (!adminExists) {
           await setDoc(doc(db, "users", DEFAULT_ADMIN.id), DEFAULT_ADMIN);
-          console.log("Admin account (Thomas Mueller) initialized in Firestore.");
         }
       } catch (e) {
-        console.error("Firebase Init Error (Check your Firestore Rules!):", e);
+        console.error("Firebase Init Error:", e);
       }
     };
     initDatabase();
@@ -116,6 +117,9 @@ const App: React.FC = () => {
               <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/" />} />
               <Route path="/incident-report" element={user ? <IncidentReportPage /> : <Navigate to="/" />} />
               <Route path="/criminal-complaint" element={user ? <CriminalComplaintPage /> : <Navigate to="/" />} />
+              <Route path="/fleet" element={user ? <FleetPage /> : <Navigate to="/" />} />
+              <Route path="/evidence" element={user ? <EvidencePage /> : <Navigate to="/" />} />
+              <Route path="/warrants" element={user ? <WarrantPage /> : <Navigate to="/" />} />
               <Route path="/admin" element={user?.isAdmin ? <AdminPanel /> : <Navigate to="/" />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>

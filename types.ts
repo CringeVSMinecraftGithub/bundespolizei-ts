@@ -17,7 +17,9 @@ export enum Permission {
   VIEW_WARRANTS = 'view_warrants',
   MANAGE_WARRANTS = 'manage_warrants',
   ADMIN_ACCESS = 'admin_access',
-  MANAGE_LAWS = 'manage_laws'
+  MANAGE_LAWS = 'manage_laws',
+  MANAGE_FLEET = 'manage_fleet',
+  MANAGE_EVIDENCE = 'manage_evidence'
 }
 
 export interface User {
@@ -29,6 +31,35 @@ export interface User {
   role: Role;
   isAdmin: boolean;
   permissions: Permission[];
+}
+
+export interface Vehicle {
+  id: string;
+  plate: string;
+  model: string;
+  status: 'Einsatzbereit' | 'Im Einsatz' | 'Defekt';
+  lastDriver?: string;
+  fuel: number;
+}
+
+export interface Evidence {
+  id: string;
+  caseNumber: string;
+  itemName: string;
+  description: string;
+  seizedBy: string;
+  timestamp: string;
+  location: string; // z.B. Regal A-01
+}
+
+export interface Warrant {
+  id: string;
+  targetName: string;
+  reason: string;
+  dangerLevel: 'Niedrig' | 'Mittel' | 'Hoch' | 'Extrem';
+  lastSeen: string;
+  timestamp: string;
+  active: boolean;
 }
 
 export interface Law {
@@ -64,36 +95,18 @@ export interface IncidentReport {
   id: string;
   type: 'Einsatzbericht' | 'Strafanzeige';
   status: 'Offen' | 'In Bearbeitung' | 'Abgeschlossen';
-  
-  // Metadata
   reportNumber: string;
   date: string;
-  time?: string;
   officerName: string;
   officerBadge: string;
-  department?: string;
-
-  // Complaint specific
-  complaintType?: 'von Amtswegen' | 'einer Privatperson';
-  docType?: 'Strafanzeige' | 'Strafantrag';
-  applicantFirstName?: string;
-  applicantLastName?: string;
-
-  // General data
   location: string;
-  zipCode?: string;
   description: string;
-  laws: string[]; // Linked law titles/paragraphs
-  
-  // Lists
-  witnesses: Witness[];
-  suspects: Suspect[];
-  involvedOfficers?: string[];
-  evidence?: {
-    bodycam?: string;
-    files?: string;
-  };
-  seizedItems?: string[];
+  applicant?: string;
+  suspect?: string;
+  violation?: string;
+  notes?: string;
+  securityLevel?: string;
+  timestamp: string;
 }
 
 export interface CitizenSubmission {
@@ -103,9 +116,9 @@ export interface CitizenSubmission {
   content: string;
   timestamp: string;
   status: 'Neu' | 'Gelesen' | 'Archiviert';
-  subType?: string;
 }
 
+// Added properties to match the fields saved in PublicHome.tsx and read in Dashboard.tsx
 export interface JobApplication {
   id: string;
   name: string;
@@ -113,12 +126,11 @@ export interface JobApplication {
   position: string;
   status: 'Eingegangen' | 'Prüfung' | 'Eingeladen' | 'Abgelehnt';
   timestamp: string;
-  email?: string;
-  oocAge: string;
-  icBirthDate: string;
-  icPhone: string;
-  discordId: string;
   motivation: string;
   cv: string;
-  extraField?: string; // z.B. Abitur-Schnitt für GD
+  discordId?: string;
+  oocAge?: string;
+  icBirthDate?: string;
+  icPhone?: string;
+  extraField?: string;
 }

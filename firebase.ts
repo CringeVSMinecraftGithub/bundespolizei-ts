@@ -2,7 +2,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Deine verifizierten Zugangsdaten für das Projekt "bundespolizei-ts"
 const firebaseConfig = {
   apiKey: "AIzaSyDo3HTvuE3ONkJnowtrJTwjv6Us3CLPVxk",
   authDomain: "bundespolizei-ts.firebaseapp.com",
@@ -21,7 +20,10 @@ export const dbCollections = {
   submissions: collection(db, "submissions"),
   reports: collection(db, "reports"),
   settings: collection(db, "settings"),
-  laws: collection(db, "laws")
+  laws: collection(db, "laws"),
+  fleet: collection(db, "fleet"),
+  evidence: collection(db, "evidence"),
+  warrants: collection(db, "warrants")
 };
 
 export { collection, addDoc, getDocs, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc };

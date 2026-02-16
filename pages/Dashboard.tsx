@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
-import { JobApplication, IncidentReport, Permission, User, CitizenSubmission } from '../types';
+import { JobApplication, IncidentReport, Permission, CitizenSubmission } from '../types';
 import { POLICE_LOGO_RAW } from '../constants';
 import { dbCollections, onSnapshot, query, orderBy, updateDoc, doc, db } from '../firebase';
 
@@ -22,20 +22,16 @@ const Dashboard: React.FC = () => {
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
 
-  // Firestore Data States
   const [allApps, setAllApps] = useState<JobApplication[]>([]);
   const [allReports, setAllReports] = useState<IncidentReport[]>([]);
   const [allSubmissions, setAllSubmissions] = useState<CitizenSubmission[]>([]);
   
-  // Selection states
   const [selectedApp, setSelectedApp] = useState<JobApplication | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<CitizenSubmission | null>(null);
-  const [isTransmitting, setIsTransmitting] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     
-    // Real-time Listeners
     const unsubApps = onSnapshot(query(dbCollections.applications, orderBy("timestamp", "desc")), (snap) => {
       setAllApps(snap.docs.map(d => ({ id: d.id, ...d.data() } as JobApplication)));
     });
@@ -72,9 +68,9 @@ const Dashboard: React.FC = () => {
   };
 
   const apps: DesktopApp[] = [
-    { id: 'fleet', label: 'Fuhrpark', icon: '🚓', color: 'bg-blue-500' },
-    { id: 'evidence', label: 'Asservatenkammer', icon: '📦', color: 'bg-orange-500' },
-    { id: 'warrants', label: 'Fahndung', icon: '🔍', color: 'bg-red-600', permission: Permission.VIEW_WARRANTS },
+    { id: 'fleet', label: 'Fuhrpark', icon: '🚓', color: 'bg-blue-500', path: '/fleet', permission: Permission.VIEW_REPORTS },
+    { id: 'evidence', label: 'Asservatenkammer', icon: '📦', color: 'bg-orange-500', path: '/evidence', permission: Permission.VIEW_REPORTS },
+    { id: 'warrants', label: 'Fahndung', icon: '🔍', color: 'bg-red-600', path: '/warrants', permission: Permission.VIEW_WARRANTS },
     { id: 'reports', label: 'Einsatzberichte', icon: '📝', color: 'bg-blue-600', permission: Permission.VIEW_REPORTS, path: '/incident-report' },
     { id: 'complaints', label: 'Strafanzeigen', icon: '⚖️', color: 'bg-slate-700', permission: Permission.CREATE_REPORTS, path: '/criminal-complaint' },
     { id: 'mail', label: 'Posteingang', icon: '📥', color: 'bg-amber-600', permission: Permission.VIEW_REPORTS },
@@ -127,7 +123,7 @@ const Dashboard: React.FC = () => {
                     ))}</tbody>
                   </table>
                 ) : (
-                  <div className="space-y-6"><h2 className="text-2xl font-black uppercase">{selectedApp.name} - {selectedApp.careerPath}</h2><div className="grid grid-cols-2 gap-8"><div className="p-6 bg-white/5 rounded-2xl"><h4 className="font-bold mb-4">Motivation</h4>{selectedApp.motivation}</div><div className="p-6 bg-white/5 rounded-2xl"><h4 className="font-bold mb-4">Details</h4>OOC: {selectedApp.oocAge} | Discord: {selectedApp.discordId}</div></div><div className="flex gap-4"><button onClick={() => updateAppStatus(selectedApp.id, 'Eingeladen')} className="bg-emerald-600 px-6 py-2 rounded-lg font-bold">Einladen</button><button onClick={() => updateAppStatus(selectedApp.id, 'Abgelehnt')} className="bg-red-600 px-6 py-2 rounded-lg font-bold">Ablehnen</button></div></div>
+                  <div className="space-y-6"><h2 className="text-2xl font-black uppercase">{selectedApp.name} - {selectedApp.careerPath}</h2><div className="grid grid-cols-2 gap-8"><div className="p-6 bg-white/5 rounded-2xl"><h4 className="font-bold mb-4">Motivation</h4>{selectedApp.motivation}</div><div className="p-6 bg-white/5 rounded-2xl"><h4 className="font-bold mb-4">Details</h4>Discord: {selectedApp.discordId}</div></div><div className="flex gap-4"><button onClick={() => updateAppStatus(selectedApp.id, 'Eingeladen')} className="bg-emerald-600 px-6 py-2 rounded-lg font-bold">Einladen</button><button onClick={() => updateAppStatus(selectedApp.id, 'Abgelehnt')} className="bg-red-600 px-6 py-2 rounded-lg font-bold">Ablehnen</button></div></div>
                 )
               )}
             </div>
@@ -137,15 +133,20 @@ const Dashboard: React.FC = () => {
 
       <footer className="h-12 bg-[#0a0f1e]/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-between px-2 z-[100]">
         <div className="flex items-center gap-1 h-full"><button onClick={() => setIsStartMenuOpen(!isStartMenuOpen)} className="h-10 w-10 flex items-center justify-center rounded-lg hover:bg-white/10"><img src={POLICE_LOGO_RAW} className="h-7 w-auto" /></button></div>
-        <div className="flex items-center gap-4 h-full pr-4">
-          <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="h-10 w-10 flex items-center justify-center rounded-lg hover:bg-white/10">🔔</button>
+        <div className="flex items-center gap-4 h-full pr-4 text-slate-400">
           <div className="flex flex-col items-end leading-none"><span className="text-[11px] font-black text-white">{time.toLocaleTimeString()}</span><span className="text-[8px] text-slate-500 uppercase">{time.toLocaleDateString()}</span></div>
         </div>
       </footer>
 
       {isStartMenuOpen && (
         <div className="absolute bottom-14 left-2 w-80 bg-[#0f172a] border border-white/10 rounded-3xl p-4 z-[150] shadow-2xl animate-in slide-in-from-bottom-4">
-          <div className="p-4 border-b border-white/5 mb-4 flex items-center gap-4"><div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-black">{user.lastName[0]}</div><div className="text-[10px] font-black uppercase text-white">{user.rank} {user.lastName}</div></div>
+          <div className="p-4 border-b border-white/5 mb-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white">{user.lastName[0]}</div>
+            <div className="flex flex-col">
+              <div className="text-[10px] font-black uppercase text-white">{user.rank} {user.lastName}</div>
+              <div className="text-[8px] text-blue-500 font-bold uppercase">{user.role}</div>
+            </div>
+          </div>
           <button onClick={() => { logout(); navigate('/'); }} className="w-full flex items-center gap-4 p-4 hover:bg-red-900/20 text-red-500 rounded-2xl transition-all">🚪<span className="text-[10px] font-black uppercase tracking-[0.2em]">Abmelden</span></button>
         </div>
       )}

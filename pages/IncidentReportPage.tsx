@@ -5,6 +5,12 @@ import PoliceOSWindow from '../components/PoliceOSWindow';
 import { dbCollections, addDoc } from '../firebase';
 import { useAuth } from '../App';
 
+const TEMPLATES: Record<string, string> = {
+  "Keine Vorlage": "",
+  "Standard Einsatz": "SACHVERHALT:\nAm [DATUM] um [UHRZEIT] wurde die Streife [RUFNAME] zu folgendem Sachverhalt gerufen:\n\nMAẞNAHMEN:\nVor Ort wurden folgende polizeiliche Maßnahmen getroffen:\n1. \n2. \n\nERGEBNIS:\nDer Einsatz wurde um [UHRZEIT] mit folgendem Ergebnis beendet:\n",
+  "Widerstand gegen Staatsgewalt": "SACHVERHALT:\nIm Rahmen einer [MAẞNAHME, z.B. Personenkontrolle] leistete die betroffene Person [NAME] aktiven Widerstand.\n\nDETAILS ZUM WIDERSTAND:\nDie Person versuchte durch [BESCHREIBUNG, z.B. Schlagen/Wegstoßen] die Maßnahme zu verhindern.\nAnwendung von unmittelbarem Zwang war: [JA/NEIN]\n\nFOLGEN:\nVerletzte Beamte: [ANZAHL/WER]\nVerletzte Beschuldigte: [ANZAHL/WER]\n\nANZEIGE:\nStrafanzeige gemäß § 113 StGB wurde gefertigt."
+};
+
 const IncidentReportPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -20,8 +26,20 @@ const IncidentReportPage: React.FC = () => {
     securityLevel: '0'
   });
 
+  const handleTemplateChange = (tmpl: string) => {
+    setReportData(prev => ({
+      ...prev,
+      template: tmpl,
+      content: prev.content ? prev.content + "\n\n" + TEMPLATES[tmpl] : TEMPLATES[tmpl]
+    }));
+  };
+
   const handleSave = async () => {
     if (!user) return;
+    if (!reportData.title || !reportData.content) {
+      alert("Titel und Inhalt dürfen nicht leer sein.");
+      return;
+    }
     setIsSaving(true);
     try {
       await addDoc(dbCollections.reports, {
@@ -33,7 +51,7 @@ const IncidentReportPage: React.FC = () => {
         ...reportData,
         timestamp: new Date().toISOString()
       });
-      navigate('/dashboard');
+      navigate('/cases'); // Redirect to cases search instead of dashboard
     } catch (e) {
       console.error(e);
       alert("Fehler beim Speichern in der Cloud.");
@@ -80,8 +98,8 @@ const IncidentReportPage: React.FC = () => {
         {/* Text Editor Area */}
         <div className="border border-slate-700/50 rounded-sm bg-[#1a1d24] flex flex-col min-h-[400px]">
           <div className="h-10 border-b border-slate-700/50 flex items-center px-4 gap-1 overflow-x-auto no-scrollbar">
-            <select className="bg-transparent text-[10px] text-slate-400 outline-none pr-4">
-              <option>Paragraph</option>
+            <select className="bg-transparent text-[10px] text-slate-400 outline-none pr-4" value={reportData.template} onChange={e => handleTemplateChange(e.target.value)}>
+              {Object.keys(TEMPLATES).map(k => <option key={k} value={k}>{k}</option>)}
             </select>
             <div className="w-[1px] h-4 bg-slate-700/50 mx-2"></div>
             {toolbarIcons.map((t, i) => (
@@ -98,14 +116,6 @@ const IncidentReportPage: React.FC = () => {
 
         {/* Bottom Config Fields */}
         <div className="space-y-1.5">
-          <div className="flex items-center bg-[#1a1d24] border border-slate-700/50 rounded-sm">
-            <span className="px-4 py-2 text-[11px] font-medium text-slate-400 border-r border-slate-700/50 w-24">Vorlage:</span>
-            <select className="flex-1 bg-transparent px-4 py-2 text-xs text-slate-200 outline-none" value={reportData.template} onChange={e => setReportData({...reportData, template: e.target.value})}>
-              <option>Keine Vorlage</option>
-              <option>Standard Einsatz</option>
-              <option>Widerstand gegen Staatsgewalt</option>
-            </select>
-          </div>
           <div className="flex items-center bg-[#1a1d24] border border-slate-700/50 rounded-sm">
             <span className="px-4 py-2 text-[11px] font-medium text-slate-400 border-r border-slate-700/50 w-60">Mit einem anderen Computer teilen:</span>
             <select className="flex-1 bg-transparent px-4 py-2 text-xs text-slate-200 outline-none" value={reportData.sharing} onChange={e => setReportData({...reportData, sharing: e.target.value})}>

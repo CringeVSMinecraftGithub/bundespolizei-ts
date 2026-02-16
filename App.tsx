@@ -9,10 +9,11 @@ import AdminPanel from './pages/AdminPanel';
 import FleetPage from './pages/FleetPage';
 import EvidencePage from './pages/EvidencePage';
 import WarrantPage from './pages/WarrantPage';
+import CaseSearchPage from './pages/CaseSearchPage';
 import Header from './components/Header';
-import { User, Permission } from './types';
+import { User, Permission, Role } from './types';
 import { DEFAULT_ADMIN } from './constants';
-import { db, dbCollections, getDocs, setDoc, doc } from './firebase';
+import { db, dbCollections, getDocs, setDoc, doc, updateDoc, onSnapshot } from './firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -58,6 +59,7 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [rolePermissions, setRolePermissions] = useState<Record<string, Permission[]>>({});
 
   useEffect(() => {
     const initDatabase = async () => {
@@ -74,6 +76,15 @@ const App: React.FC = () => {
       }
     };
     initDatabase();
+
+    // Live sync for role permissions
+    const unsubRoles = onSnapshot(doc(db, "settings", "permissions"), (snap) => {
+      if (snap.exists()) {
+        setRolePermissions(snap.data() as Record<string, Permission[]>);
+      }
+    });
+
+    return () => unsubRoles();
   }, []);
 
   useEffect(() => {
@@ -88,8 +99,17 @@ const App: React.FC = () => {
       const found = allUsers.find(u => u.badgeNumber.toLowerCase() === badgeNumber.toLowerCase());
       
       if (found) {
-        setUser(found);
-        return true;
+        if (!found.password && password) {
+          await updateDoc(doc(db, "users", found.id), { password });
+          const updatedUser = { ...found, password };
+          setUser(updatedUser);
+          return true;
+        }
+
+        if (found.password === password) {
+          setUser(found);
+          return true;
+        }
       }
     } catch (e) {
       console.error("Login Error:", e);
@@ -105,7 +125,11 @@ const App: React.FC = () => {
   const hasPermission = (perm: Permission) => {
     if (!user) return false;
     if (user.isAdmin) return true;
-    return user.permissions.includes(perm);
+    
+    const userExplicitPerms = user.permissions || [];
+    const roleBasedPerms = rolePermissions[user.role] || [];
+    
+    return userExplicitPerms.includes(perm) || roleBasedPerms.includes(perm);
   };
 
   return (
@@ -120,6 +144,7 @@ const App: React.FC = () => {
               <Route path="/fleet" element={user ? <FleetPage /> : <Navigate to="/" />} />
               <Route path="/evidence" element={user ? <EvidencePage /> : <Navigate to="/" />} />
               <Route path="/warrants" element={user ? <WarrantPage /> : <Navigate to="/" />} />
+              <Route path="/cases" element={user ? <CaseSearchPage /> : <Navigate to="/" />} />
               <Route path="/admin" element={user?.isAdmin ? <AdminPanel /> : <Navigate to="/" />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>

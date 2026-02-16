@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../App';
 import { Role, Permission, User, Law } from '../types';
 import { POLICE_LOGO_RAW } from '../constants';
-import { dbCollections, onSnapshot, query, orderBy, setDoc, doc, db, deleteDoc } from '../firebase';
+import { dbCollections, onSnapshot, query, orderBy, setDoc, doc, db, deleteDoc, addDoc } from '../firebase';
 
 const AdminPanel: React.FC = () => {
   const { user: currentUser } = useAuth();
@@ -18,6 +18,22 @@ const AdminPanel: React.FC = () => {
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [newLaw, setNewLaw] = useState({ paragraph: '', title: '', description: '' });
 
+  const permissionLabels: Record<Permission, string> = {
+    [Permission.VIEW_REPORTS]: "Berichte einsehen",
+    [Permission.CREATE_REPORTS]: "Berichte erstellen",
+    [Permission.EDIT_REPORTS]: "Berichte bearbeiten",
+    [Permission.DELETE_REPORTS]: "Berichte löschen",
+    [Permission.MANAGE_USERS]: "Benutzer verwalten",
+    [Permission.VIEW_WARRANTS]: "Fahndungen einsehen",
+    [Permission.MANAGE_WARRANTS]: "Fahndungen verwalten",
+    [Permission.ADMIN_ACCESS]: "Admin-Panel Zugriff",
+    [Permission.MANAGE_LAWS]: "Gesetze verwalten",
+    [Permission.MANAGE_FLEET]: "Fuhrpark verwalten",
+    [Permission.MANAGE_EVIDENCE]: "Asservaten verwalten",
+    [Permission.VIEW_APPLICATIONS]: "Bewerbungen einsehen",
+    [Permission.MANAGE_APPLICATIONS]: "Bewerbungen bearbeiten/löschen"
+  };
+
   useEffect(() => {
     const unsubUsers = onSnapshot(query(dbCollections.users), (snap) => {
       setUsers(snap.docs.map(d => d.data() as User));
@@ -26,7 +42,7 @@ const AdminPanel: React.FC = () => {
       setLaws(snap.docs.map(d => ({ id: d.id, ...d.data() } as Law)));
     });
     const unsubSettings = onSnapshot(doc(db, "settings", "permissions"), (snap) => {
-      if (snap.exists()) setRolePermissions(snap.data() as any);
+      if (snap.exists()) setRolePermissions(snap.data() as Record<string, Permission[]>);
     });
 
     return () => {
@@ -38,6 +54,24 @@ const AdminPanel: React.FC = () => {
 
   const saveUserToDB = async (user: User) => {
     await setDoc(doc(db, "users", user.id), user);
+  };
+
+  const handleSaveLaw = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLaw.paragraph || !newLaw.title) return;
+    await addDoc(dbCollections.laws, {
+      paragraph: newLaw.paragraph,
+      title: newLaw.title,
+      description: newLaw.description,
+      timestamp: new Date().toISOString()
+    });
+    setNewLaw({ paragraph: '', title: '', description: '' });
+  };
+
+  const handleDeleteLaw = async (id: string) => {
+    if (confirm("Möchten Sie diesen Gesetzestext wirklich löschen?")) {
+      await deleteDoc(doc(db, "laws", id));
+    }
   };
 
   const togglePermissionForRole = async (role: string, perm: Permission) => {
@@ -100,16 +134,68 @@ const AdminPanel: React.FC = () => {
         </div>
       )}
 
+      {tab === 'Laws' && (
+        <div className="space-y-8">
+           <div className="bg-slate-900/50 border border-white/5 p-8 rounded-3xl">
+              <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-6">Neuen Gesetzestext hinzufügen</h3>
+              <form onSubmit={handleSaveLaw} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 <div className="space-y-2">
+                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Paragraph</label>
+                    <input value={newLaw.paragraph} onChange={e => setNewLaw({...newLaw, paragraph: e.target.value})} placeholder="z.B. § 242 StGB" className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-sm text-white outline-none focus:border-blue-600" />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Titel</label>
+                    <input value={newLaw.title} onChange={e => setNewLaw({...newLaw, title: e.target.value})} placeholder="z.B. Diebstahl" className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-sm text-white outline-none focus:border-blue-600" />
+                 </div>
+                 <div className="space-y-2 flex flex-col justify-end">
+                    <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white h-14 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">Gesetz Speichern</button>
+                 </div>
+                 <div className="md:col-span-3 space-y-2">
+                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Beschreibung / Strafmaß</label>
+                    <textarea value={newLaw.description} onChange={e => setNewLaw({...newLaw, description: e.target.value})} placeholder="Details zum Tatbestand..." className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-sm text-white outline-none focus:border-blue-600 h-24 resize-none" />
+                 </div>
+              </form>
+           </div>
+
+           <div className="bg-slate-900/40 border border-white/5 rounded-3xl overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-black/50 text-slate-500 uppercase font-black tracking-widest"><tr className="border-b border-white/5"><th className="p-6">Paragraph</th><th className="p-6">Titel</th><th className="p-6">Inhalt</th><th className="p-6 text-right">Aktion</th></tr></thead>
+                <tbody className="divide-y divide-white/5">
+                  {laws.map(l => (
+                    <tr key={l.id} className="hover:bg-white/[0.02] transition-all">
+                      <td className="p-6 font-bold text-blue-500 whitespace-nowrap">{l.paragraph}</td>
+                      <td className="p-6 font-bold text-white uppercase">{l.title}</td>
+                      <td className="p-6 text-slate-400 max-w-md truncate">{l.description}</td>
+                      <td className="p-6 text-right"><button onClick={() => handleDeleteLaw(l.id)} className="text-red-500 font-black uppercase text-[10px] hover:text-red-400">Löschen</button></td>
+                    </tr>
+                  ))}
+                  {laws.length === 0 && <tr><td colSpan={4} className="p-10 text-center text-slate-600 italic uppercase tracking-widest text-[10px]">Keine Gesetze in der Datenbank</td></tr>}
+                </tbody>
+              </table>
+           </div>
+        </div>
+      )}
+
       {tab === 'Roles' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Object.values(Role).map(role => (
             <div key={role} className="bg-slate-900/50 border border-white/5 rounded-3xl p-8 space-y-6">
-              <h3 className="text-lg font-black text-white uppercase tracking-tighter flex items-center justify-between">{role}<span className="text-[10px] text-blue-500 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">Konfiguration</span></h3>
+              <h3 className="text-lg font-black text-white uppercase tracking-tighter flex items-center justify-between">
+                {role}
+                <span className="text-[10px] text-blue-500 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">Konfiguration</span>
+              </h3>
               <div className="space-y-3">
                 {Object.values(Permission).map(perm => (
-                  <label key={perm} className="flex items-center gap-3 p-3 bg-black/30 rounded-xl cursor-pointer hover:bg-black/50 transition-all border border-transparent hover:border-white/5">
-                    <input type="checkbox" checked={(rolePermissions[role] || []).includes(perm)} onChange={() => togglePermissionForRole(role, perm)} className="w-4 h-4 rounded border-white/10 bg-slate-800 text-blue-600 focus:ring-blue-500" />
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{perm.replace('_', ' ')}</span>
+                  <label key={perm} className="flex items-center gap-3 p-3 bg-black/30 rounded-xl cursor-pointer hover:bg-black/50 transition-all border border-transparent hover:border-white/10 group">
+                    <input 
+                      type="checkbox" 
+                      checked={(rolePermissions[role] || []).includes(perm)} 
+                      onChange={() => togglePermissionForRole(role, perm)} 
+                      className="w-4 h-4 rounded border-white/10 bg-slate-800 text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                    />
+                    <span className="text-[10px] font-bold text-slate-300 group-hover:text-blue-400 uppercase tracking-widest transition-colors">
+                      {permissionLabels[perm]}
+                    </span>
                   </label>
                 ))}
               </div>

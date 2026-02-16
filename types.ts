@@ -19,7 +19,9 @@ export enum Permission {
   ADMIN_ACCESS = 'admin_access',
   MANAGE_LAWS = 'manage_laws',
   MANAGE_FLEET = 'manage_fleet',
-  MANAGE_EVIDENCE = 'manage_evidence'
+  MANAGE_EVIDENCE = 'manage_evidence',
+  VIEW_APPLICATIONS = 'view_applications',
+  MANAGE_APPLICATIONS = 'manage_applications'
 }
 
 export interface User {
@@ -31,6 +33,7 @@ export interface User {
   role: Role;
   isAdmin: boolean;
   permissions: Permission[];
+  password?: string;
 }
 
 export interface Vehicle {
@@ -49,7 +52,7 @@ export interface Evidence {
   description: string;
   seizedBy: string;
   timestamp: string;
-  location: string; // z.B. Regal A-01
+  location: string;
 }
 
 export interface Warrant {
@@ -69,41 +72,24 @@ export interface Law {
   description?: string;
 }
 
-export interface Witness {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  radio: string;
-  statement: string;
-}
-
-export interface Suspect {
-  firstName: string;
-  lastName: string;
-  birthDate: string;
-  birthPlace: string;
-  gender: string;
-  address: string;
-  city: string;
-  phone: string;
-  radio: string;
-  job: string;
-  idType: string;
-}
-
 export interface IncidentReport {
   id: string;
   type: 'Einsatzbericht' | 'Strafanzeige';
-  status: 'Offen' | 'In Bearbeitung' | 'Abgeschlossen';
+  status: 'Offen' | 'In Bearbeitung' | 'Abgeschlossen' | 'Unbearbeitet' | 'In Prüfung';
   reportNumber: string;
   date: string;
   officerName: string;
   officerBadge: string;
   location: string;
-  description: string;
+  description?: string;
+  title?: string;
+  content?: string;
+  involvedOfficers?: string;
   applicant?: string;
   suspect?: string;
+  suspectDescription?: string;
   violation?: string;
+  incidentDetails?: string;
   notes?: string;
   securityLevel?: string;
   timestamp: string;
@@ -118,7 +104,6 @@ export interface CitizenSubmission {
   status: 'Neu' | 'Gelesen' | 'Archiviert';
 }
 
-// Added properties to match the fields saved in PublicHome.tsx and read in Dashboard.tsx
 export interface JobApplication {
   id: string;
   name: string;

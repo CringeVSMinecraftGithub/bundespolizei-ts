@@ -102,7 +102,7 @@ const PublicHome: React.FC = () => {
                       <p className="text-blue-500 text-[9px] uppercase tracking-[0.4em] font-black mt-2">Zentrale Datenbank-Abfrage</p>
                     </div>
                     <form onSubmit={handleLogin} className="space-y-6">
-                      {loginError && <div className="text-red-500 text-[10px] font-black uppercase tracking-widest text-center">Zugriff verweigert - Kennung unbekannt</div>}
+                      {loginError && <div className="text-red-500 text-[10px] font-black uppercase tracking-widest text-center">Zugriff verweigert - Kennung oder Passwort falsch</div>}
                       <div className="space-y-2">
                         <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Dienstnummer</label>
                         <input type="text" value={badge} onChange={(e) => setBadge(e.target.value)} className="w-full bg-black/40 border border-white/5 rounded-xl p-5 text-white uppercase font-black tracking-widest text-sm focus:border-blue-600 outline-none" placeholder="ADLER 00/00" required />
@@ -110,6 +110,7 @@ const PublicHome: React.FC = () => {
                       <div className="space-y-2">
                         <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Sicherheitsschlüssel</label>
                         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black/40 border border-white/5 rounded-xl p-5 text-white outline-none focus:border-blue-600" placeholder="Passwort" required />
+                        <p className="text-[8px] text-slate-600 uppercase font-bold tracking-widest ml-2">Erster Login? Passwort wird bei Erstanmeldung festgelegt.</p>
                       </div>
                       <button disabled={isLoggingIn} type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3">
                         {isLoggingIn ? "Verbinde..." : "Validieren"}

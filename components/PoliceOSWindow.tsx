@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { POLICE_LOGO_RAW } from '../constants';
+import { useAuth } from '../App';
+import { Permission } from '../types';
 
 interface PoliceOSWindowProps {
   title: string;
@@ -11,14 +12,18 @@ interface PoliceOSWindowProps {
 const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasPermission } = useAuth();
 
   const sidebarItems = [
-    { label: 'Einsatzberichte', icon: '📝', path: '/incident-report', group: 'Dienstbetrieb' },
-    { label: 'Strafanzeigen', icon: '⚖️', path: '/criminal-complaint', group: 'Dienstbetrieb' },
-    { label: 'Vorgangssuche', icon: '🔍', path: '/cases', group: 'Favorisierte Apps' },
-    { label: 'Fuhrpark', icon: '🚓', path: '/fleet', group: 'Oft genutzte Apps' },
-    { label: 'Asservaten', icon: '📦', path: '/evidence', group: 'Oft genutzte Apps' },
-    { label: 'Fahndungen', icon: '👤', path: '/warrants', group: 'Favorisierte Apps' },
+    { label: 'Einsatzberichte', icon: '📝', path: '/incident-report', group: 'Dienstbetrieb', perm: Permission.VIEW_REPORTS },
+    { label: 'Strafanzeigen', icon: '⚖️', path: '/criminal-complaint', group: 'Dienstbetrieb', perm: Permission.CREATE_REPORTS },
+    { label: 'Vorgangssuche', icon: '🔍', path: '/cases', group: 'Favorisierte Apps', perm: Permission.VIEW_REPORTS },
+    { label: 'Fuhrpark', icon: '🚓', path: '/fleet', group: 'Oft genutzte Apps', perm: Permission.VIEW_REPORTS },
+    { label: 'Asservaten', icon: '📦', path: '/evidence', group: 'Oft genutzte Apps', perm: Permission.VIEW_REPORTS },
+    { label: 'Fahndungen', icon: '👤', path: '/warrants', group: 'Favorisierte Apps', perm: Permission.VIEW_WARRANTS },
+    { label: 'Bewerbungen', icon: '📂', path: '/applications', group: 'Verwaltung', perm: Permission.VIEW_APPLICATIONS },
+    { label: 'Bürgerhinweise', icon: '💡', path: '/tips', group: 'Verwaltung', perm: Permission.VIEW_TIPS },
+    { label: 'Administration', icon: '⚙️', path: '/admin', group: 'Verwaltung', perm: Permission.ADMIN_ACCESS },
   ];
 
   return (
@@ -37,8 +42,8 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside className="w-16 md:w-56 bg-[#1a1c23] border-r border-white/5 flex flex-col shrink-0 overflow-y-auto custom-scrollbar py-4">
-          {['Favorisierte Apps', 'Dienstbetrieb', 'Oft genutzte Apps'].map((group) => {
-            const items = sidebarItems.filter(i => i.group === group);
+          {['Favorisierte Apps', 'Dienstbetrieb', 'Oft genutzte Apps', 'Verwaltung'].map((group) => {
+            const items = sidebarItems.filter(i => i.group === group && hasPermission(i.perm));
             if (items.length === 0) return null;
             return (
               <div key={group} className="mb-6">

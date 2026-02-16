@@ -5,7 +5,7 @@ import { useAuth } from '../App';
 import { POLICE_LOGO_RAW } from '../constants';
 
 const Footer: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, setSettingsOpen } = useAuth();
   const navigate = useNavigate();
   const [time, setTime] = useState(new Date());
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
@@ -44,7 +44,7 @@ const Footer: React.FC = () => {
             <span className="text-[8px] text-slate-500 uppercase tracking-widest font-bold mt-0.5">{time.toLocaleDateString('de-DE')}</span>
           </div>
           <div className="text-[10px] font-black text-slate-700 uppercase tracking-widest hidden md:block">
-            CopNet System v2.6.0-stable
+            Bundespolizei Intranet
           </div>
         </div>
       </footer>
@@ -61,10 +61,16 @@ const Footer: React.FC = () => {
             </div>
           </div>
           <div className="space-y-1">
-             <button onClick={() => { setIsStartMenuOpen(false); navigate('/admin'); }} className="w-full flex items-center gap-4 p-4 hover:bg-white/5 text-slate-300 rounded-2xl transition-all group">
+             <button onClick={() => { setIsStartMenuOpen(false); setSettingsOpen(true); }} className="w-full flex items-center gap-4 p-4 hover:bg-white/5 text-slate-300 rounded-2xl transition-all group">
                 <span className="text-lg">⚙️</span>
                 <span className="text-[10px] font-black uppercase tracking-widest">Einstellungen</span>
              </button>
+             {user.isAdmin && (
+               <button onClick={() => { setIsStartMenuOpen(false); navigate('/admin'); }} className="w-full flex items-center gap-4 p-4 hover:bg-white/5 text-slate-300 rounded-2xl transition-all group">
+                  <span className="text-lg">🛡️</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Admin-Bereich</span>
+               </button>
+             )}
              <button onClick={() => { logout(); navigate('/'); }} className="w-full flex items-center gap-4 p-4 hover:bg-red-900/20 text-red-500 rounded-2xl transition-all group">
                 <span className="text-lg">🚪</span>
                 <span className="text-[10px] font-black uppercase tracking-widest">Abmelden</span>

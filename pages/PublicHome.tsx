@@ -112,7 +112,7 @@ const PublicHome: React.FC = () => {
                   <div className="animate-in zoom-in duration-300">
                     <div className="flex flex-col items-center mb-10 text-center">
                       <img src={POLICE_LOGO_RAW} alt="BPOL Badge" className="h-32 w-auto mb-6" />
-                      <h2 className="text-2xl font-black text-white uppercase tracking-tight">Intranet Gateway</h2>
+                      <h2 className="text-2xl font-black text-white uppercase tracking-tight">Intranet Login</h2>
                       <p className="text-blue-500 text-[9px] uppercase tracking-[0.4em] font-black mt-2">Präsidium Teamstadt</p>
                     </div>
                     <form onSubmit={handleLogin} className="space-y-6">

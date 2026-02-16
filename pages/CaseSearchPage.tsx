@@ -7,6 +7,7 @@ import { IncidentReport } from '../types';
 const CaseSearchPage: React.FC = () => {
   const [allCases, setAllCases] = useState<IncidentReport[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterDate, setFilterDate] = useState('');
   const [selectedCase, setSelectedCase] = useState<IncidentReport | null>(null);
 
   useEffect(() => {
@@ -16,11 +17,17 @@ const CaseSearchPage: React.FC = () => {
     return unsub;
   }, []);
 
-  const filteredCases = allCases.filter(c => 
-    c.reportNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.officerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.applicant && c.applicant.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredCases = allCases.filter(c => {
+    const matchesSearch = 
+      c.reportNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.officerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.officerBadge.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.applicant && c.applicant.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesDate = !filterDate || (c.date && c.date.startsWith(filterDate)) || (c.timestamp && c.timestamp.startsWith(filterDate));
+    
+    return matchesSearch && matchesDate;
+  });
 
   return (
     <PoliceOSWindow title="Vorgangssuche">
@@ -32,14 +39,26 @@ const CaseSearchPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-[#1a1d24] border border-slate-700/50 p-6 rounded-sm flex items-center gap-4">
-          <span className="text-slate-500">🔍</span>
-          <input 
-            value={searchTerm} 
-            onChange={e => setSearchTerm(e.target.value)} 
-            placeholder="Nach Aktenzeichen (z.B. REP-1234), Beamten oder Beteiligten suchen..." 
-            className="flex-1 bg-transparent border-none outline-none text-sm text-slate-200" 
-          />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2 bg-[#1a1d24] border border-slate-700/50 p-6 rounded-sm flex items-center gap-4">
+            <span className="text-slate-500">🔍</span>
+            <input 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+              placeholder="Nach Aktenzeichen, Dienstnummer, Beamten oder Beteiligten suchen..." 
+              className="flex-1 bg-transparent border-none outline-none text-sm text-slate-200" 
+            />
+          </div>
+          <div className="bg-[#1a1d24] border border-slate-700/50 p-6 rounded-sm flex items-center gap-4">
+             <span className="text-[10px] font-black uppercase text-slate-500 whitespace-nowrap">Datum:</span>
+             <input 
+               type="date"
+               value={filterDate}
+               onChange={e => setFilterDate(e.target.value)}
+               className="flex-1 bg-transparent border-none outline-none text-sm text-slate-200 [color-scheme:dark]" 
+             />
+             {filterDate && <button onClick={() => setFilterDate('')} className="text-slate-500 hover:text-white">✕</button>}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

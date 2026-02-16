@@ -10,8 +10,11 @@ import FleetPage from './pages/FleetPage';
 import EvidencePage from './pages/EvidencePage';
 import WarrantPage from './pages/WarrantPage';
 import CaseSearchPage from './pages/CaseSearchPage';
+import ApplicationsPage from './pages/ApplicationsPage';
+import TipsPage from './pages/TipsPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import SettingsModal from './components/SettingsModal';
 import { User, Permission, Role } from './types';
 import { DEFAULT_ADMIN } from './constants';
 import { db, dbCollections, getDocs, setDoc, doc, updateDoc, onSnapshot } from './firebase';
@@ -21,6 +24,8 @@ interface AuthContextType {
   login: (badgeNumber: string, password?: string) => Promise<boolean>;
   logout: () => void;
   hasPermission: (perm: Permission) => boolean;
+  isSettingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -36,7 +41,6 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isPublicHome = location.pathname === '/';
   
-  // Wenn wir auf der öffentlichen Startseite sind, nutzen wir das dortige spezielle Layout
   if (isPublicHome) return <>{children}</>;
 
   return (
@@ -46,6 +50,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {children}
       </main>
       {user && <Footer />}
+      <SettingsModal />
     </div>
   );
 };
@@ -55,6 +60,7 @@ const App: React.FC = () => {
     const saved = sessionStorage.getItem('bpol_active_user');
     return saved ? JSON.parse(saved) : null;
   });
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [rolePermissions, setRolePermissions] = useState<Record<string, Permission[]>>({});
 
   useEffect(() => {
@@ -114,6 +120,7 @@ const App: React.FC = () => {
 
   const logout = () => {
     setUser(null);
+    setSettingsOpen(false);
   };
 
   const hasPermission = (perm: Permission) => {
@@ -127,7 +134,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, hasPermission }}>
+    <AuthContext.Provider value={{ user, login, logout, hasPermission, isSettingsOpen, setSettingsOpen }}>
       <Router>
         <AppLayout>
             <Routes>
@@ -139,6 +146,8 @@ const App: React.FC = () => {
               <Route path="/evidence" element={user ? <EvidencePage /> : <Navigate to="/" />} />
               <Route path="/warrants" element={user ? <WarrantPage /> : <Navigate to="/" />} />
               <Route path="/cases" element={user ? <CaseSearchPage /> : <Navigate to="/" />} />
+              <Route path="/applications" element={user && hasPermission(Permission.VIEW_APPLICATIONS) ? <ApplicationsPage /> : <Navigate to="/" />} />
+              <Route path="/tips" element={user && hasPermission(Permission.VIEW_TIPS) ? <TipsPage /> : <Navigate to="/" />} />
               <Route path="/admin" element={user?.isAdmin ? <AdminPanel /> : <Navigate to="/" />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>

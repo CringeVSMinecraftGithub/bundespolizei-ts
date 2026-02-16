@@ -32,7 +32,7 @@ const CaseSearchPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-[#1a1d24] border border-slate-700/50 p-6 rounded-sm flex items-center gap-4 sticky top-0 z-20 shadow-xl">
+        <div className="bg-[#1a1d24] border border-slate-700/50 p-6 rounded-sm flex items-center gap-4">
           <span className="text-slate-500">🔍</span>
           <input 
             value={searchTerm} 

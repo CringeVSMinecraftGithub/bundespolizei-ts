@@ -11,6 +11,7 @@ import EvidencePage from './pages/EvidencePage';
 import WarrantPage from './pages/WarrantPage';
 import CaseSearchPage from './pages/CaseSearchPage';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import { User, Permission, Role } from './types';
 import { DEFAULT_ADMIN } from './constants';
 import { db, dbCollections, getDocs, setDoc, doc, updateDoc, onSnapshot } from './firebase';
@@ -20,8 +21,6 @@ interface AuthContextType {
   login: (badgeNumber: string, password?: string) => Promise<boolean>;
   logout: () => void;
   hasPermission: (perm: Permission) => boolean;
-  isSidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -35,20 +34,18 @@ export const useAuth = () => {
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const location = useLocation();
-  const isDashboard = location.pathname === '/dashboard';
+  const isPublicHome = location.pathname === '/';
   
+  // Wenn wir auf der öffentlichen Startseite sind, nutzen wir das dortige spezielle Layout
+  if (isPublicHome) return <>{children}</>;
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 overflow-x-hidden flex flex-col relative">
-      {user && !isDashboard && <Header />}
-      <main className="flex-1">
+    <div className="h-screen w-screen flex flex-col bg-[#020617] overflow-hidden">
+      {user && <Header />}
+      <main className="flex-1 relative overflow-hidden">
         {children}
       </main>
-      {!isDashboard && (
-        <footer className="bg-slate-900/50 p-2 text-[10px] text-slate-500 flex justify-between px-6 border-t border-slate-800 z-50">
-          <div>© 2024 Bundesrepublik Deutschland | Internes Netzwerk</div>
-          <div>Dienst: {user ? `${user.rank} ${user.lastName}` : 'Nicht angemeldet'}</div>
-        </footer>
-      )}
+      {user && <Footer />}
     </div>
   );
 };
@@ -58,7 +55,6 @@ const App: React.FC = () => {
     const saved = sessionStorage.getItem('bpol_active_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [rolePermissions, setRolePermissions] = useState<Record<string, Permission[]>>({});
 
   useEffect(() => {
@@ -77,7 +73,6 @@ const App: React.FC = () => {
     };
     initDatabase();
 
-    // Live sync for role permissions
     const unsubRoles = onSnapshot(doc(db, "settings", "permissions"), (snap) => {
       if (snap.exists()) {
         setRolePermissions(snap.data() as Record<string, Permission[]>);
@@ -119,7 +114,6 @@ const App: React.FC = () => {
 
   const logout = () => {
     setUser(null);
-    setSidebarOpen(false);
   };
 
   const hasPermission = (perm: Permission) => {
@@ -133,7 +127,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, hasPermission, isSidebarOpen, setSidebarOpen }}>
+    <AuthContext.Provider value={{ user, login, logout, hasPermission }}>
       <Router>
         <AppLayout>
             <Routes>

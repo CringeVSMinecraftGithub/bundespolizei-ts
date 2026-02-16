@@ -31,7 +31,9 @@ const AdminPanel: React.FC = () => {
     [Permission.MANAGE_FLEET]: "Fuhrpark verwalten",
     [Permission.MANAGE_EVIDENCE]: "Asservaten verwalten",
     [Permission.VIEW_APPLICATIONS]: "Bewerbungen einsehen",
-    [Permission.MANAGE_APPLICATIONS]: "Bewerbungen bearbeiten/löschen"
+    [Permission.MANAGE_APPLICATIONS]: "Bewerbungen bearbeiten/löschen",
+    [Permission.VIEW_TIPS]: "Hinweise einsehen",
+    [Permission.MANAGE_TIPS]: "Hinweise bearbeiten/löschen"
   };
 
   useEffect(() => {

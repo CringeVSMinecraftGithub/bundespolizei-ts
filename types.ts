@@ -21,7 +21,9 @@ export enum Permission {
   MANAGE_FLEET = 'manage_fleet',
   MANAGE_EVIDENCE = 'manage_evidence',
   VIEW_APPLICATIONS = 'view_applications',
-  MANAGE_APPLICATIONS = 'manage_applications'
+  MANAGE_APPLICATIONS = 'manage_applications',
+  VIEW_TIPS = 'view_tips',
+  MANAGE_TIPS = 'manage_tips'
 }
 
 export interface User {
@@ -102,6 +104,7 @@ export interface CitizenSubmission {
   content: string;
   timestamp: string;
   status: 'Neu' | 'Gelesen' | 'Archiviert';
+  contactInfo?: string;
 }
 
 export interface JobApplication {

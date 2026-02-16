@@ -26,6 +26,8 @@ const IncidentReportPage: React.FC = () => {
     securityLevel: '0'
   });
 
+  const generateReportId = () => `BTS-${Math.floor(100000 + Math.random() * 900000)}-2026`;
+
   const handleTemplateChange = (tmpl: string) => {
     setReportData(prev => ({
       ...prev,
@@ -43,7 +45,7 @@ const IncidentReportPage: React.FC = () => {
     setIsSaving(true);
     try {
       await addDoc(dbCollections.reports, {
-        reportNumber: `REP-${Math.floor(Math.random() * 9000) + 1000}`,
+        reportNumber: generateReportId(),
         type: 'Einsatzbericht',
         status: 'Offen',
         officerName: `${user.rank} ${user.lastName}`,
@@ -51,10 +53,10 @@ const IncidentReportPage: React.FC = () => {
         ...reportData,
         timestamp: new Date().toISOString()
       });
-      navigate('/cases'); // Redirect to cases search instead of dashboard
+      navigate('/cases');
     } catch (e) {
       console.error(e);
-      alert("Fehler beim Speichern in der Cloud.");
+      alert("Fehler beim Speichern.");
     } finally {
       setIsSaving(false);
     }
@@ -95,7 +97,6 @@ const IncidentReportPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Text Editor Area */}
         <div className="border border-slate-700/50 rounded-sm bg-[#1a1d24] flex flex-col min-h-[400px]">
           <div className="h-10 border-b border-slate-700/50 flex items-center px-4 gap-1 overflow-x-auto no-scrollbar">
             <select className="bg-transparent text-[10px] text-slate-400 outline-none pr-4" value={reportData.template} onChange={e => handleTemplateChange(e.target.value)}>
@@ -114,26 +115,11 @@ const IncidentReportPage: React.FC = () => {
           />
         </div>
 
-        {/* Bottom Config Fields */}
-        <div className="space-y-1.5">
-          <div className="flex items-center bg-[#1a1d24] border border-slate-700/50 rounded-sm">
-            <span className="px-4 py-2 text-[11px] font-medium text-slate-400 border-r border-slate-700/50 w-60">Mit einem anderen Computer teilen:</span>
-            <select className="flex-1 bg-transparent px-4 py-2 text-xs text-slate-200 outline-none" value={reportData.sharing} onChange={e => setReportData({...reportData, sharing: e.target.value})}>
-              <option>Nothing selected</option>
-              <option>Dienstgruppen-PC 01</option>
-            </select>
-          </div>
-          <div className="flex items-center bg-[#1a1d24] border border-slate-700/50 rounded-sm">
-            <span className="px-4 py-2 text-[11px] font-medium text-slate-400 border-r border-slate-700/50 w-40">Sicherheitsstufe:</span>
-            <input type="number" min="0" max="5" className="flex-1 bg-transparent px-4 py-2 text-xs text-slate-200 outline-none" value={reportData.securityLevel} onChange={e => setReportData({...reportData, securityLevel: e.target.value})} />
-          </div>
-        </div>
-
         <div className="flex items-center gap-2 pt-8">
           <button onClick={handleSave} disabled={isSaving} className="bg-emerald-800/20 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500 hover:text-white px-6 py-2.5 rounded-sm text-xs font-semibold transition-all disabled:opacity-50">
             {isSaving ? 'Wird gespeichert...' : 'Bericht speichern'}
           </button>
-          <button onClick={() => navigate('/dashboard')} className="bg-slate-800/40 border border-slate-700/50 text-slate-400 hover:text-white px-6 py-2.5 rounded-sm text-xs font-semibold transition-all">Zurück</button>
+          <button onClick={() => navigate('/dashboard')} className="bg-slate-800/40 border border-slate-700/50 text-slate-400 hover:text-white px-6 py-2.5 rounded-sm text-xs font-semibold transition-all">Abbrechen</button>
         </div>
       </div>
     </PoliceOSWindow>

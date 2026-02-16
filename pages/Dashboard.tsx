@@ -17,7 +17,7 @@ interface DesktopApp {
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isSidebarOpen, setSidebarOpen, hasPermission, logout } = useAuth();
+  const { user, hasPermission, logout } = useAuth();
   const [time, setTime] = useState(new Date());
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
@@ -77,7 +77,6 @@ const Dashboard: React.FC = () => {
     { id: 'mail', label: 'Posteingang', icon: '📥', color: 'bg-amber-600', permission: Permission.VIEW_REPORTS },
     { id: 'personnel', label: 'Administration', icon: '⚙️', color: 'bg-indigo-600', permission: Permission.MANAGE_USERS, path: '/admin' },
     { id: 'apps', label: 'Bewerbungen', icon: '📁', color: 'bg-emerald-600', permission: Permission.MANAGE_USERS },
-    { id: 'radio', label: 'Funk', icon: '📻', color: 'bg-gray-600' },
   ];
 
   if (!user) return null;
@@ -86,6 +85,7 @@ const Dashboard: React.FC = () => {
     <div className="h-screen w-screen bg-[#000000] overflow-hidden flex flex-col relative font-sans select-none">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#1e3a8a33,transparent)] pointer-events-none"></div>
 
+      {/* Desktop Icons */}
       <main className="flex-1 p-10 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 auto-rows-min gap-10 z-10 overflow-y-auto custom-scrollbar">
         {apps.map((app) => (hasPermission(app.permission || Permission.VIEW_REPORTS) && (
           <button key={app.id} onClick={() => handleAppClick(app)} className="group flex flex-col items-center gap-2 w-24 h-28 transition-all hover:bg-white/5 rounded-xl p-2">
@@ -95,153 +95,230 @@ const Dashboard: React.FC = () => {
         )))}
       </main>
 
+      {/* Window System */}
       {activeWindow && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-[4px] animate-in fade-in">
-          <div className="w-full max-w-6xl bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl flex flex-col animate-in zoom-in overflow-hidden max-h-[90vh]">
-            <div className="h-12 bg-slate-900 flex items-center justify-between px-6 border-b border-white/5 shrink-0">
-              <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest">{apps.find(a => a.id === activeWindow)?.label}</span>
-              <button onClick={() => {setActiveWindow(null); setSelectedApp(null); setSelectedSubmission(null);}} className="text-slate-500 hover:text-white transition-all text-xl">✕</button>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="w-full max-w-6xl bg-[#0f172a] border border-white/10 rounded-3xl shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col animate-in zoom-in duration-300 overflow-hidden max-h-[92vh]">
+            
+            {/* Title Bar */}
+            <div className="h-14 bg-slate-900 flex items-center justify-between px-8 border-b border-white/5 shrink-0">
+              <div className="flex items-center gap-4">
+                <span className="text-xl">{apps.find(a => a.id === activeWindow)?.icon}</span>
+                <span className="text-[10px] font-black uppercase text-blue-400 tracking-[0.3em]">{apps.find(a => a.id === activeWindow)?.label}</span>
+              </div>
+              <button onClick={() => {setActiveWindow(null); setSelectedApp(null); setSelectedSubmission(null);}} className="text-slate-500 hover:text-white transition-all text-xl p-2">✕</button>
             </div>
-            <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
-              {activeWindow === 'mail' && (
-                !selectedSubmission ? (
-                  <table className="w-full text-left text-xs">
-                    <thead><tr className="text-slate-500 border-b border-white/10"><th className="pb-4">Typ</th><th className="pb-4">Betreff</th><th className="pb-4 text-right">Aktion</th></tr></thead>
-                    <tbody>{allSubmissions.map(s => (
-                      <tr key={s.id} className="border-b border-white/5 hover:bg-white/5 transition-all"><td className="py-4">{s.type}</td><td className="py-4 font-bold">{s.title}</td><td className="py-4 text-right"><button onClick={() => {setSelectedSubmission(s); updateSubmissionStatus(s.id, 'Gelesen');}} className="text-blue-500 font-bold uppercase tracking-widest text-[10px]">Öffnen ➔</button></td></tr>
-                    ))}</tbody>
-                  </table>
-                ) : (
-                  <div className="space-y-6 max-w-3xl mx-auto">
-                    <button onClick={() => setSelectedSubmission(null)} className="text-blue-500 text-[10px] font-black uppercase tracking-widest mb-4">← Zurück zur Übersicht</button>
-                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">{selectedSubmission.title}</h2>
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">{new Date(selectedSubmission.timestamp).toLocaleString('de-DE')}</div>
-                    <div className="p-8 bg-white/5 rounded-[32px] border border-white/5 text-slate-300 leading-relaxed whitespace-pre-wrap">{selectedSubmission.content}</div>
-                  </div>
-                )
-              )}
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
               
+              {/* Mail / Submissions View */}
+              {activeWindow === 'mail' && (
+                <div className="p-10">
+                  {!selectedSubmission ? (
+                    <div className="space-y-4">
+                      <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-8">Posteingang</h2>
+                      <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden">
+                        <table className="w-full text-left text-xs">
+                          <thead><tr className="text-slate-500 border-b border-white/10 bg-black/40"><th className="p-6">Eingang</th><th className="p-6">Typ</th><th className="p-6">Betreff</th><th className="p-6 text-right">Aktion</th></tr></thead>
+                          <tbody>{allSubmissions.map(s => (
+                            <tr key={s.id} className="border-b border-white/5 hover:bg-white/5 transition-all">
+                              <td className="p-6 text-slate-500">{new Date(s.timestamp).toLocaleDateString('de-DE')}</td>
+                              <td className="p-6 font-bold text-blue-500 uppercase">{s.type}</td>
+                              <td className="p-6 font-bold text-white">{s.title}</td>
+                              <td className="p-6 text-right"><button onClick={() => {setSelectedSubmission(s); updateSubmissionStatus(s.id, 'Gelesen');}} className="text-blue-500 font-black uppercase text-[10px]">Öffnen</button></td>
+                            </tr>
+                          ))}</tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                      <button onClick={() => setSelectedSubmission(null)} className="text-blue-500 text-[10px] font-black uppercase tracking-widest">← Zurück zur Übersicht</button>
+                      <div className="space-y-2">
+                        <h2 className="text-4xl font-black text-white uppercase tracking-tighter">{selectedSubmission.title}</h2>
+                        <p className="text-slate-500 text-xs">{new Date(selectedSubmission.timestamp).toLocaleString('de-DE')} • Status: {selectedSubmission.status}</p>
+                      </div>
+                      <div className="p-8 bg-slate-900/80 border border-white/5 rounded-[40px] text-slate-300 leading-relaxed whitespace-pre-wrap shadow-inner">{selectedSubmission.content}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Job Applications View */}
               {activeWindow === 'apps' && (
-                !selectedApp ? (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center mb-8">
-                      <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Offene Bewerbungen</h2>
-                      <div className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase px-4 py-2 rounded-full border border-emerald-500/20">{allApps.length} Eingänge</div>
-                    </div>
-                    <div className="bg-slate-900/40 border border-white/5 rounded-3xl overflow-hidden">
-                      <table className="w-full text-left text-xs">
-                        <thead><tr className="text-slate-500 border-b border-white/10 bg-black/50"><th className="p-6">Bewerber</th><th className="p-6">Laufbahn</th><th className="p-6">Status</th><th className="p-6 text-right">Aktion</th></tr></thead>
-                        <tbody>{allApps.map(a => (
-                          <tr key={a.id} className="border-b border-white/5 hover:bg-white/5 transition-all">
-                            <td className="p-6">
-                              <div className="flex flex-col">
-                                <span className="font-black text-white uppercase text-sm">{a.name}</span>
-                                <span className="text-slate-500 text-[9px] uppercase tracking-widest">{new Date(a.timestamp).toLocaleDateString('de-DE')}</span>
-                              </div>
-                            </td>
-                            <td className="p-6 font-bold text-slate-400">{a.careerPath}</td>
-                            <td className="p-6">
-                              <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${
-                                a.status === 'Eingegangen' ? 'bg-blue-500/10 border-blue-500/30 text-blue-500' :
-                                a.status === 'Eingeladen' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' :
-                                a.status === 'Abgelehnt' ? 'bg-red-500/10 border-red-500/30 text-red-500' :
-                                'bg-slate-500/10 border-slate-500/30 text-slate-500'
-                              }`}>{a.status}</span>
-                            </td>
-                            <td className="p-6 text-right"><button onClick={() => setSelectedApp(a)} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Prüfen</button></td>
-                          </tr>
-                        ))}</tbody>
-                      </table>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto space-y-8">
-                    <button onClick={() => setSelectedApp(null)} className="text-blue-500 text-[10px] font-black uppercase tracking-widest mb-4">← Zurück zur Übersicht</button>
-                    
-                    <div className="flex justify-between items-start border-b border-white/10 pb-8">
-                      <div>
-                        <h2 className="text-5xl font-black text-white uppercase tracking-tighter mb-2">{selectedApp.name}</h2>
-                        <div className="flex items-center gap-4">
-                          <span className="text-blue-500 text-[11px] font-black uppercase tracking-[0.3em]">{selectedApp.position}</span>
-                          <span className="h-4 w-[1px] bg-slate-800"></span>
-                          <span className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">{selectedApp.careerPath}</span>
+                <div className="p-10">
+                  {!selectedApp ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center mb-10">
+                        <div>
+                          <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Bewerbungs-Portal</h2>
+                          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">Personalverwaltung Teamstadt</p>
+                        </div>
+                        <div className="flex gap-4">
+                           <div className="bg-slate-900 border border-white/10 px-6 py-3 rounded-2xl flex flex-col items-center">
+                              <span className="text-2xl font-black text-white">{allApps.length}</span>
+                              <span className="text-[8px] text-slate-500 uppercase font-black">Gesamt</span>
+                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Aktueller Status</div>
-                        <span className={`text-xs font-black uppercase px-6 py-2 rounded-2xl border ${
-                                selectedApp.status === 'Eingegangen' ? 'bg-blue-500/10 border-blue-500/30 text-blue-500' :
-                                selectedApp.status === 'Eingeladen' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' :
-                                selectedApp.status === 'Abgelehnt' ? 'bg-red-500/10 border-red-500/30 text-red-500' :
-                                'bg-slate-500/10 border-slate-500/30 text-slate-500'
-                              }`}>{selectedApp.status}</span>
+                      <div className="bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden">
+                        <table className="w-full text-left text-xs">
+                          <thead><tr className="text-slate-500 border-b border-white/10 bg-black/40"><th className="p-6">Name</th><th className="p-6">Laufbahn</th><th className="p-6">Status</th><th className="p-6 text-right">Aktion</th></tr></thead>
+                          <tbody>{allApps.map(a => (
+                            <tr key={a.id} className="border-b border-white/5 hover:bg-white/5 transition-all">
+                              <td className="p-6">
+                                <div className="flex flex-col">
+                                  <span className="font-black text-white uppercase text-sm">{a.name}</span>
+                                  <span className="text-slate-500 text-[9px] uppercase tracking-widest">{new Date(a.timestamp).toLocaleDateString('de-DE')}</span>
+                                </div>
+                              </td>
+                              <td className="p-6 font-bold text-slate-400">{a.careerPath}</td>
+                              <td className="p-6">
+                                <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${
+                                  a.status === 'Eingegangen' ? 'bg-blue-500/10 border-blue-500/30 text-blue-500' :
+                                  a.status === 'Eingeladen' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' :
+                                  a.status === 'Abgelehnt' ? 'bg-red-500/10 border-red-500/30 text-red-500' :
+                                  'bg-slate-500/10 border-slate-500/30 text-slate-500'
+                                }`}>{a.status}</span>
+                              </td>
+                              <td className="p-6 text-right"><button onClick={() => setSelectedApp(a)} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20">Details ansehen</button></td>
+                            </tr>
+                          ))}</tbody>
+                        </table>
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      <div className="bg-white/5 border border-white/5 p-6 rounded-3xl space-y-4">
-                        <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Persönliche Daten (IC)</h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between"><span className="text-[10px] text-slate-500 uppercase font-bold">Name:</span><span className="text-xs font-bold text-white uppercase">{selectedApp.name}</span></div>
-                          <div className="flex justify-between"><span className="text-[10px] text-slate-500 uppercase font-bold">Geburtstag:</span><span className="text-xs font-bold text-white">{selectedApp.icBirthDate ? new Date(selectedApp.icBirthDate).toLocaleDateString('de-DE') : 'N/A'}</span></div>
-                          <div className="flex justify-between"><span className="text-[10px] text-slate-500 uppercase font-bold">Telefon:</span><span className="text-xs font-bold text-white">{selectedApp.icPhone || 'N/A'}</span></div>
+                  ) : (
+                    <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 max-w-5xl mx-auto space-y-10 pb-20">
+                      
+                      {/* Detailed App Header */}
+                      <div className="flex justify-between items-center">
+                        <button onClick={() => setSelectedApp(null)} className="flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all">
+                           <span className="text-lg">←</span> Zurück zur Liste
+                        </button>
+                        <div className="flex items-center gap-3">
+                           <span className="text-[10px] text-slate-500 font-black uppercase">Eingang:</span>
+                           <span className="text-[10px] text-slate-300 font-mono">{new Date(selectedApp.timestamp).toLocaleString('de-DE')}</span>
                         </div>
                       </div>
-                      <div className="bg-white/5 border border-white/5 p-6 rounded-3xl space-y-4">
-                        <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Kontakt & OOC</h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between"><span className="text-[10px] text-slate-500 uppercase font-bold">Discord:</span><span className="text-xs font-bold text-white">{selectedApp.discordId || 'N/A'}</span></div>
-                          <div className="flex justify-between"><span className="text-[10px] text-slate-500 uppercase font-bold">OOC Alter:</span><span className="text-xs font-bold text-white">{selectedApp.oocAge || 'N/A'} Jahre</span></div>
-                          {selectedApp.extraField && <div className="flex justify-between"><span className="text-[10px] text-slate-500 uppercase font-bold">Zusatz:</span><span className="text-xs font-bold text-white">{selectedApp.extraField}</span></div>}
+
+                      <div className="flex flex-col md:flex-row justify-between items-start gap-8 border-b border-white/10 pb-10">
+                        <div className="space-y-4">
+                          <div className="bg-blue-600/10 border border-blue-600/30 text-blue-500 text-[9px] font-black uppercase px-3 py-1 rounded-full w-fit tracking-[0.2em]">{selectedApp.careerPath}</div>
+                          <h2 className="text-6xl font-black text-white uppercase tracking-tighter leading-none">{selectedApp.name}</h2>
+                          <p className="text-slate-400 text-lg font-medium">{selectedApp.position}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-3">
+                           <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Aktueller Bewerberstatus</div>
+                           <div className={`text-xl font-black uppercase px-8 py-4 rounded-[28px] border shadow-2xl ${
+                                  selectedApp.status === 'Eingegangen' ? 'bg-blue-600 border-white/20 text-white' :
+                                  selectedApp.status === 'Eingeladen' ? 'bg-emerald-600 border-white/20 text-white' :
+                                  selectedApp.status === 'Abgelehnt' ? 'bg-red-600 border-white/20 text-white' :
+                                  'bg-slate-700 border-white/20 text-white'
+                                }`}>{selectedApp.status}</div>
                         </div>
                       </div>
-                      <div className="bg-white/5 border border-white/5 p-6 rounded-3xl space-y-4">
-                        <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Eingangs-Log</h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between"><span className="text-[10px] text-slate-500 uppercase font-bold">Eingereicht am:</span><span className="text-xs font-bold text-white">{new Date(selectedApp.timestamp).toLocaleDateString('de-DE')}</span></div>
-                          <div className="flex justify-between"><span className="text-[10px] text-slate-500 uppercase font-bold">Uhrzeit:</span><span className="text-xs font-bold text-white">{new Date(selectedApp.timestamp).toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'})}</span></div>
-                          <div className="flex justify-between"><span className="text-[10px] text-slate-500 uppercase font-bold">ID:</span><span className="text-[9px] font-mono text-slate-400">{selectedApp.id.slice(0, 8)}...</span></div>
+
+                      {/* Info Cards Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {/* Personalien IC */}
+                        <div className="bg-slate-900/60 border border-white/5 p-8 rounded-[32px] space-y-6 shadow-xl">
+                          <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                             <span className="text-2xl">👤</span>
+                             <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Personalien (IC)</h4>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="flex flex-col"><span className="text-[9px] text-slate-500 uppercase font-black">Vor- & Nachname</span><span className="text-sm font-bold text-white uppercase">{selectedApp.name}</span></div>
+                            <div className="flex flex-col"><span className="text-[9px] text-slate-500 uppercase font-black">Geburtsdatum</span><span className="text-sm font-bold text-white">{selectedApp.icBirthDate ? new Date(selectedApp.icBirthDate).toLocaleDateString('de-DE') : 'Unbekannt'}</span></div>
+                            <div className="flex flex-col"><span className="text-[9px] text-slate-500 uppercase font-black">Telefonnummer</span><span className="text-sm font-bold text-white">{selectedApp.icPhone || 'N/A'}</span></div>
+                          </div>
+                        </div>
+
+                        {/* OOC & Kontakt */}
+                        <div className="bg-slate-900/60 border border-white/5 p-8 rounded-[32px] space-y-6 shadow-xl">
+                          <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                             <span className="text-2xl">🎮</span>
+                             <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Out of Character (OOC)</h4>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="flex flex-col"><span className="text-[9px] text-slate-500 uppercase font-black">Alter (Reallife)</span><span className="text-sm font-bold text-white">{selectedApp.oocAge || 'N/A'} Jahre</span></div>
+                            <div className="flex flex-col"><span className="text-[9px] text-slate-500 uppercase font-black">Discord Kennung</span><span className="text-sm font-bold text-white">{selectedApp.discordId || 'N/A'}</span></div>
+                            {selectedApp.extraField && <div className="flex flex-col"><span className="text-[9px] text-slate-500 uppercase font-black">Zusatzinfo</span><span className="text-sm font-bold text-white">{selectedApp.extraField}</span></div>}
+                          </div>
+                        </div>
+
+                        {/* System & Log */}
+                        <div className="bg-slate-900/60 border border-white/5 p-8 rounded-[32px] space-y-6 shadow-xl">
+                          <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                             <span className="text-2xl">🛠️</span>
+                             <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">System-Informationen</h4>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="flex flex-col"><span className="text-[9px] text-slate-500 uppercase font-black">Bewerbungs-ID</span><span className="text-[10px] font-mono text-slate-400">{selectedApp.id}</span></div>
+                            <div className="flex flex-col"><span className="text-[9px] text-slate-500 uppercase font-black">Gewünschte Laufbahn</span><span className="text-sm font-bold text-white uppercase">{selectedApp.careerPath}</span></div>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="space-y-6">
-                      <div className="p-8 bg-white/5 rounded-[40px] border border-white/5">
-                        <h4 className="text-xs font-black text-white uppercase tracking-widest mb-6 flex items-center gap-3">
-                          <span className="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">✨</span> 
-                          Motivation des Bewerbers
-                        </h4>
-                        <div className="text-slate-300 leading-relaxed text-sm whitespace-pre-wrap">{selectedApp.motivation}</div>
+                      {/* Large Text Blocks */}
+                      <div className="space-y-8">
+                        <div className="p-10 bg-slate-900/40 border border-white/5 rounded-[48px] shadow-2xl">
+                          <div className="flex items-center gap-4 mb-8">
+                             <div className="w-12 h-12 rounded-2xl bg-blue-600/10 text-blue-500 flex items-center justify-center text-xl">✍️</div>
+                             <h4 className="text-xs font-black text-white uppercase tracking-[0.2em]">Motivation & Ziele</h4>
+                          </div>
+                          <div className="text-slate-300 leading-relaxed text-sm whitespace-pre-wrap border-l-4 border-blue-600/30 pl-8">{selectedApp.motivation}</div>
+                        </div>
+
+                        <div className="p-10 bg-slate-900/40 border border-white/5 rounded-[48px] shadow-2xl">
+                          <div className="flex items-center gap-4 mb-8">
+                             <div className="w-12 h-12 rounded-2xl bg-indigo-600/10 text-indigo-500 flex items-center justify-center text-xl">📜</div>
+                             <h4 className="text-xs font-black text-white uppercase tracking-[0.2em]">Lebenslauf & Erfahrungen</h4>
+                          </div>
+                          <div className="text-slate-300 leading-relaxed text-sm whitespace-pre-wrap border-l-4 border-indigo-600/30 pl-8">{selectedApp.cv}</div>
+                        </div>
                       </div>
 
-                      <div className="p-8 bg-white/5 rounded-[40px] border border-white/5">
-                        <h4 className="text-xs font-black text-white uppercase tracking-widest mb-6 flex items-center gap-3">
-                          <span className="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-500 flex items-center justify-center text-sm">📋</span> 
-                          Lebenslauf / Erfahrung
-                        </h4>
-                        <div className="text-slate-300 leading-relaxed text-sm whitespace-pre-wrap">{selectedApp.cv}</div>
+                      {/* Actions */}
+                      <div className="flex flex-col md:flex-row gap-6 pt-10">
+                        <button 
+                          onClick={() => updateAppStatus(selectedApp.id, 'Eingeladen')} 
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-8 rounded-[32px] font-black text-sm uppercase tracking-[0.3em] shadow-[0_20px_60px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-4"
+                        >
+                          <span>✓</span> Bewerber Einladen
+                        </button>
+                        <button 
+                          onClick={() => updateAppStatus(selectedApp.id, 'Abgelehnt')} 
+                          className="flex-1 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-8 rounded-[32px] font-black text-sm uppercase tracking-[0.3em] border border-red-900/40 transition-all active:scale-[0.98] flex items-center justify-center gap-4"
+                        >
+                          <span>✕</span> Ablehnen
+                        </button>
                       </div>
                     </div>
-
-                    <div className="flex gap-4 pt-10 border-t border-white/5">
-                      <button onClick={() => updateAppStatus(selectedApp.id, 'Eingeladen')} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-6 rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-950/20 transition-all active:scale-[0.98]">✓ Bewerber Einladen</button>
-                      <button onClick={() => updateAppStatus(selectedApp.id, 'Abgelehnt')} className="flex-1 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-6 rounded-3xl font-black text-xs uppercase tracking-widest border border-red-900/40 transition-all active:scale-[0.98]">✕ Bewerbung Ablehnen</button>
-                    </div>
-                  </div>
-                )
+                  )}
+                </div>
               )}
             </div>
           </div>
         </div>
       )}
 
+      {/* Taskbar */}
       <footer className="h-12 bg-[#0a0f1e]/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-between px-2 z-[100] shrink-0">
-        <div className="flex items-center gap-1 h-full"><button onClick={() => setIsStartMenuOpen(!isStartMenuOpen)} className="h-10 w-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all"><img src={POLICE_LOGO_RAW} className="h-7 w-auto" /></button></div>
+        <div className="flex items-center gap-1 h-full">
+          <button onClick={() => setIsStartMenuOpen(!isStartMenuOpen)} className="h-10 w-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all">
+            <img src={POLICE_LOGO_RAW} className="h-7 w-auto" alt="Logo" />
+          </button>
+        </div>
         <div className="flex items-center gap-4 h-full pr-4 text-slate-400">
-          <div className="flex flex-col items-end leading-none"><span className="text-[11px] font-black text-white">{time.toLocaleTimeString()}</span><span className="text-[8px] text-slate-500 uppercase tracking-widest">{time.toLocaleDateString()}</span></div>
+          <div className="flex flex-col items-end leading-none">
+            <span className="text-[11px] font-black text-white">{time.toLocaleTimeString()}</span>
+            <span className="text-[8px] text-slate-500 uppercase tracking-widest">{time.toLocaleDateString()}</span>
+          </div>
         </div>
       </footer>
 
+      {/* Start Menu */}
       {isStartMenuOpen && (
         <div className="absolute bottom-14 left-2 w-80 bg-[#0f172a] border border-white/10 rounded-3xl p-4 z-[150] shadow-2xl animate-in slide-in-from-bottom-4 backdrop-blur-3xl">
           <div className="p-6 border-b border-white/5 mb-4 flex items-center gap-5">

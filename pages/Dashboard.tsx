@@ -97,7 +97,7 @@ const Dashboard: React.FC = () => {
     { id: 'mail', label: 'Bürgerhinweise', icon: '💡', color: 'bg-amber-600', permission: Permission.VIEW_TIPS, path: '/tips', group: 'Ermittlungen' },
     
     // Verwaltung
-    { id: 'fleet', label: 'Fuhrpark', icon: '🚓', color: 'bg-blue-500', path: '/fleet', permission: Permission.VIEW_REPORTS, group: 'Verwaltung' },
+    { id: 'fleet', label: 'Fuhrpark', icon: '🚓', color: 'bg-blue-500', path: '/fleet', permission: Permission.MANAGE_FLEET, group: 'Verwaltung' },
     { id: 'apps', label: 'Bewerbungen', icon: '📂', color: 'bg-emerald-600', permission: Permission.VIEW_APPLICATIONS, path: '/applications', group: 'Verwaltung' },
     { id: 'personnel', label: 'Administration', icon: '⚙️', color: 'bg-indigo-600', permission: Permission.ADMIN_ACCESS, path: '/admin', group: 'Verwaltung' },
   ];

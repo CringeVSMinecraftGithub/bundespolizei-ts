@@ -6,6 +6,35 @@ import { POLICE_LOGO_RAW } from '../constants';
 import { dbCollections, onSnapshot, query, orderBy, setDoc, doc, db, deleteDoc, addDoc } from '../firebase';
 import PoliceOSWindow from '../components/PoliceOSWindow';
 
+const RANKS = {
+  "Mittlerer Dienst": [
+    "Polizeimeisteranwärter/in",
+    "Polizeimeister/in",
+    "Polizeiobermeister/in",
+    "Polizeihauptmeister/in",
+    "Polizeihauptmeister/in mit Amtszulage",
+    "Erste/r Polizeihauptmeister/in"
+  ],
+  "Gehobener Dienst": [
+    "Polizeikommissaranwärter/in",
+    "Polizeikommissar/in",
+    "Polizeioberkommissar/in",
+    "Polizeihauptkommissar/in A12",
+    "Erste/r Polizeihauptkommissar/in"
+  ],
+  "Höherer Dienst": [
+    "Polizeiratanwärter/in",
+    "Polizeirat/rätin",
+    "Polizeioberrat/rätin",
+    "Polizeidirektor/in",
+    "Leitende/r Polizeidirektor/in",
+    "Leitende/r Polizeidirektor/in B2",
+    "Leitende/r Polizeidirektor/in B3",
+    "Bundespolizeivizepräsident",
+    "Bundespolizeipräsident"
+  ]
+};
+
 const AdminPanel: React.FC = () => {
   const { user: currentUser } = useAuth();
   const [tab, setTab] = useState<'Users' | 'Roles' | 'Laws'>('Users');
@@ -20,7 +49,6 @@ const AdminPanel: React.FC = () => {
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [newLaw, setNewLaw] = useState({ paragraph: '', title: '', description: '' });
 
-  // Add missing calendar permissions to the permissionLabels object
   const permissionLabels: Record<Permission, string> = {
     [Permission.VIEW_REPORTS]: "Einsatzberichte einsehen",
     [Permission.CREATE_REPORTS]: "Einsatzberichte/Anzeigen erstellen",
@@ -43,7 +71,7 @@ const AdminPanel: React.FC = () => {
 
   useEffect(() => {
     const unsubUsers = onSnapshot(query(dbCollections.users), (snap) => {
-      setUsers(snap.docs.map(d => d.data() as User));
+      setUsers(snap.docs.map(d => ({ ...d.data(), id: d.id } as User)));
     });
     const unsubLaws = onSnapshot(query(dbCollections.laws, orderBy("paragraph", "asc")), (snap) => {
       setLaws(snap.docs.map(d => ({ id: d.id, ...d.data() } as Law)));
@@ -96,7 +124,8 @@ const AdminPanel: React.FC = () => {
   const filteredUsers = useMemo(() => {
     return users.filter(u => 
       u.lastName.toLowerCase().includes(userSearchTerm.toLowerCase()) || 
-      u.badgeNumber.toLowerCase().includes(userSearchTerm.toLowerCase())
+      u.badgeNumber.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+      u.firstName.toLowerCase().includes(userSearchTerm.toLowerCase())
     );
   }, [users, userSearchTerm]);
 
@@ -128,7 +157,7 @@ const AdminPanel: React.FC = () => {
                   </div>
                </div>
                <button onClick={() => {
-                 setEditingUser({ id: `user-${Date.now()}`, firstName: '', lastName: '', rank: '', badgeNumber: '', role: Role.GE, isAdmin: false, permissions: [] });
+                 setEditingUser({ id: `user-${Date.now()}`, firstName: '', lastName: '', rank: RANKS["Mittlerer Dienst"][0], badgeNumber: '', role: Role.GE, isAdmin: false, permissions: [] });
                  setIsModalOpen(true);
                }} className="bg-blue-600 hover:bg-blue-500 px-12 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95">Account erstellen</button>
             </div>
@@ -138,7 +167,7 @@ const AdminPanel: React.FC = () => {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-black/50 text-slate-500 uppercase font-black tracking-widest sticky top-0 z-10">
                     <tr className="border-b border-white/5">
-                      <th className="p-8">Dienstgrad & Name</th>
+                      <th className="p-8">Name & Dienstgrad</th>
                       <th className="p-8">Dienstnummer</th>
                       <th className="p-8">Direktion / Rolle</th>
                       <th className="p-8 text-right">Aktionen</th>
@@ -149,8 +178,8 @@ const AdminPanel: React.FC = () => {
                       <tr key={u.id} className="hover:bg-white/[0.02] transition-all group">
                         <td className="p-8">
                           <div className="flex flex-col">
-                            <span className="text-white font-black text-sm uppercase tracking-tight">{u.rank} {u.lastName}</span>
-                            <span className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">{u.firstName}</span>
+                            <span className="text-white font-black text-sm uppercase tracking-tight">{u.firstName} {u.lastName}</span>
+                            <span className="text-slate-500 text-[10px] font-medium uppercase tracking-widest mt-1">{u.rank}</span>
                           </div>
                         </td>
                         <td className="p-8">
@@ -305,7 +334,21 @@ const AdminPanel: React.FC = () => {
                  <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-slate-600 uppercase ml-2 tracking-widest">Dienstgrad</label>
-                      <input value={editingUser.rank} onChange={e => setEditingUser({...editingUser, rank: e.target.value})} className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none focus:border-blue-600 transition-all" />
+                      <select 
+                        value={editingUser.rank} 
+                        onChange={e => setEditingUser({...editingUser, rank: e.target.value})} 
+                        className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none focus:border-blue-600 appearance-none cursor-pointer transition-all"
+                      >
+                        {Object.entries(RANKS).map(([group, ranks]) => (
+                          <optgroup key={group} label={group} className="bg-slate-900 text-slate-400 font-black uppercase text-[10px]">
+                            {ranks.map(rank => (
+                              <option key={rank} value={rank} className="bg-slate-900 text-white font-normal capitalize">
+                                {rank}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-slate-600 uppercase ml-2 tracking-widest">Dienstnummer</label>

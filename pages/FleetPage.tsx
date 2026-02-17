@@ -2,14 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import PoliceOSWindow from '../components/PoliceOSWindow';
 import { dbCollections, onSnapshot, updateDoc, doc, db, addDoc } from '../firebase';
-import { Vehicle } from '../types';
+import { Vehicle, Permission } from '../types';
 import { useAuth } from '../App';
 
 const FleetPage: React.FC = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [showAdd, setShowAdd] = useState(false);
   const [newVehicle, setNewVehicle] = useState({ plate: '', model: '' });
+
+  const canManage = hasPermission(Permission.MANAGE_FLEET);
 
   useEffect(() => {
     const unsub = onSnapshot(dbCollections.fleet, (snap) => {
@@ -19,6 +21,10 @@ const FleetPage: React.FC = () => {
   }, []);
 
   const toggleStatus = async (v: Vehicle) => {
+    if (!canManage) {
+      alert("Fehlende Berechtigung: Fuhrpark verwalten.");
+      return;
+    }
     const nextStatus = v.status === 'Einsatzbereit' ? 'Im Einsatz' : v.status === 'Im Einsatz' ? 'Defekt' : 'Einsatzbereit';
     await updateDoc(doc(db, "fleet", v.id), { 
       status: nextStatus,
@@ -27,6 +33,10 @@ const FleetPage: React.FC = () => {
   };
 
   const handleAdd = async () => {
+    if (!canManage) {
+      alert("Fehlende Berechtigung: Fuhrpark verwalten.");
+      return;
+    }
     await addDoc(dbCollections.fleet, { ...newVehicle, status: 'Einsatzbereit', fuel: 100 });
     setShowAdd(false);
     setNewVehicle({ plate: '', model: '' });
@@ -37,10 +47,12 @@ const FleetPage: React.FC = () => {
       <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-light text-white tracking-tight">Fuhrpark <span className="text-blue-500 font-bold">Zentrale</span></h1>
-          <button onClick={() => setShowAdd(true)} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-sm text-xs font-bold uppercase transition-all">Fahrzeug hinzufügen</button>
+          {canManage && (
+            <button onClick={() => setShowAdd(true)} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-sm text-xs font-bold uppercase transition-all">Fahrzeug hinzufügen</button>
+          )}
         </div>
 
-        {showAdd && (
+        {showAdd && canManage && (
           <div className="bg-[#1f2937]/50 border border-blue-500/30 p-6 rounded-sm space-y-4 animate-in slide-in-from-top-4">
              <div className="grid grid-cols-2 gap-4">
                <input placeholder="Kennzeichen (z.B. BP-42)" className="bg-black/40 border border-white/10 p-3 text-sm text-white outline-none" value={newVehicle.plate} onChange={e => setNewVehicle({...newVehicle, plate: e.target.value})} />
@@ -77,7 +89,9 @@ const FleetPage: React.FC = () => {
                 <div className="text-[9px] text-slate-600 pt-2 italic">Zuletzt geführt von: {v.lastDriver || 'N/A'}</div>
               </div>
 
-              <button onClick={() => toggleStatus(v)} className="w-full mt-2 bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase tracking-widest py-3 rounded-sm transition-all border border-white/5">Status ändern</button>
+              {canManage && (
+                <button onClick={() => toggleStatus(v)} className="w-full mt-2 bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase tracking-widest py-3 rounded-sm transition-all border border-white/5">Status ändern</button>
+              )}
             </div>
           ))}
         </div>

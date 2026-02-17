@@ -27,7 +27,7 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
     { label: 'Bürgerhinweise', icon: '💡', path: '/tips', group: 'Ermittlungen', perm: Permission.VIEW_TIPS },
     
     // Verwaltung
-    { label: 'Fuhrpark', icon: '🚓', path: '/fleet', group: 'Verwaltung', perm: Permission.VIEW_REPORTS },
+    { label: 'Fuhrpark', icon: '🚓', path: '/fleet', group: 'Verwaltung', perm: Permission.MANAGE_FLEET },
     { label: 'Bewerbungen', icon: '📂', path: '/applications', group: 'Verwaltung', perm: Permission.VIEW_APPLICATIONS },
     { label: 'Administration', icon: '⚙️', path: '/admin', group: 'Verwaltung', perm: Permission.ADMIN_ACCESS },
   ];

@@ -5,12 +5,13 @@ import { dbCollections, onSnapshot, query, orderBy, addDoc, deleteDoc, doc, db }
 import { CalendarEvent, Permission } from '../types';
 import { useAuth } from '../App';
 
-const CalendarPage: React.FC = () => {
+export default function CalendarPage() {
   const { user, hasPermission } = useAuth();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [isAdding, setIsAdding] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [newEvent, setNewEvent] = useState<Partial<CalendarEvent>>({
     title: '',
@@ -23,7 +24,7 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     if (!user) return;
     const unsub = onSnapshot(query(dbCollections.calendar, orderBy("startTime", "asc")), (snap) => {
-      const allEvents = snap.docs.map(d => ({ id: d.id, ...d.data() } as CalendarEvent));
+      const allEvents = snap.docs.map(d => ({ ...d.data(), id: d.id } as CalendarEvent));
       // Filter: Eigene Termine ODER öffentliche Termine
       const visibleEvents = allEvents.filter(e => e.isPublic || e.createdBy === user.id);
       setEvents(visibleEvents);
@@ -74,28 +75,64 @@ const CalendarPage: React.FC = () => {
   };
 
   const handleAdd = async () => {
-    if (!user || !newEvent.title || !selectedDate) return;
+    if (!user) {
+      alert("Fehler: Kein authentifizierter Benutzer gefunden.");
+      return;
+    }
+    if (!newEvent.title || newEvent.title.trim() === '') {
+      alert("Bitte geben Sie einen Titel für den Termin an.");
+      return;
+    }
+    if (!selectedDate) {
+      alert("Bitte wählen Sie ein Datum aus.");
+      return;
+    }
+
     const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
     
+    setIsSaving(true);
     try {
+      const canManage = hasPermission(Permission.MANAGE_CALENDAR);
+      
       await addDoc(dbCollections.calendar, {
-        ...newEvent,
+        title: newEvent.title.trim(),
+        description: newEvent.description?.trim() || '',
+        startTime: newEvent.startTime || '08:00',
+        type: newEvent.type || 'Personal',
+        isPublic: canManage ? (newEvent.isPublic || false) : false,
         date: dateStr,
         createdBy: user.id,
         creatorName: `${user.rank} ${user.lastName}`,
         timestamp: new Date().toISOString()
       });
+
       setIsAdding(false);
       setNewEvent({ title: '', description: '', startTime: '08:00', type: 'Personal', isPublic: false });
     } catch (e) {
-      console.error(e);
-      alert("Fehler beim Speichern des Termins.");
+      console.error("Calendar Save Error:", e);
+      alert("Kritischer Fehler beim Speichern des Termins.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Termin wirklich löschen?")) {
-      await deleteDoc(doc(db, "calendar", id));
+  const handleDelete = async (e: React.MouseEvent, eventId: string) => {
+    e.preventDefault();
+    e.stopPropagation(); 
+    
+    if (!eventId) {
+      console.error("Keine Event-ID zum Löschen vorhanden.");
+      return;
+    }
+
+    if (window.confirm("Möchten Sie diesen Termin wirklich unwiderruflich löschen?")) {
+      try {
+        const docRef = doc(db, "calendar", eventId);
+        await deleteDoc(docRef);
+      } catch (err) {
+        console.error("Calendar Delete Error:", err);
+        alert("Fehler beim Löschen des Termins in der Cloud-Datenbank.");
+      }
     }
   };
 
@@ -142,7 +179,6 @@ const CalendarPage: React.FC = () => {
             <div className="flex-1 grid grid-cols-7 grid-rows-6">
               {calendarDays.map((dayObj, i) => {
                 const dayEvents = getEventsForDate(dayObj.day, dayObj.month, dayObj.year);
-                const hasPublic = dayEvents.some(e => e.isPublic);
                 const isToday = new Date().toDateString() === new Date(dayObj.year, dayObj.month, dayObj.day).toDateString();
                 const isSelected = selectedDate?.getDate() === dayObj.day && selectedDate?.getMonth() === dayObj.month && selectedDate?.getFullYear() === dayObj.year;
 
@@ -190,7 +226,13 @@ const CalendarPage: React.FC = () => {
                              <div className="flex items-center gap-2">
                                {e.isPublic && <span className="text-[7px] font-black bg-amber-500 text-black px-1.5 rounded uppercase leading-none py-0.5">Dienstlich</span>}
                                {(e.createdBy === user?.id || user?.isAdmin) && (
-                                 <button onClick={() => handleDelete(e.id)} className="text-slate-600 hover:text-red-500 transition-colors">✕</button>
+                                 <button 
+                                   onClick={(event) => handleDelete(event, e.id)} 
+                                   className="text-slate-600 hover:text-red-500 transition-colors p-1"
+                                   title="Termin löschen"
+                                 >
+                                   ✕
+                                 </button>
                                )}
                              </div>
                           </div>
@@ -235,7 +277,13 @@ const CalendarPage: React.FC = () => {
                <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-slate-500 uppercase ml-2 tracking-widest">Bezeichnung</label>
-                    <input autoFocus placeholder="z.B. Besprechung GE" className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none focus:border-blue-600 transition-all" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} />
+                    <input 
+                      autoFocus 
+                      placeholder="z.B. Besprechung GE" 
+                      className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none focus:border-blue-600 transition-all" 
+                      value={newEvent.title} 
+                      onChange={e => setNewEvent({...newEvent, title: e.target.value})} 
+                    />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-6">
@@ -274,7 +322,13 @@ const CalendarPage: React.FC = () => {
                </div>
 
                <div className="flex gap-4 pt-4">
-                  <button onClick={handleAdd} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-6 rounded-3xl font-black uppercase text-[11px] tracking-widest transition-all shadow-2xl active:scale-95">Eintragen</button>
+                  <button 
+                    onClick={handleAdd} 
+                    disabled={isSaving}
+                    className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white py-6 rounded-3xl font-black uppercase text-[11px] tracking-widest transition-all shadow-2xl active:scale-95"
+                  >
+                    {isSaving ? 'Wird gespeichert...' : 'Eintragen'}
+                  </button>
                   <button onClick={() => setIsAdding(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-slate-500 py-6 rounded-3xl font-black uppercase text-[11px] tracking-widest">Abbrechen</button>
                </div>
             </div>
@@ -284,6 +338,4 @@ const CalendarPage: React.FC = () => {
       </div>
     </PoliceOSWindow>
   );
-};
-
-export default CalendarPage;
+}

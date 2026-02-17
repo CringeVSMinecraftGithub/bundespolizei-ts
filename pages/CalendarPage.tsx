@@ -12,6 +12,7 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [eventIdToDelete, setEventIdToDelete] = useState<string | null>(null);
   
   const [newEvent, setNewEvent] = useState<Partial<CalendarEvent>>({
     title: '',
@@ -116,23 +117,22 @@ export default function CalendarPage() {
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent, eventId: string) => {
+  const triggerDelete = (e: React.MouseEvent, eventId: string) => {
     e.preventDefault();
     e.stopPropagation(); 
-    
-    if (!eventId) {
-      console.error("Keine Event-ID zum Löschen vorhanden.");
-      return;
-    }
+    if (eventId) setEventIdToDelete(eventId);
+  };
 
-    if (window.confirm("Möchten Sie diesen Termin wirklich unwiderruflich löschen?")) {
-      try {
-        const docRef = doc(db, "calendar", eventId);
-        await deleteDoc(docRef);
-      } catch (err) {
-        console.error("Calendar Delete Error:", err);
-        alert("Fehler beim Löschen des Termins in der Cloud-Datenbank.");
-      }
+  const confirmDelete = async () => {
+    if (!eventIdToDelete) return;
+
+    try {
+      // Fixed typo: eventIdIdToDelete -> eventIdToDelete and removed redundant docRef
+      await deleteDoc(doc(db, "calendar", eventIdToDelete));
+      setEventIdToDelete(null);
+    } catch (err) {
+      console.error("Calendar Delete Error:", err);
+      alert("Fehler beim Löschen des Termins in der Cloud-Datenbank.");
     }
   };
 
@@ -227,7 +227,7 @@ export default function CalendarPage() {
                                {e.isPublic && <span className="text-[7px] font-black bg-amber-500 text-black px-1.5 rounded uppercase leading-none py-0.5">Dienstlich</span>}
                                {(e.createdBy === user?.id || user?.isAdmin) && (
                                  <button 
-                                   onClick={(event) => handleDelete(event, e.id)} 
+                                   onClick={(event) => triggerDelete(event, e.id)} 
                                    className="text-slate-600 hover:text-red-500 transition-colors p-1"
                                    title="Termin löschen"
                                  >
@@ -330,6 +330,36 @@ export default function CalendarPage() {
                     {isSaving ? 'Wird gespeichert...' : 'Eintragen'}
                   </button>
                   <button onClick={() => setIsAdding(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-slate-500 py-6 rounded-3xl font-black uppercase text-[11px] tracking-widest">Abbrechen</button>
+               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Delete Confirmation Modal */}
+        {eventIdToDelete && (
+          <div className="fixed inset-0 z-[600] bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-8 animate-in fade-in">
+            <div className="bg-[#1a1c23] border border-red-500/30 p-10 rounded-[40px] w-full max-w-md space-y-8 shadow-[0_40px_100px_rgba(0,0,0,0.9)] animate-in zoom-in duration-200">
+               <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-red-600/10 text-red-500 rounded-full flex items-center justify-center text-4xl border border-red-600/20">
+                    🗑️
+                  </div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Termin löschen?</h3>
+                  <p className="text-sm text-slate-400">Diese Aktion kann nicht rückgängig gemacht werden. Der Termin wird permanent aus der Cloud-Datenbank entfernt.</p>
+               </div>
+               
+               <div className="flex gap-4">
+                  <button 
+                    onClick={() => setEventIdToDelete(null)}
+                    className="flex-1 bg-white/5 hover:bg-white/10 text-slate-400 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all"
+                  >
+                    Abbrechen
+                  </button>
+                  <button 
+                    onClick={confirmDelete}
+                    className="flex-1 bg-red-600 hover:bg-red-500 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-red-900/20 transition-all active:scale-95"
+                  >
+                    Löschen
+                  </button>
                </div>
             </div>
           </div>

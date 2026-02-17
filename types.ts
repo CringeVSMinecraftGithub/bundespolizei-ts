@@ -1,31 +1,30 @@
 
-export enum Role {
-  GE = 'Direktion GE',
-  K = 'Direktion K',
-  DGL = 'Dienstgruppenleiter',
-  DSL = 'Dienststellenleitung',
-  HD = 'Höherer Dienst',
-  LS = 'Leitungsstab'
+export enum Permission {
+  VIEW_REPORTS = 'Berichte einsehen',
+  CREATE_REPORTS = 'Berichte erstellen',
+  EDIT_REPORTS = 'Berichte bearbeiten',
+  DELETE_REPORTS = 'Berichte löschen',
+  MANAGE_USERS = 'Nutzer verwalten',
+  VIEW_WARRANTS = 'Fahndungen einsehen',
+  MANAGE_WARRANTS = 'Fahndungen verwalten',
+  ADMIN_ACCESS = 'Administrator-Zugriff',
+  MANAGE_LAWS = 'Gesetze verwalten',
+  MANAGE_FLEET = 'Fuhrpark verwalten',
+  MANAGE_EVIDENCE = 'Asservaten verwalten',
+  VIEW_APPLICATIONS = 'Bewerbungen einsehen',
+  MANAGE_APPLICATIONS = 'Bewerbungen verwalten',
+  VIEW_TIPS = 'Hinweise einsehen',
+  MANAGE_TIPS = 'Hinweise verwalten',
+  VIEW_CALENDAR = 'Kalender einsehen',
+  MANAGE_CALENDAR = 'Kalender verwalten',
+  MANAGE_NEWS = 'Presse verwalten'
 }
 
-export enum Permission {
-  VIEW_REPORTS = 'view_reports',
-  CREATE_REPORTS = 'create_reports',
-  EDIT_REPORTS = 'edit_reports',
-  DELETE_REPORTS = 'delete_reports',
-  MANAGE_USERS = 'manage_users',
-  VIEW_WARRANTS = 'view_warrants',
-  MANAGE_WARRANTS = 'manage_warrants',
-  ADMIN_ACCESS = 'admin_access',
-  MANAGE_LAWS = 'manage_laws',
-  MANAGE_FLEET = 'manage_fleet',
-  MANAGE_EVIDENCE = 'manage_evidence',
-  VIEW_APPLICATIONS = 'view_applications',
-  MANAGE_APPLICATIONS = 'manage_applications',
-  VIEW_TIPS = 'view_tips',
-  MANAGE_TIPS = 'manage_tips',
-  VIEW_CALENDAR = 'view_calendar',
-  MANAGE_CALENDAR = 'manage_calendar'
+export interface UserRole {
+  id: string;
+  name: string;
+  permissions: Permission[];
+  isSpecial: boolean; // true = Sonderrolle
 }
 
 export interface User {
@@ -34,10 +33,20 @@ export interface User {
   lastName: string;
   rank: string;
   badgeNumber: string;
-  role: Role;
+  role: string; // ID der Hauptrolle
+  specialRoles: string[]; // IDs der Sonderrollen
   isAdmin: boolean;
   permissions: Permission[];
   password?: string;
+}
+
+export interface PressRelease {
+  id: string;
+  title: string;
+  content: string;
+  author: string;
+  timestamp: string;
+  category: 'Einsatz' | 'Personal' | 'Allgemein';
 }
 
 export interface CalendarEvent {
@@ -144,5 +153,4 @@ export interface JobApplication {
   oocAge?: string;
   icBirthDate?: string;
   icPhone?: string;
-  extraField?: string;
 }

@@ -1,6 +1,5 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-// Add limit to the imports from firebase-firestore
 import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -25,8 +24,9 @@ export const dbCollections = {
   fleet: collection(db, "fleet"),
   evidence: collection(db, "evidence"),
   warrants: collection(db, "warrants"),
-  calendar: collection(db, "calendar")
+  calendar: collection(db, "calendar"),
+  news: collection(db, "news"),
+  roles: collection(db, "roles")
 };
 
-// Export firebase tools
 export { collection, addDoc, getDocs, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where };

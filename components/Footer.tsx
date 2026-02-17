@@ -5,7 +5,7 @@ import { useAuth } from '../App';
 import { POLICE_LOGO_RAW } from '../constants';
 
 const Footer: React.FC = () => {
-  const { user, logout, setSettingsOpen } = useAuth();
+  const { user, logout, setSettingsOpen, roles } = useAuth();
   const navigate = useNavigate();
   const [time, setTime] = useState(new Date());
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
@@ -16,6 +16,9 @@ const Footer: React.FC = () => {
   }, []);
 
   if (!user) return null;
+
+  const mainRole = roles.find(r => r.id === user.role);
+  const userSpecialRoles = roles.filter(r => user.specialRoles?.includes(r.id));
 
   return (
     <>
@@ -43,9 +46,6 @@ const Footer: React.FC = () => {
             <span className="text-[12px] font-black text-white">{time.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
             <span className="text-[8px] text-slate-500 uppercase tracking-widest font-bold mt-0.5">{time.toLocaleDateString('de-DE')}</span>
           </div>
-          <div className="text-[10px] font-black text-slate-700 uppercase tracking-widest hidden md:block">
-            Bundespolizei Intranet
-          </div>
         </div>
       </footer>
 
@@ -57,22 +57,34 @@ const Footer: React.FC = () => {
             </div>
             <div className="flex flex-col">
               <div className="text-[11px] font-black uppercase text-white tracking-tighter">{user.rank} {user.lastName}</div>
-              <div className="text-[8px] text-blue-500 font-bold uppercase tracking-widest mt-1">{user.role}</div>
+              <div className="text-[8px] text-blue-500 font-bold uppercase tracking-widest mt-1">{mainRole?.name || user.role}</div>
             </div>
           </div>
+          
+          {userSpecialRoles.length > 0 && (
+            <div className="px-6 mb-4 py-2 bg-indigo-600/5 rounded-2xl border border-indigo-600/10">
+              <div className="text-[7px] font-black text-slate-600 uppercase tracking-widest mb-2">Zusatzfunktionen (Sonderrollen):</div>
+              <div className="flex flex-wrap gap-1.5">
+                {userSpecialRoles.map(sr => (
+                  <span key={sr.id} className="bg-indigo-600/10 text-indigo-400 text-[7px] px-2 py-0.5 rounded border border-indigo-600/20 uppercase font-black">{sr.name}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1">
              <button onClick={() => { setIsStartMenuOpen(false); setSettingsOpen(true); }} className="w-full flex items-center gap-4 p-4 hover:bg-white/5 text-slate-300 rounded-2xl transition-all group">
-                <span className="text-lg">⚙️</span>
+                <span className="text-lg group-hover:scale-110 transition-transform">⚙️</span>
                 <span className="text-[10px] font-black uppercase tracking-widest">Einstellungen</span>
              </button>
              {user.isAdmin && (
                <button onClick={() => { setIsStartMenuOpen(false); navigate('/admin'); }} className="w-full flex items-center gap-4 p-4 hover:bg-white/5 text-slate-300 rounded-2xl transition-all group">
-                  <span className="text-lg">🛡️</span>
+                  <span className="text-lg group-hover:scale-110 transition-transform">🛡️</span>
                   <span className="text-[10px] font-black uppercase tracking-widest">Admin-Bereich</span>
                </button>
              )}
              <button onClick={() => { logout(); navigate('/'); }} className="w-full flex items-center gap-4 p-4 hover:bg-red-900/20 text-red-500 rounded-2xl transition-all group">
-                <span className="text-lg">🚪</span>
+                <span className="text-lg group-hover:scale-110 transition-transform">🚪</span>
                 <span className="text-[10px] font-black uppercase tracking-widest">Abmelden</span>
              </button>
           </div>

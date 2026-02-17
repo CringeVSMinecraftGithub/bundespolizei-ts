@@ -1,4 +1,5 @@
 
+import { GoogleGenAI } from "@google/genai";
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import PublicHome from './pages/PublicHome';
@@ -13,10 +14,11 @@ import CaseSearchPage from './pages/CaseSearchPage';
 import ApplicationsPage from './pages/ApplicationsPage';
 import TipsPage from './pages/TipsPage';
 import CalendarPage from './pages/CalendarPage';
+import PressPage from './pages/PressPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import SettingsModal from './components/SettingsModal';
-import { User, Permission, Role } from './types';
+import { User, Permission, UserRole } from './types';
 import { DEFAULT_ADMIN } from './constants';
 import { db, dbCollections, getDocs, setDoc, doc, updateDoc, onSnapshot } from './firebase';
 
@@ -27,6 +29,7 @@ interface AuthContextType {
   hasPermission: (perm: Permission) => boolean;
   isSettingsOpen: boolean;
   setSettingsOpen: (open: boolean) => void;
+  roles: UserRole[];
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -62,29 +65,49 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
   const [isSettingsOpen, setSettingsOpen] = useState(false);
-  const [rolePermissions, setRolePermissions] = useState<Record<string, Permission[]>>({});
+  const [roles, setRoles] = useState<UserRole[]>([]);
 
   useEffect(() => {
+    const unsubRoles = onSnapshot(dbCollections.roles, (snap) => {
+      setRoles(snap.docs.map(d => ({ id: d.id, ...d.data() } as UserRole)));
+    });
+
     const initDatabase = async () => {
       try {
+        // Initialisiere Standard-Rollen
+        const rolesSnap = await getDocs(dbCollections.roles);
+        if (rolesSnap.empty) {
+          const defaultRoles: UserRole[] = [
+            { id: 'LS', name: 'Leitungsstab', isSpecial: false, permissions: Object.values(Permission) },
+            { id: 'HD', name: 'Höherer Dienst', isSpecial: false, permissions: Object.values(Permission).filter(p => p !== Permission.ADMIN_ACCESS) },
+            { id: 'DSL', name: 'Dienststellenleitung', isSpecial: false, permissions: [Permission.VIEW_REPORTS, Permission.CREATE_REPORTS, Permission.VIEW_WARRANTS, Permission.VIEW_APPLICATIONS, Permission.VIEW_TIPS, Permission.VIEW_CALENDAR] },
+            { id: 'DGL', name: 'Dienstgruppenleitung', isSpecial: false, permissions: [Permission.VIEW_REPORTS, Permission.CREATE_REPORTS, Permission.VIEW_WARRANTS, Permission.VIEW_TIPS, Permission.VIEW_CALENDAR] },
+            { id: 'DIR_K', name: 'Direktion K', isSpecial: false, permissions: [Permission.VIEW_REPORTS, Permission.CREATE_REPORTS, Permission.VIEW_WARRANTS, Permission.MANAGE_WARRANTS, Permission.VIEW_TIPS, Permission.MANAGE_TIPS] },
+            { id: 'DIR_GE', name: 'Direktion GE', isSpecial: false, permissions: [Permission.VIEW_REPORTS, Permission.CREATE_REPORTS, Permission.VIEW_WARRANTS, Permission.MANAGE_FLEET, Permission.VIEW_CALENDAR] },
+            { id: 'PR', name: 'Presseabteilung', isSpecial: true, permissions: [Permission.MANAGE_NEWS] }
+          ];
+
+          for (const r of defaultRoles) {
+            await setDoc(doc(db, "roles", r.id), r);
+          }
+        }
+
         const userSnap = await getDocs(dbCollections.users);
         const allUsers = userSnap.docs.map(d => d.data() as User);
         const adminExists = allUsers.some(u => u.badgeNumber === DEFAULT_ADMIN.badgeNumber);
 
         if (!adminExists) {
-          await setDoc(doc(db, "users", DEFAULT_ADMIN.id), DEFAULT_ADMIN);
+          await setDoc(doc(db, "users", DEFAULT_ADMIN.id), {
+             ...DEFAULT_ADMIN,
+             role: 'LS',
+             specialRoles: []
+          });
         }
       } catch (e) {
         console.error("Firebase Init Error:", e);
       }
     };
     initDatabase();
-
-    const unsubRoles = onSnapshot(doc(db, "settings", "permissions"), (snap) => {
-      if (snap.exists()) {
-        setRolePermissions(snap.data() as Record<string, Permission[]>);
-      }
-    });
 
     return () => unsubRoles();
   }, []);
@@ -103,39 +126,34 @@ const App: React.FC = () => {
       if (found) {
         if (!found.password && password) {
           await updateDoc(doc(db, "users", found.id), { password });
-          const updatedUser = { ...found, password };
-          setUser(updatedUser);
+          setUser({ ...found, password });
           return true;
         }
-
         if (found.password === password) {
           setUser(found);
           return true;
         }
       }
-    } catch (e) {
-      console.error("Login Error:", e);
-    }
+    } catch (e) { console.error("Login Error:", e); }
     return false;
-  };
-
-  const logout = () => {
-    setUser(null);
-    setSettingsOpen(false);
   };
 
   const hasPermission = (perm: Permission) => {
     if (!user) return false;
     if (user.isAdmin) return true;
     
-    const userExplicitPerms = user.permissions || [];
-    const roleBasedPerms = rolePermissions[user.role] || [];
+    const userRoleIds = [user.role, ...(user.specialRoles || [])];
+    const assignedRoles = roles.filter(r => userRoleIds.includes(r.id));
+    const allPerms = new Set([
+      ...(user.permissions || []),
+      ...assignedRoles.flatMap(r => r.permissions || [])
+    ]);
     
-    return userExplicitPerms.includes(perm) || roleBasedPerms.includes(perm);
+    return allPerms.has(perm);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, hasPermission, isSettingsOpen, setSettingsOpen }}>
+    <AuthContext.Provider value={{ user, login, logout: () => setUser(null), hasPermission, isSettingsOpen, setSettingsOpen, roles }}>
       <Router>
         <AppLayout>
             <Routes>
@@ -148,6 +166,7 @@ const App: React.FC = () => {
               <Route path="/warrants" element={user ? <WarrantPage /> : <Navigate to="/" />} />
               <Route path="/cases" element={user ? <CaseSearchPage /> : <Navigate to="/" />} />
               <Route path="/calendar" element={user ? <CalendarPage /> : <Navigate to="/" />} />
+              <Route path="/press" element={user && hasPermission(Permission.MANAGE_NEWS) ? <PressPage /> : <Navigate to="/" />} />
               <Route path="/applications" element={user && hasPermission(Permission.VIEW_APPLICATIONS) ? <ApplicationsPage /> : <Navigate to="/" />} />
               <Route path="/tips" element={user && hasPermission(Permission.VIEW_TIPS) ? <TipsPage /> : <Navigate to="/" />} />
               <Route path="/admin" element={user?.isAdmin ? <AdminPanel /> : <Navigate to="/" />} />

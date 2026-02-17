@@ -17,6 +17,7 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
   const sidebarItems = [
     // Dienstbetrieb
     { label: 'Kalender', icon: '📅', path: '/calendar', group: 'Dienstbetrieb', perm: Permission.VIEW_CALENDAR },
+    { label: 'Presse-Portal', icon: '📰', path: '/press', group: 'Dienstbetrieb', perm: Permission.MANAGE_NEWS },
     { label: 'Einsatzberichte', icon: '📝', path: '/incident-report', group: 'Dienstbetrieb', perm: Permission.VIEW_REPORTS },
     { label: 'Strafanzeigen', icon: '⚖️', path: '/criminal-complaint', group: 'Dienstbetrieb', perm: Permission.CREATE_REPORTS },
     

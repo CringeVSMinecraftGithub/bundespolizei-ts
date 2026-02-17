@@ -15,14 +15,20 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
   const { hasPermission } = useAuth();
 
   const sidebarItems = [
+    // Dienstbetrieb
+    { label: 'Kalender', icon: '📅', path: '/calendar', group: 'Dienstbetrieb', perm: Permission.VIEW_CALENDAR },
     { label: 'Einsatzberichte', icon: '📝', path: '/incident-report', group: 'Dienstbetrieb', perm: Permission.VIEW_REPORTS },
     { label: 'Strafanzeigen', icon: '⚖️', path: '/criminal-complaint', group: 'Dienstbetrieb', perm: Permission.CREATE_REPORTS },
-    { label: 'Vorgangssuche', icon: '🔍', path: '/cases', group: 'Favorisierte Apps', perm: Permission.VIEW_REPORTS },
-    { label: 'Fuhrpark', icon: '🚓', path: '/fleet', group: 'Oft genutzte Apps', perm: Permission.VIEW_REPORTS },
-    { label: 'Asservaten', icon: '📦', path: '/evidence', group: 'Oft genutzte Apps', perm: Permission.VIEW_REPORTS },
-    { label: 'Fahndungen', icon: '👤', path: '/warrants', group: 'Favorisierte Apps', perm: Permission.VIEW_WARRANTS },
+    
+    // Ermittlungen
+    { label: 'Vorgangssuche', icon: '🔍', path: '/cases', group: 'Ermittlungen', perm: Permission.VIEW_REPORTS },
+    { label: 'Fahndungen', icon: '👤', path: '/warrants', group: 'Ermittlungen', perm: Permission.VIEW_WARRANTS },
+    { label: 'Asservaten', icon: '📦', path: '/evidence', group: 'Ermittlungen', perm: Permission.VIEW_REPORTS },
+    { label: 'Bürgerhinweise', icon: '💡', path: '/tips', group: 'Ermittlungen', perm: Permission.VIEW_TIPS },
+    
+    // Verwaltung
+    { label: 'Fuhrpark', icon: '🚓', path: '/fleet', group: 'Verwaltung', perm: Permission.VIEW_REPORTS },
     { label: 'Bewerbungen', icon: '📂', path: '/applications', group: 'Verwaltung', perm: Permission.VIEW_APPLICATIONS },
-    { label: 'Bürgerhinweise', icon: '💡', path: '/tips', group: 'Verwaltung', perm: Permission.VIEW_TIPS },
     { label: 'Administration', icon: '⚙️', path: '/admin', group: 'Verwaltung', perm: Permission.ADMIN_ACCESS },
   ];
 
@@ -42,8 +48,8 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside className="w-16 md:w-56 bg-[#1a1c23] border-r border-white/5 flex flex-col shrink-0 overflow-y-auto custom-scrollbar py-4">
-          {['Favorisierte Apps', 'Dienstbetrieb', 'Oft genutzte Apps', 'Verwaltung'].map((group) => {
-            const items = sidebarItems.filter(i => i.group === group && hasPermission(i.perm));
+          {['Dienstbetrieb', 'Ermittlungen', 'Verwaltung'].map((group) => {
+            const items = sidebarItems.filter(i => i.group === group && hasPermission(i.perm || Permission.VIEW_REPORTS));
             if (items.length === 0) return null;
             return (
               <div key={group} className="mb-6">

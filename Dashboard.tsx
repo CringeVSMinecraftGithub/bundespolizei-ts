@@ -102,8 +102,6 @@ const Dashboard: React.FC = () => {
     { id: 'personnel', label: 'Administration', icon: '⚙️', color: 'bg-indigo-600', permission: Permission.ADMIN_ACCESS, path: '/admin', group: 'Verwaltung' },
   ];
 
-  const visibleApps = apps.filter(app => hasPermission(app.permission || Permission.VIEW_REPORTS));
-
   if (!user) return null;
 
   return (
@@ -150,31 +148,39 @@ const Dashboard: React.FC = () => {
       {/* Desktop Grid Layout */}
       <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10 p-10 lg:p-14 flex flex-col xl:flex-row gap-12">
         
-        {/* Unified Apps Grid */}
+        {/* Apps Grid */}
         <div className="flex-1 space-y-16 animate-in fade-in slide-in-from-top-4 duration-700">
-          <div>
-            <div className="flex items-center gap-4 mb-10 border-b border-white/5 pb-6">
-              <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-              <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40">Anwendungen</h2>
-            </div>
+          
+          {['Dienstbetrieb', 'Ermittlungen', 'Verwaltung'].map((groupName) => {
+            const groupApps = apps.filter(a => a.group === groupName && hasPermission(a.permission || Permission.VIEW_REPORTS));
+            if (groupApps.length === 0) return null;
+            
+            return (
+              <div key={groupName}>
+                <div className="flex items-center gap-4 mb-10 border-b border-white/5 pb-6">
+                  <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                  <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40">{groupName}</h2>
+                </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-x-8 gap-y-12">
-              {visibleApps.map((app) => (
-                <button 
-                  key={app.id} 
-                  onClick={() => navigate(app.path)} 
-                  className="group flex flex-col items-center gap-4 w-24 transition-all active:scale-95"
-                >
-                  <div className={`w-16 h-16 ${app.color} rounded-2xl flex items-center justify-center text-3xl shadow-[0_15px_40px_rgba(0,0,0,0.5)] group-hover:scale-110 group-hover:-translate-y-2 transition-all border border-white/20 backdrop-blur-md group-hover:border-white/40 group-hover:shadow-blue-900/40`}>
-                    {app.icon}
-                  </div>
-                  <span className="text-[9px] font-black text-white/80 text-center uppercase tracking-widest group-hover:text-white transition-colors drop-shadow-lg leading-relaxed">
-                    {app.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-x-8 gap-y-12">
+                  {groupApps.map((app) => (
+                    <button 
+                      key={app.id} 
+                      onClick={() => navigate(app.path)} 
+                      className="group flex flex-col items-center gap-4 w-24 transition-all active:scale-95"
+                    >
+                      <div className={`w-16 h-16 ${app.color} rounded-2xl flex items-center justify-center text-3xl shadow-[0_15px_40px_rgba(0,0,0,0.5)] group-hover:scale-110 group-hover:-translate-y-2 transition-all border border-white/20 backdrop-blur-md group-hover:border-white/40 group-hover:shadow-blue-900/40`}>
+                        {app.icon}
+                      </div>
+                      <span className="text-[9px] font-black text-white/80 text-center uppercase tracking-widest group-hover:text-white transition-colors drop-shadow-lg leading-relaxed">
+                        {app.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Reminders/Fristen Widget */}

@@ -12,6 +12,7 @@ import WarrantPage from './pages/WarrantPage';
 import CaseSearchPage from './pages/CaseSearchPage';
 import ApplicationsPage from './pages/ApplicationsPage';
 import TipsPage from './pages/TipsPage';
+import CalendarPage from './pages/CalendarPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import SettingsModal from './components/SettingsModal';
@@ -146,6 +147,7 @@ const App: React.FC = () => {
               <Route path="/evidence" element={user ? <EvidencePage /> : <Navigate to="/" />} />
               <Route path="/warrants" element={user ? <WarrantPage /> : <Navigate to="/" />} />
               <Route path="/cases" element={user ? <CaseSearchPage /> : <Navigate to="/" />} />
+              <Route path="/calendar" element={user ? <CalendarPage /> : <Navigate to="/" />} />
               <Route path="/applications" element={user && hasPermission(Permission.VIEW_APPLICATIONS) ? <ApplicationsPage /> : <Navigate to="/" />} />
               <Route path="/tips" element={user && hasPermission(Permission.VIEW_TIPS) ? <TipsPage /> : <Navigate to="/" />} />
               <Route path="/admin" element={user?.isAdmin ? <AdminPanel /> : <Navigate to="/" />} />

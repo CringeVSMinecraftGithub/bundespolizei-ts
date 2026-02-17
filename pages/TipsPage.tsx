@@ -28,7 +28,7 @@ const TipsPage: React.FC = () => {
   };
 
   const deleteSub = async (id: string) => {
-    if (confirm("Meldung unwiderruflich löschen?")) {
+    if (confirm("Meldung unwiderruflich aus dem System löschen?")) {
       await deleteDoc(doc(db, "submissions", id));
       setSelectedSubmission(null);
     }
@@ -41,29 +41,32 @@ const TipsPage: React.FC = () => {
   );
 
   return (
-    <PoliceOSWindow title="Internetwache / Bürgerhinweise">
-      <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
-        <div className="flex justify-between items-end">
-          <div>
-            <h1 className="text-4xl font-light text-white tracking-tight uppercase">Bürger <span className="text-amber-500 font-bold">Hinweise</span></h1>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">Schnittstelle zur Internetwache Teamstadt</p>
+    <PoliceOSWindow title="Ermittlung / Bürgerhinweise">
+      <div className="h-full flex flex-col gap-6 overflow-hidden">
+        
+        {/* Compact Header */}
+        <div className="shrink-0 flex items-center justify-between bg-[#1a1c23]/50 p-4 rounded-2xl border border-white/5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-amber-600/10 border border-amber-500/20 text-amber-500 rounded-xl flex items-center justify-center text-xl">💡</div>
+            <h1 className="text-xl font-black text-white tracking-tighter uppercase leading-none">Internet <span className="text-amber-500">Wache</span></h1>
           </div>
-          <div className="flex items-center gap-4 bg-[#1a1d24] border border-slate-700/50 p-4 rounded-xl w-96">
-            <span className="text-slate-500 ml-2">🔍</span>
+          <div className="flex items-center gap-4 bg-black/40 border border-white/10 p-2 rounded-xl w-64 focus-within:border-amber-500 transition-all">
             <input 
               value={searchTerm} 
               onChange={e => setSearchTerm(e.target.value)} 
               placeholder="In Meldungen suchen..." 
-              className="flex-1 bg-transparent border-none outline-none text-sm text-slate-200" 
+              className="flex-1 bg-transparent border-none outline-none text-[10px] font-black uppercase text-slate-200 px-2 placeholder:text-slate-700" 
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* List Section */}
-          <div className="lg:col-span-1 space-y-4">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest px-1">Eingänge ({filteredSubmissions.length})</h3>
-            <div className="space-y-2 overflow-y-auto max-h-[70vh] pr-2 custom-scrollbar">
+        {/* Main Split View */}
+        <div className="flex-1 flex gap-6 min-h-0 overflow-hidden">
+          
+          {/* List Panel */}
+          <div className="w-80 flex flex-col gap-3 shrink-0">
+            <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-2">Eingangskorb ({filteredSubmissions.length})</h3>
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
               {filteredSubmissions.map(s => (
                 <button 
                   key={s.id} 
@@ -71,81 +74,82 @@ const TipsPage: React.FC = () => {
                     setSelectedSubmission(s);
                     if (s.status === 'Neu') updateStatus(s.id, 'Gelesen');
                   }}
-                  className={`w-full text-left p-5 border rounded-sm transition-all flex flex-col gap-2 ${selectedSubmission?.id === s.id ? 'bg-amber-600/10 border-amber-600/50 shadow-lg shadow-amber-900/10' : 'bg-[#1a1d24] border-slate-700/50 hover:border-slate-500'}`}
+                  className={`w-full text-left p-4 border rounded-2xl transition-all flex flex-col gap-2 ${selectedSubmission?.id === s.id ? 'bg-amber-600/10 border-amber-500/40' : 'bg-[#1a1c23]/40 border-white/5 hover:bg-white/5'}`}
                 >
-                  <div className="flex justify-between items-center">
-                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${
-                      s.status === 'Neu' ? 'bg-blue-500/10 border-blue-500/30 text-blue-500' :
-                      s.status === 'Gelesen' ? 'bg-slate-500/10 border-slate-500/30 text-slate-400' :
-                      'bg-amber-500/10 border-amber-500/30 text-amber-500'
-                    }`}>{s.status}</span>
-                    <span className="text-[10px] font-mono text-slate-500">{new Date(s.timestamp).toLocaleDateString('de-DE')}</span>
+                  <div className="flex justify-between items-center w-full">
+                    <span className={`text-[7px] font-black px-1.5 py-0.5 rounded border uppercase ${s.status === 'Neu' ? 'bg-blue-500/10 border-blue-500/30 text-blue-500' : 'text-slate-500'}`}>{s.status}</span>
+                    <span className="text-[8px] font-mono text-slate-700">{new Date(s.timestamp).toLocaleDateString('de-DE')}</span>
                   </div>
-                  <div className="text-sm font-bold text-white uppercase tracking-tighter truncate">{s.title}</div>
-                  <div className="text-[9px] text-slate-500 uppercase font-black">{s.contactInfo || 'Anonym'}</div>
+                  <div className="text-[11px] font-black text-white uppercase truncate">{s.title}</div>
                 </button>
               ))}
-              {filteredSubmissions.length === 0 && (
-                <div className="text-center py-10 text-slate-600 text-sm italic">Keine Hinweise gefunden.</div>
-              )}
             </div>
           </div>
 
-          {/* Details Section */}
-          <div className="lg:col-span-2">
+          {/* Details Panel */}
+          <div className="flex-1 min-w-0">
             {selectedSubmission ? (
-              <div className="bg-[#1a1d24] border border-slate-700/50 p-10 rounded-sm space-y-8 animate-in slide-in-from-right-4">
-                <div className="flex justify-between items-start border-b border-slate-800 pb-8">
-                  <div className="space-y-1">
-                    <div className="text-amber-500 text-[10px] font-black uppercase tracking-widest">Bürgerhinweis</div>
-                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">{selectedSubmission.title}</h2>
-                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-2">Übermittelt am: {new Date(selectedSubmission.timestamp).toLocaleString('de-DE')}</p>
+              <div className="h-full flex flex-col bg-[#1a1c23]/80 rounded-[32px] border border-white/5 overflow-hidden animate-in slide-in-from-right-4 duration-500">
+                
+                {/* Fixed Top Bar in Details */}
+                <div className="p-8 border-b border-white/10 shrink-0">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded text-[8px] font-black text-amber-500 uppercase">Bürgerhinweis</span>
+                        <span className="text-[8px] font-mono text-slate-600">REF: #{selectedSubmission.id.slice(-4).toUpperCase()}</span>
+                      </div>
+                      <h2 className="text-3xl font-black text-white uppercase tracking-tighter">{selectedSubmission.title}</h2>
+                    </div>
+                    <div className="text-right">
+                       <div className="text-[9px] font-black uppercase px-4 py-2 rounded-xl border border-amber-500/30 text-amber-500 bg-amber-500/5">{selectedSubmission.status}</div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-[10px] text-slate-500 font-black uppercase">Status</div>
-                    <div className={`text-xs font-black uppercase px-4 py-1.5 rounded-full border mt-2 ${
-                      selectedSubmission.status === 'Archiviert' ? 'text-amber-500 border-amber-500 bg-amber-500/5' : 
-                      selectedSubmission.status === 'Neu' ? 'text-blue-500 border-blue-500 bg-blue-500/5' : 
-                      'text-slate-400 border-slate-600 bg-slate-800/20'
-                    }`}>{selectedSubmission.status}</div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                     <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Absender</div>
+                        <div className="text-[11px] font-bold text-slate-200">{selectedSubmission.contactInfo || 'Anonym'}</div>
+                     </div>
+                     <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Zeitpunkt Eingang</div>
+                        <div className="text-[11px] font-bold text-slate-200">{new Date(selectedSubmission.timestamp).toLocaleString('de-DE')}</div>
+                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Inhalt der Meldung</h4>
-                  <div className="bg-black/20 p-8 border border-white/5 rounded-sm min-h-[250px] text-slate-300 text-lg leading-relaxed whitespace-pre-wrap font-light italic">
-                    "{selectedSubmission.content}"
-                  </div>
+                {/* Content Body (Internal Scroll) */}
+                <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
+                   <div className="space-y-4">
+                     <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] border-l-2 border-amber-500 pl-3">Inhalt der Eingabe</h4>
+                     <div className="bg-black/40 p-8 border border-white/5 rounded-3xl text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                        "{selectedSubmission.content}"
+                     </div>
+                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kontaktinformationen</h4>
-                  <div className="bg-black/20 p-4 border border-white/5 font-bold text-white text-xs uppercase">
-                    {selectedSubmission.contactInfo || 'KEINE KONTAKTDATEN HINTERLEGT (ANONYM)'}
-                  </div>
-                </div>
-
+                {/* Fixed Bottom Action Bar */}
                 {hasPermission(Permission.MANAGE_TIPS) && (
-                  <div className="flex gap-4 pt-6">
+                  <div className="p-6 border-t border-white/10 flex gap-4 shrink-0 bg-black/20">
                     <button 
                       onClick={() => updateStatus(selectedSubmission.id, 'Archiviert')} 
-                      className="flex-1 bg-white/5 hover:bg-white/10 text-white py-5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95"
+                      className="flex-1 bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl font-black uppercase text-[10px] tracking-widest border border-white/5"
                     >
-                      Meldung Archivieren
+                      Archivieren
                     </button>
                     <button 
                       onClick={() => deleteSub(selectedSubmission.id)} 
-                      className="flex-1 bg-red-600/10 text-red-500 border border-red-500/20 py-5 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all active:scale-95"
+                      className="flex-1 bg-red-600/10 text-red-500 border border-red-500/20 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all"
                     >
-                      Meldung Löschen
+                      Löschen
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center bg-[#1a1d24]/50 border border-slate-700/50 rounded-sm p-20 text-center space-y-4">
-                 <div className="text-6xl grayscale opacity-20">💡</div>
-                 <div className="text-slate-600 font-bold uppercase tracking-widest text-xs">Wählen Sie einen Hinweis aus der Liste aus,<br/>um die Details einzusehen.</div>
+              <div className="h-full flex flex-col items-center justify-center bg-[#1a1c23]/30 border border-white/5 rounded-[32px] p-20 text-center space-y-4">
+                 <div className="text-4xl opacity-20">💡</div>
+                 <div className="text-slate-600 font-black uppercase tracking-widest text-[10px]">Wählen Sie eine Meldung</div>
               </div>
             )}
           </div>

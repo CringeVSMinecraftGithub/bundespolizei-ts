@@ -20,6 +20,7 @@ const AdminPanel: React.FC = () => {
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [newLaw, setNewLaw] = useState({ paragraph: '', title: '', description: '' });
 
+  // Add missing calendar permissions to the permissionLabels object
   const permissionLabels: Record<Permission, string> = {
     [Permission.VIEW_REPORTS]: "Einsatzberichte einsehen",
     [Permission.CREATE_REPORTS]: "Einsatzberichte/Anzeigen erstellen",
@@ -35,7 +36,9 @@ const AdminPanel: React.FC = () => {
     [Permission.VIEW_APPLICATIONS]: "Bewerbungen einsehen",
     [Permission.MANAGE_APPLICATIONS]: "Bewerbungen bearbeiten/entscheiden",
     [Permission.VIEW_TIPS]: "Bürgerhinweise einsehen",
-    [Permission.MANAGE_TIPS]: "Hinweise bearbeiten/löschen"
+    [Permission.MANAGE_TIPS]: "Hinweise bearbeiten/löschen",
+    [Permission.VIEW_CALENDAR]: "Dienstkalender einsehen",
+    [Permission.MANAGE_CALENDAR]: "Dienstkalender verwalten"
   };
 
   useEffect(() => {
@@ -279,7 +282,7 @@ const AdminPanel: React.FC = () => {
         )}
 
         {isModalOpen && editingUser && (
-          <div className="fixed inset-0 z-[500] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-8 animate-in fade-in">
+          <div className="fixed inset-0 z-[1000] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-8 animate-in fade-in">
             <div className="bg-[#0a111f] border border-white/10 p-12 rounded-[60px] w-full max-w-2xl space-y-10 shadow-[0_40px_150px_rgba(0,0,0,0.9)] relative animate-in zoom-in duration-300">
                <button onClick={() => setIsModalOpen(false)} className="absolute top-12 right-12 text-slate-500 hover:text-white transition-all text-xl">✕</button>
                <div className="space-y-2">

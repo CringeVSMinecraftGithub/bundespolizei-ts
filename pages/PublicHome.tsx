@@ -8,8 +8,9 @@ import { dbCollections, addDoc } from '../firebase';
 const PublicHome: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [modalType, setModalType] = useState<'Hinweis' | 'Onlineanzeige' | 'Bewerbung' | 'News' | 'Login' | null>(null);
+  const [modalType, setModalType] = useState<'Internetwache' | 'Bewerbung' | 'News' | 'Login' | null>(null);
   const [appStep, setAppStep] = useState<'Selection' | 'Form'>('Selection');
+  const [iwStep, setIwStep] = useState<'Selection' | 'Anzeige' | 'Hinweis'>('Selection');
   const [careerPath, setCareerPath] = useState<'Mittlerer Dienst' | 'Gehobener Dienst'>('Mittlerer Dienst');
   const [submitted, setSubmitted] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -34,12 +35,12 @@ const PublicHome: React.FC = () => {
     }
   };
 
-  const handleSubmission = async (e: React.FormEvent) => {
+  const handleSubmission = async (e: React.FormEvent, type: 'Bewerbung' | 'Anzeige' | 'Hinweis') => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     
     try {
-      if (modalType === 'Bewerbung') {
+      if (type === 'Bewerbung') {
         await addDoc(dbCollections.applications, {
           name: `${formData.get('firstname')} ${formData.get('lastname')}`,
           careerPath: careerPath,
@@ -53,7 +54,7 @@ const PublicHome: React.FC = () => {
           status: 'Eingegangen',
           timestamp: new Date().toISOString()
         });
-      } else if (modalType === 'Onlineanzeige') {
+      } else if (type === 'Anzeige') {
         await addDoc(dbCollections.reports, {
           reportNumber: generateCaseId(),
           type: 'Strafanzeige',
@@ -67,7 +68,7 @@ const PublicHome: React.FC = () => {
           violation: 'Bürgeranzeige via Internetwache',
           timestamp: new Date().toISOString()
         });
-      } else if (modalType === 'Hinweis') {
+      } else if (type === 'Hinweis') {
         await addDoc(dbCollections.submissions, {
           type: 'Hinweis',
           title: formData.get('subject') || 'Anonymer Hinweis',
@@ -82,6 +83,7 @@ const PublicHome: React.FC = () => {
       setTimeout(() => {
         setModalType(null);
         setAppStep('Selection');
+        setIwStep('Selection');
         setSubmitted(false);
       }, 2000);
     } catch (e) {
@@ -96,7 +98,7 @@ const PublicHome: React.FC = () => {
 
       {modalType && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/95 backdrop-blur-3xl animate-in fade-in">
-          <div className={`w-full ${modalType === 'Bewerbung' || modalType === 'Onlineanzeige' ? 'max-w-4xl' : 'max-w-xl'} bg-[#0a111f] border border-white/5 rounded-3xl p-8 lg:p-12 shadow-[0_20px_80px_rgba(0,0,0,0.9)] overflow-hidden max-h-[95vh] flex flex-col relative`}>
+          <div className={`w-full ${(modalType === 'Bewerbung' && appStep === 'Form') || (modalType === 'Internetwache' && iwStep !== 'Selection') ? 'max-w-4xl' : 'max-w-xl'} bg-[#0a111f] border border-white/5 rounded-3xl p-8 lg:p-12 shadow-[0_20px_80px_rgba(0,0,0,0.9)] overflow-hidden max-h-[95vh] flex flex-col relative`}>
             
             {submitted ? (
               <div className="text-center space-y-6 animate-in zoom-in py-12">
@@ -106,7 +108,7 @@ const PublicHome: React.FC = () => {
               </div>
             ) : (
               <div className="flex flex-col h-full overflow-hidden">
-                <button onClick={() => { setModalType(null); setAppStep('Selection'); }} className="absolute top-8 right-8 p-3 text-slate-500 hover:text-white z-50 transition-colors">✕</button>
+                <button onClick={() => { setModalType(null); setAppStep('Selection'); setIwStep('Selection'); }} className="absolute top-8 right-8 p-3 text-slate-500 hover:text-white z-50 transition-colors">✕</button>
 
                 {modalType === 'Login' ? (
                   <div className="animate-in zoom-in duration-300">
@@ -141,41 +143,64 @@ const PublicHome: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                ) : modalType === 'Onlineanzeige' ? (
-                   <div className="space-y-8 flex flex-col h-full">
-                     <div>
-                        <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Online-Strafanzeige</h2>
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-2">Bürgerservice Internetwache</p>
-                     </div>
-                     <form onSubmit={handleSubmission} className="flex-1 overflow-y-auto pr-2 space-y-6 custom-scrollbar">
-                        <div className="bg-blue-600/10 p-4 rounded-xl border border-blue-600/20 text-blue-400 text-xs italic">Wichtiger Hinweis: Das Erstatten einer Anzeige ist ein rechtsverbindlicher Vorgang.</div>
-                        <div className="grid grid-cols-2 gap-4">
-                           <input name="name" required placeholder="Ihr Vor- und Zuname" className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm outline-none" />
-                           <input name="contact" required placeholder="E-Mail / Telefon" className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm outline-none" />
+                ) : modalType === 'Internetwache' ? (
+                  <div className="flex flex-col h-full animate-in fade-in">
+                    {iwStep === 'Selection' ? (
+                      <div className="space-y-10 py-4 text-center">
+                        <div className="space-y-4">
+                          <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Internetwache</h2>
+                          <p className="text-slate-400 text-sm max-w-lg mx-auto">Wählen Sie Ihr Anliegen aus.</p>
                         </div>
-                        <input name="suspect" placeholder="Angaben zum Täter (falls bekannt)" className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm outline-none" />
-                        <textarea name="reason" required rows={6} placeholder="Detaillierte Schilderung des Sachverhalts (Ort, Zeit, Hergang)..." className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm outline-none resize-none"></textarea>
-                        <button type="submit" className="w-full bg-blue-600 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Anzeige rechtsverbindlich absenden</button>
-                     </form>
-                   </div>
-                ) : modalType === 'Hinweis' ? (
-                  <div className="space-y-8">
-                    <div>
-                        <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Anonymer Hinweis</h2>
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-2">Ihre Sicherheit ist unser Auftrag</p>
-                    </div>
-                    <form onSubmit={handleSubmission} className="space-y-6">
-                      <input name="subject" required className="w-full bg-black/40 border border-white/5 rounded-xl p-5 text-white outline-none" placeholder="Betreff des Hinweises" />
-                      <textarea name="message" required rows={5} className="w-full bg-black/40 border border-white/5 rounded-2xl p-6 text-white outline-none resize-none" placeholder="Was möchten Sie uns mitteilen?"></textarea>
-                      <input name="contact" className="w-full bg-black/40 border border-white/5 rounded-xl p-5 text-white outline-none" placeholder="Kontakt für Rückfragen (Optional)" />
-                      <button type="submit" className="w-full bg-blue-600 py-6 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Hinweis übermitteln</button>
-                    </form>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                           <button onClick={() => setIwStep('Anzeige')} className="bg-slate-900/50 border border-white/5 p-8 rounded-[40px] text-left hover:border-blue-500/50 transition-all group">
+                              <div className="w-16 h-16 bg-blue-600/20 text-blue-500 rounded-2xl flex items-center justify-center text-3xl mb-6">⚖️</div>
+                              <h3 className="text-2xl font-black text-white uppercase mb-2">Strafanzeige</h3>
+                              <div className="mt-6 text-[10px] font-black text-blue-500 uppercase tracking-widest">Vorgang starten ➔</div>
+                           </button>
+                           <button onClick={() => setIwStep('Hinweis')} className="bg-slate-900/50 border border-white/5 p-8 rounded-[40px] text-left hover:border-amber-500/50 transition-all group">
+                              <div className="w-16 h-16 bg-amber-600/20 text-amber-500 rounded-2xl flex items-center justify-center text-3xl mb-6">💡</div>
+                              <h3 className="text-2xl font-black text-white uppercase mb-2">Anonymer Hinweis</h3>
+                              <div className="mt-6 text-[10px] font-black text-amber-500 uppercase tracking-widest">Hinweis geben ➔</div>
+                           </button>
+                        </div>
+                      </div>
+                    ) : iwStep === 'Anzeige' ? (
+                      <div className="space-y-8 flex flex-col h-full">
+                        <div className="flex justify-between items-center">
+                          <button onClick={() => setIwStep('Selection')} className="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors">← Zurück</button>
+                          <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Online-Strafanzeige</h2>
+                        </div>
+                        <form onSubmit={(e) => handleSubmission(e, 'Anzeige')} className="flex-1 overflow-y-auto pr-2 space-y-6 custom-scrollbar">
+                           <div className="bg-blue-600/10 p-4 rounded-xl border border-blue-600/20 text-blue-400 text-xs italic">Wichtiger Hinweis: Das Erstatten einer Anzeige ist ein rechtsverbindlicher Vorgang.</div>
+                           <div className="grid grid-cols-2 gap-4">
+                              <input name="name" required placeholder="Ihr Vor- und Zuname" className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm outline-none focus:border-blue-600" />
+                              <input name="contact" required placeholder="E-Mail / Telefon" className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm outline-none focus:border-blue-600" />
+                           </div>
+                           <input name="suspect" placeholder="Angaben zum Täter (falls bekannt)" className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm outline-none focus:border-blue-600" />
+                           <textarea name="reason" required rows={6} placeholder="Detaillierte Schilderung des Sachverhalts (Ort, Zeit, Hergang)..." className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm outline-none resize-none focus:border-blue-600"></textarea>
+                           <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-[0.98]">Anzeige rechtsverbindlich absenden</button>
+                        </form>
+                      </div>
+                    ) : (
+                      <div className="space-y-8">
+                        <div className="flex justify-between items-center">
+                          <button onClick={() => setIwStep('Selection')} className="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors">← Zurück</button>
+                          <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Anonymer Hinweis</h2>
+                        </div>
+                        <form onSubmit={(e) => handleSubmission(e, 'Hinweis')} className="space-y-6">
+                          <input name="subject" required className="w-full bg-black/40 border border-white/5 rounded-xl p-5 text-white outline-none focus:border-amber-600" placeholder="Betreff des Hinweises" />
+                          <textarea name="message" required rows={5} className="w-full bg-black/40 border border-white/5 rounded-2xl p-6 text-white outline-none resize-none focus:border-amber-600" placeholder="Was möchten Sie uns mitteilen?"></textarea>
+                          <input name="contact" className="w-full bg-black/40 border border-white/5 rounded-xl p-5 text-white outline-none focus:border-amber-600" placeholder="Kontakt für Rückfragen (Optional)" />
+                          <button type="submit" className="w-full bg-amber-600 hover:bg-amber-500 py-6 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-[0.98]">Hinweis übermitteln</button>
+                        </form>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col h-full animate-in fade-in">
                     {appStep === 'Selection' ? (
-                      <div className="space-y-10 py-4">
-                        <div className="text-center space-y-4">
+                      <div className="space-y-10 py-4 text-center">
+                        <div className="space-y-4">
                           <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Karriere bei der Bundespolizei</h2>
                           <p className="text-slate-400 text-sm max-w-lg mx-auto">Wählen Sie Ihre gewünschte Laufbahn aus.</p>
                         </div>
@@ -198,20 +223,20 @@ const PublicHome: React.FC = () => {
                            <button onClick={() => setAppStep('Selection')} className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 border border-white/10 rounded-lg text-xs font-bold text-white transition-all"><span>←</span> Zurück</button>
                            <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">Laufbahn: {careerPath}</div>
                         </div>
-                        <form onSubmit={handleSubmission} className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
+                        <form onSubmit={(e) => handleSubmission(e, 'Bewerbung')} className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
                             <div className="grid grid-cols-2 gap-4">
-                                <input name="firstname" required placeholder="Vorname" className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none" />
-                                <input name="lastname" required placeholder="Nachname" className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none" />
+                                <input name="firstname" required placeholder="Vorname" className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none focus:border-blue-600" />
+                                <input name="lastname" required placeholder="Nachname" className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none focus:border-blue-600" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <input name="oocAge" type="number" required placeholder="[OOC] Alter" className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none" />
-                                <input name="icBirthDate" type="date" required className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none [color-scheme:dark]" />
+                                <input name="oocAge" type="number" required placeholder="[OOC] Alter" className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none focus:border-blue-600" />
+                                <input name="icBirthDate" type="date" required className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none [color-scheme:dark] focus:border-blue-600" />
                             </div>
-                            <input name="icPhone" required placeholder="Telefonnummer IC" className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none" />
-                            <input name="discordId" required placeholder="Discord ID" className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none" />
-                            <textarea name="motivation" required rows={4} placeholder="Motivation..." className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none resize-none"></textarea>
-                            <textarea name="cv" required rows={6} placeholder="Lebenslauf..." className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none resize-none"></textarea>
-                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all">🚀 Bewerbung einreichen</button>
+                            <input name="icPhone" required placeholder="Telefonnummer IC" className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none focus:border-blue-600" />
+                            <input name="discordId" required placeholder="Discord ID" className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none focus:border-blue-600" />
+                            <textarea name="motivation" required rows={4} placeholder="Motivation..." className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none resize-none focus:border-blue-600"></textarea>
+                            <textarea name="cv" required rows={6} placeholder="Lebenslauf..." className="w-full bg-[#08101d] border border-white/10 rounded-xl p-4 text-slate-200 text-sm outline-none resize-none focus:border-blue-600"></textarea>
+                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-[0.98]">🚀 Bewerbung einreichen</button>
                         </form>
                       </div>
                     )}
@@ -249,17 +274,16 @@ const PublicHome: React.FC = () => {
               <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Presse</h3>
               <p className="text-slate-500 text-sm leading-relaxed">Aktuelle Einsatzmeldungen und offizielle Presseberichte.</p>
            </button>
-           <div className="group p-1 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-[48px]">
-              <div className="p-10 bg-slate-950 rounded-[44px] h-full text-left relative overflow-hidden">
+           
+           <button onClick={() => { setModalType('Internetwache'); setIwStep('Selection'); }} className="group p-1 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-[48px] text-left hover:scale-[1.02] transition-all">
+              <div className="p-10 bg-slate-950 rounded-[44px] h-full relative overflow-hidden">
                 <div className="text-4xl mb-6">🏛️</div>
                 <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Internetwache</h3>
-                <p className="text-slate-500 text-sm mb-8">Erstatten Sie Anzeigen oder geben Sie Hinweise anonym ab.</p>
-                <div className="flex flex-col gap-3">
-                   <button onClick={() => setModalType('Onlineanzeige')} className="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Anzeige erstatten</button>
-                   <button onClick={() => setModalType('Hinweis')} className="bg-white/5 hover:bg-white/10 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Anonymer Hinweis</button>
-                </div>
+                <p className="text-slate-500 text-sm mb-4">Erstatten Sie Anzeigen oder geben Sie Hinweise anonym ab.</p>
+                <div className="mt-8 text-[10px] font-black text-blue-500 uppercase tracking-widest">Portal öffnen ➔</div>
               </div>
-           </div>
+           </button>
+
            <button onClick={() => setModalType('Bewerbung')} className="group p-10 bg-slate-900/40 border border-white/5 rounded-[48px] hover:bg-indigo-600/10 hover:border-indigo-600/30 transition-all text-left">
               <div className="text-4xl mb-6">👨‍✈️</div>
               <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Karriere</h3>

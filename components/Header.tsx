@@ -19,9 +19,9 @@ const Header: React.FC = () => {
         </Link>
       </div>
 
-      {/* Zentraler Bereich: Banner */}
-      <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-        <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-[-0.05em] drop-shadow-2xl text-center whitespace-nowrap">
+      {/* Zentraler Bereich: Banner - Jetzt mit vertikaler Zentrierung */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none">
+        <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight drop-shadow-2xl text-center whitespace-nowrap">
           Bundespolizei Teamstadt
         </h1>
         <div className="h-1.5 w-40 bg-blue-600 rounded-full mt-2 shadow-[0_0_15px_rgba(37,99,235,0.8)]"></div>

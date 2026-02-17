@@ -23,7 +23,9 @@ export enum Permission {
   VIEW_APPLICATIONS = 'view_applications',
   MANAGE_APPLICATIONS = 'manage_applications',
   VIEW_TIPS = 'view_tips',
-  MANAGE_TIPS = 'manage_tips'
+  MANAGE_TIPS = 'manage_tips',
+  VIEW_CALENDAR = 'view_calendar',
+  MANAGE_CALENDAR = 'manage_calendar'
 }
 
 export interface User {
@@ -36,6 +38,19 @@ export interface User {
   isAdmin: boolean;
   permissions: Permission[];
   password?: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  startTime: string;
+  endTime?: string;
+  createdBy: string;
+  creatorName: string;
+  isPublic: boolean;
+  type: 'Personal' | 'Besprechung' | 'Ausbildung' | 'Einsatz' | 'Sonstiges';
 }
 
 export interface Vehicle {
@@ -74,6 +89,13 @@ export interface Law {
   description?: string;
 }
 
+export interface Reminder {
+  id: string;
+  text: string;
+  dueDate: string;
+  completed: boolean;
+}
+
 export interface IncidentReport {
   id: string;
   type: 'Einsatzbericht' | 'Strafanzeige';
@@ -87,6 +109,7 @@ export interface IncidentReport {
   title?: string;
   content?: string;
   involvedOfficers?: string;
+  involvedUnits?: string;
   applicant?: string;
   suspect?: string;
   suspectDescription?: string;
@@ -95,6 +118,7 @@ export interface IncidentReport {
   notes?: string;
   securityLevel?: string;
   timestamp: string;
+  reminders?: Reminder[];
 }
 
 export interface CitizenSubmission {

@@ -5,10 +5,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { POLICE_LOGO_RAW } from '../constants';
 
 const Header: React.FC = () => {
-  const { user, logout, setSettingsOpen } = useAuth();
+  const { user, logout, setSettingsOpen, roles } = useAuth();
   const navigate = useNavigate();
 
   if (!user) return null;
+
+  const mainRole = roles.find(r => r.id === user.role);
 
   return (
     <header className="h-28 bg-[#0a0f1e]/95 backdrop-blur-xl border-b border-blue-900/40 flex items-center justify-between px-12 shadow-2xl relative z-[100] shrink-0">
@@ -38,7 +40,7 @@ const Header: React.FC = () => {
                 {user.rank} • {user.badgeNumber}
              </div>
              <div className="text-[8px] text-slate-500 font-black uppercase tracking-[0.3em] bg-white/5 px-3 py-1 rounded-md border border-white/5 w-fit">
-                {user.role}
+                {mainRole?.name || user.role}
              </div>
           </div>
         </div>

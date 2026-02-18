@@ -40,6 +40,28 @@ export const useAuth = () => {
   return context;
 };
 
+// Map für Rückwärtskompatibilität in der hasPermission-Prüfung
+const LEGACY_MAP: Record<string, string> = {
+  'view_reports': Permission.VIEW_REPORTS,
+  'create_reports': Permission.CREATE_REPORTS,
+  'edit_reports': Permission.EDIT_REPORTS,
+  'delete_reports': Permission.DELETE_REPORTS,
+  'manage_users': Permission.MANAGE_USERS,
+  'view_warrants': Permission.VIEW_WARRANTS,
+  'manage_warrants': Permission.MANAGE_WARRANTS,
+  'admin_access': Permission.ADMIN_ACCESS,
+  'manage_laws': Permission.MANAGE_LAWS,
+  'manage_fleet': Permission.MANAGE_FLEET,
+  'manage_evidence': Permission.MANAGE_EVIDENCE,
+  'view_applications': Permission.VIEW_APPLICATIONS,
+  'manage_applications': Permission.MANAGE_APPLICATIONS,
+  'view_tips': Permission.VIEW_TIPS,
+  'manage_tips': Permission.MANAGE_TIPS,
+  'view_calendar': Permission.VIEW_CALENDAR,
+  'manage_calendar': Permission.MANAGE_CALENDAR,
+  'manage_news': Permission.MANAGE_NEWS
+};
+
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const location = useLocation();
@@ -48,7 +70,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (isPublicHome) return <>{children}</>;
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#020617] overflow-hidden">
+    <div className="h-screen w-screen flex flex-col bg-[#0f172a] overflow-hidden">
       {user && <Header />}
       <main className="flex-1 relative overflow-hidden">
         {children}
@@ -74,7 +96,6 @@ const App: React.FC = () => {
 
     const initDatabase = async () => {
       try {
-        // Initialisiere Standard-Rollen
         const rolesSnap = await getDocs(dbCollections.roles);
         if (rolesSnap.empty) {
           const defaultRoles: UserRole[] = [
@@ -82,8 +103,8 @@ const App: React.FC = () => {
             { id: 'HD', name: 'Höherer Dienst', isSpecial: false, permissions: Object.values(Permission).filter(p => p !== Permission.ADMIN_ACCESS) },
             { id: 'DSL', name: 'Dienststellenleitung', isSpecial: false, permissions: [Permission.VIEW_REPORTS, Permission.CREATE_REPORTS, Permission.VIEW_WARRANTS, Permission.VIEW_APPLICATIONS, Permission.VIEW_TIPS, Permission.VIEW_CALENDAR] },
             { id: 'DGL', name: 'Dienstgruppenleitung', isSpecial: false, permissions: [Permission.VIEW_REPORTS, Permission.CREATE_REPORTS, Permission.VIEW_WARRANTS, Permission.VIEW_TIPS, Permission.VIEW_CALENDAR] },
-            { id: 'DIR_K', name: 'Direktion K', isSpecial: false, permissions: [Permission.VIEW_REPORTS, Permission.CREATE_REPORTS, Permission.VIEW_WARRANTS, Permission.MANAGE_WARRANTS, Permission.VIEW_TIPS, Permission.MANAGE_TIPS] },
-            { id: 'DIR_GE', name: 'Direktion GE', isSpecial: false, permissions: [Permission.VIEW_REPORTS, Permission.CREATE_REPORTS, Permission.VIEW_WARRANTS, Permission.MANAGE_FLEET, Permission.VIEW_CALENDAR] },
+            { id: 'DIR_K', name: 'Direktion K', isSpecial: false, permissions: [Permission.VIEW_REPORTS, Permission.CREATE_REPORTS, Permission.VIEW_WARRANTS, Permission.MANAGE_WARRANTS, Permission.VIEW_TIPS, Permission.MANAGE_TIPS, Permission.MANAGE_EVIDENCE] },
+            { id: 'DIR_GE', name: 'Direktion GE', isSpecial: false, permissions: [Permission.VIEW_REPORTS, Permission.CREATE_REPORTS, Permission.VIEW_WARRANTS, Permission.VIEW_CALENDAR] }, // Fuhrpark entfernt
             { id: 'PR', name: 'Presseabteilung', isSpecial: true, permissions: [Permission.MANAGE_NEWS] }
           ];
 
@@ -144,12 +165,15 @@ const App: React.FC = () => {
     
     const userRoleIds = [user.role, ...(user.specialRoles || [])];
     const assignedRoles = roles.filter(r => userRoleIds.includes(r.id));
-    const allPerms = new Set([
+    
+    const rawPerms = [
       ...(user.permissions || []),
       ...assignedRoles.flatMap(r => r.permissions || [])
-    ]);
+    ];
     
-    return allPerms.has(perm);
+    const normalizedPerms = new Set(rawPerms.map(p => LEGACY_MAP[p] || p));
+    
+    return normalizedPerms.has(perm);
   };
 
   return (
@@ -159,16 +183,16 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<PublicHome />} />
               <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/" />} />
-              <Route path="/incident-report" element={user ? <IncidentReportPage /> : <Navigate to="/" />} />
-              <Route path="/criminal-complaint" element={user ? <CriminalComplaintPage /> : <Navigate to="/" />} />
-              <Route path="/fleet" element={user ? <FleetPage /> : <Navigate to="/" />} />
-              <Route path="/evidence" element={user ? <EvidencePage /> : <Navigate to="/" />} />
-              <Route path="/warrants" element={user ? <WarrantPage /> : <Navigate to="/" />} />
-              <Route path="/cases" element={user ? <CaseSearchPage /> : <Navigate to="/" />} />
-              <Route path="/calendar" element={user ? <CalendarPage /> : <Navigate to="/" />} />
-              <Route path="/press" element={user && hasPermission(Permission.MANAGE_NEWS) ? <PressPage /> : <Navigate to="/" />} />
-              <Route path="/applications" element={user && hasPermission(Permission.VIEW_APPLICATIONS) ? <ApplicationsPage /> : <Navigate to="/" />} />
-              <Route path="/tips" element={user && hasPermission(Permission.VIEW_TIPS) ? <TipsPage /> : <Navigate to="/" />} />
+              <Route path="/incident-report" element={user && hasPermission(Permission.VIEW_REPORTS) ? <IncidentReportPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/criminal-complaint" element={user && hasPermission(Permission.CREATE_REPORTS) ? <CriminalComplaintPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/fleet" element={user && hasPermission(Permission.MANAGE_FLEET) ? <FleetPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/evidence" element={user && hasPermission(Permission.MANAGE_EVIDENCE) ? <EvidencePage /> : <Navigate to="/dashboard" />} />
+              <Route path="/warrants" element={user && hasPermission(Permission.VIEW_WARRANTS) ? <WarrantPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/cases" element={user && hasPermission(Permission.VIEW_REPORTS) ? <CaseSearchPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/calendar" element={user && hasPermission(Permission.VIEW_CALENDAR) ? <CalendarPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/press" element={user && hasPermission(Permission.MANAGE_NEWS) ? <PressPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/applications" element={user && hasPermission(Permission.VIEW_APPLICATIONS) ? <ApplicationsPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/tips" element={user && hasPermission(Permission.VIEW_TIPS) ? <TipsPage /> : <Navigate to="/dashboard" />} />
               <Route path="/admin" element={user?.isAdmin ? <AdminPanel /> : <Navigate to="/" />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>

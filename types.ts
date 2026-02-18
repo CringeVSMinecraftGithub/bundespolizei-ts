@@ -24,7 +24,7 @@ export interface UserRole {
   id: string;
   name: string;
   permissions: Permission[];
-  isSpecial: boolean; // true = Sonderrolle
+  isSpecial: boolean;
 }
 
 export interface User {
@@ -33,8 +33,8 @@ export interface User {
   lastName: string;
   rank: string;
   badgeNumber: string;
-  role: string; // ID der Hauptrolle
-  specialRoles: string[]; // IDs der Sonderrollen
+  role: string;
+  specialRoles: string[];
   isAdmin: boolean;
   permissions: Permission[];
   password?: string;
@@ -89,6 +89,13 @@ export interface Warrant {
   lastSeen: string;
   timestamp: string;
   active: boolean;
+  age?: string;
+  height?: string;
+  weight?: string;
+  hairColor?: string;
+  eyeColor?: string;
+  features?: string;
+  caseNumber?: string;
 }
 
 export interface Law {
@@ -108,7 +115,7 @@ export interface Reminder {
 export interface IncidentReport {
   id: string;
   type: 'Einsatzbericht' | 'Strafanzeige';
-  status: 'Offen' | 'In Bearbeitung' | 'Abgeschlossen' | 'Unbearbeitet' | 'In Prüfung';
+  status: 'Offen' | 'In Bearbeitung' | 'Abgeschlossen' | 'Unbearbeitet' | 'In Prüfung' | 'Neu';
   reportNumber: string;
   date: string;
   officerName: string;
@@ -128,6 +135,16 @@ export interface IncidentReport {
   securityLevel?: string;
   timestamp: string;
   reminders?: Reminder[];
+  isOnlineSubmission?: boolean;
+  contactData?: string;
+  // Neue Felder
+  incidentTime?: string;
+  incidentEnd?: string;
+  witnesses?: string;
+  measures?: string;
+  result?: string;
+  evidenceList?: string;
+  propertyValue?: string;
 }
 
 export interface CitizenSubmission {
@@ -137,7 +154,15 @@ export interface CitizenSubmission {
   content: string;
   timestamp: string;
   status: 'Neu' | 'Gelesen' | 'Archiviert';
-  contactInfo?: string;
+  anonymous: boolean;
+  location?: string;
+  incidentTime?: string;
+  suspectInfo?: string;
+  contactName?: string;
+  contactBirthdate?: string;
+  contactAddress?: string;
+  contactPhone?: string;
+  contactEmail?: string;
 }
 
 export interface JobApplication {

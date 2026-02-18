@@ -93,11 +93,11 @@ const Dashboard: React.FC = () => {
     // Ermittlungen
     { id: 'cases', label: 'Vorgangssuche', icon: '📁', color: 'bg-blue-700', path: '/cases', permission: Permission.VIEW_REPORTS, group: 'Ermittlungen' },
     { id: 'warrants', label: 'Fahndung', icon: '🔍', color: 'bg-red-600', path: '/warrants', permission: Permission.VIEW_WARRANTS, group: 'Ermittlungen' },
-    { id: 'evidence', label: 'Asservatenkammer', icon: '📦', color: 'bg-orange-500', path: '/evidence', permission: Permission.VIEW_REPORTS, group: 'Ermittlungen' },
+    { id: 'evidence', label: 'Asservatenkammer', icon: '📦', color: 'bg-orange-500', path: '/evidence', permission: Permission.MANAGE_EVIDENCE, group: 'Ermittlungen' },
     { id: 'mail', label: 'Bürgerhinweise', icon: '💡', color: 'bg-amber-600', permission: Permission.VIEW_TIPS, path: '/tips', group: 'Ermittlungen' },
     
     // Verwaltung
-    { id: 'fleet', label: 'Fuhrpark', icon: '🚓', color: 'bg-blue-500', path: '/fleet', permission: Permission.VIEW_REPORTS, group: 'Verwaltung' },
+    { id: 'fleet', label: 'Fuhrpark', icon: '🚓', color: 'bg-blue-500', path: '/fleet', permission: Permission.MANAGE_FLEET, group: 'Verwaltung' },
     { id: 'apps', label: 'Bewerbungen', icon: '📂', color: 'bg-emerald-600', permission: Permission.VIEW_APPLICATIONS, path: '/applications', group: 'Verwaltung' },
     { id: 'personnel', label: 'Administration', icon: '⚙️', color: 'bg-indigo-600', permission: Permission.ADMIN_ACCESS, path: '/admin', group: 'Verwaltung' },
   ];

@@ -24,7 +24,7 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
     // Ermittlungen
     { label: 'Vorgangssuche', icon: '🔍', path: '/cases', group: 'Ermittlungen', perm: Permission.VIEW_REPORTS },
     { label: 'Fahndungen', icon: '👤', path: '/warrants', group: 'Ermittlungen', perm: Permission.VIEW_WARRANTS },
-    { label: 'Asservaten', icon: '📦', path: '/evidence', group: 'Ermittlungen', perm: Permission.VIEW_REPORTS },
+    { label: 'Asservaten', icon: '📦', path: '/evidence', group: 'Ermittlungen', perm: Permission.MANAGE_EVIDENCE },
     { label: 'Bürgerhinweise', icon: '💡', path: '/tips', group: 'Ermittlungen', perm: Permission.VIEW_TIPS },
     
     // Verwaltung
@@ -50,7 +50,8 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
         {/* Sidebar */}
         <aside className="w-16 md:w-56 bg-[#1a1c23] border-r border-white/5 flex flex-col shrink-0 overflow-y-auto custom-scrollbar py-4">
           {['Dienstbetrieb', 'Ermittlungen', 'Verwaltung'].map((group) => {
-            const items = sidebarItems.filter(i => i.group === group && hasPermission(i.perm || Permission.VIEW_REPORTS));
+            // Striktes Filtern basierend auf den identischen Dashboard-Berechtigungen
+            const items = sidebarItems.filter(i => i.group === group && hasPermission(i.perm));
             if (items.length === 0) return null;
             return (
               <div key={group} className="mb-6">

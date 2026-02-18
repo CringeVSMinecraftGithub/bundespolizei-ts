@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Permission } from './types';
 
 // Permanenter Link für das Logo (Postimages)
 export const POLICE_LOGO_RAW = "https://i.postimg.cc/QtKgbk3m/bpoltssternv1.png"; 
@@ -16,22 +17,23 @@ export const DEFAULT_ADMIN: any = {
   lastName: 'Mueller',
   rank: 'Bundespolizeipräsident',
   badgeNumber: 'Adler 51/01',
-  role: 'Leitungsstab',
+  role: 'LS',
   isAdmin: true,
   permissions: [
-    'view_reports',
-    'create_reports',
-    'edit_reports',
-    'delete_reports',
-    'manage_users',
-    'view_warrants',
-    'manage_warrants',
-    'admin_access',
-    'view_tips',
-    'manage_tips',
-    'view_applications',
-    'manage_applications',
-    'view_calendar',
-    'manage_calendar'
+    Permission.VIEW_REPORTS,
+    Permission.CREATE_REPORTS,
+    Permission.EDIT_REPORTS,
+    Permission.DELETE_REPORTS,
+    Permission.MANAGE_USERS,
+    Permission.VIEW_WARRANTS,
+    Permission.MANAGE_WARRANTS,
+    Permission.ADMIN_ACCESS,
+    Permission.VIEW_TIPS,
+    Permission.MANAGE_TIPS,
+    Permission.VIEW_APPLICATIONS,
+    Permission.MANAGE_APPLICATIONS,
+    Permission.VIEW_CALENDAR,
+    Permission.MANAGE_CALENDAR,
+    Permission.MANAGE_NEWS
   ]
 };

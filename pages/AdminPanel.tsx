@@ -6,6 +6,28 @@ import { POLICE_LOGO_RAW } from '../constants';
 import { dbCollections, onSnapshot, query, orderBy, setDoc, doc, db, deleteDoc, addDoc } from '../firebase';
 import PoliceOSWindow from '../components/PoliceOSWindow';
 
+// Mapping-Tabelle für alte englische Keys auf neue deutsche Enum-Werte
+const LEGACY_PERMISSION_MAP: Record<string, Permission> = {
+  'view_reports': Permission.VIEW_REPORTS,
+  'create_reports': Permission.CREATE_REPORTS,
+  'edit_reports': Permission.EDIT_REPORTS,
+  'delete_reports': Permission.DELETE_REPORTS,
+  'manage_users': Permission.MANAGE_USERS,
+  'view_warrants': Permission.VIEW_WARRANTS,
+  'manage_warrants': Permission.MANAGE_WARRANTS,
+  'admin_access': Permission.ADMIN_ACCESS,
+  'manage_laws': Permission.MANAGE_LAWS,
+  'manage_fleet': Permission.MANAGE_FLEET,
+  'manage_evidence': Permission.MANAGE_EVIDENCE,
+  'view_applications': Permission.VIEW_APPLICATIONS,
+  'manage_applications': Permission.MANAGE_APPLICATIONS,
+  'view_tips': Permission.VIEW_TIPS,
+  'manage_tips': Permission.MANAGE_TIPS,
+  'view_calendar': Permission.VIEW_CALENDAR,
+  'manage_calendar': Permission.MANAGE_CALENDAR,
+  'manage_news': Permission.MANAGE_NEWS
+};
+
 const AdminPanel: React.FC = () => {
   const { roles: allRoles } = useAuth();
   const [tab, setTab] = useState<'Users' | 'Roles' | 'Laws'>('Users');
@@ -28,15 +50,55 @@ const AdminPanel: React.FC = () => {
     return () => { unsubUsers(); unsubLaws(); };
   }, []);
 
+  // Hilfsfunktion zur Bereinigung von Berechtigungen (Migration alter Keys)
+  const normalizePermissions = (perms: any[] = []): Permission[] => {
+    const normalized = perms.map(p => {
+      // Wenn es ein alter Key ist, mappe ihn auf das deutsche Label
+      if (LEGACY_PERMISSION_MAP[p]) return LEGACY_PERMISSION_MAP[p];
+      // Sonst lass es so (falls es schon ein deutsches Label ist)
+      return p as Permission;
+    });
+    // Entferne Duplikate und ungültige Werte
+    const validValues = Object.values(Permission) as string[];
+    return Array.from(new Set(normalized)).filter(p => validValues.includes(p)) as Permission[];
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser({
+      ...user,
+      permissions: normalizePermissions(user.permissions || [])
+    });
+    setIsUserModalOpen(true);
+  };
+
+  const handleEditRole = (role: UserRole) => {
+    setEditingRole({
+      ...role,
+      permissions: normalizePermissions(role.permissions || [])
+    });
+    setIsRoleModalOpen(true);
+  };
+
   const saveUser = async () => {
-    if (editingUser) await setDoc(doc(db, "users", editingUser.id), editingUser);
+    if (editingUser) {
+      const cleanedUser = {
+        ...editingUser,
+        permissions: normalizePermissions(editingUser.permissions)
+      };
+      await setDoc(doc(db, "users", editingUser.id), cleanedUser);
+    }
     setIsUserModalOpen(false);
   };
 
   const saveRole = async () => {
     if (editingRole) {
       const id = editingRole.id || editingRole.name.toUpperCase().replace(/\s/g, '_');
-      await setDoc(doc(db, "roles", id), { ...editingRole, id });
+      const cleanedRole = {
+        ...editingRole,
+        id,
+        permissions: normalizePermissions(editingRole.permissions)
+      };
+      await setDoc(doc(db, "roles", id), cleanedRole);
     }
     setIsRoleModalOpen(false);
   };
@@ -108,7 +170,7 @@ const AdminPanel: React.FC = () => {
                            </div>
                         </td>
                         <td className="p-8 text-right">
-                          <button onClick={() => {setEditingUser(u); setIsUserModalOpen(true);}} className="bg-white/5 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all">Bearbeiten</button>
+                          <button onClick={() => handleEditUser(u)} className="bg-white/5 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all">Bearbeiten</button>
                         </td>
                       </tr>
                     ))}
@@ -134,10 +196,10 @@ const AdminPanel: React.FC = () => {
                          <div key={r.id} className="bg-black/40 border border-white/5 p-5 rounded-2xl flex justify-between items-center group hover:border-blue-500/30 transition-all">
                             <div>
                                <div className="text-xs font-black text-white uppercase">{r.name}</div>
-                               <div className="text-[8px] text-slate-600 mt-1 uppercase font-bold">{r.permissions?.length || 0} Rechte aktiv</div>
+                               <div className="text-[8px] text-slate-600 mt-1 uppercase font-bold">{normalizePermissions(r.permissions).length} Rechte aktiv</div>
                             </div>
                             <div className="flex gap-4">
-                               <button onClick={() => {setEditingRole(r); setIsRoleModalOpen(true);}} className="text-blue-500 text-[10px] font-black uppercase hover:text-white">Bearbeiten</button>
+                               <button onClick={() => handleEditRole(r)} className="text-blue-500 text-[10px] font-black uppercase hover:text-white">Bearbeiten</button>
                                <button onClick={() => deleteRole(r.id)} className="text-red-500 text-[10px] font-black uppercase hover:text-white">Löschen</button>
                             </div>
                          </div>
@@ -158,10 +220,10 @@ const AdminPanel: React.FC = () => {
                          <div key={r.id} className="bg-indigo-600/5 border border-indigo-600/20 p-5 rounded-2xl flex justify-between items-center group hover:border-indigo-600 transition-all">
                             <div>
                                <div className="text-xs font-black text-white uppercase">{r.name}</div>
-                               <div className="text-[8px] text-indigo-400 mt-1 uppercase font-bold tracking-widest">{r.permissions?.length || 0} Zusatzrechte</div>
+                               <div className="text-[8px] text-indigo-400 mt-1 uppercase font-bold tracking-widest">{normalizePermissions(r.permissions).length} Zusatzrechte</div>
                             </div>
                             <div className="flex gap-4">
-                               <button onClick={() => {setEditingRole(r); setIsRoleModalOpen(true);}} className="text-indigo-400 text-[10px] font-black uppercase hover:text-white">Bearbeiten</button>
+                               <button onClick={() => handleEditRole(r)} className="text-indigo-400 text-[10px] font-black uppercase hover:text-white">Bearbeiten</button>
                                <button onClick={() => deleteRole(r.id)} className="text-red-500 text-[10px] font-black uppercase hover:text-white">Löschen</button>
                             </div>
                          </div>
@@ -190,11 +252,17 @@ const AdminPanel: React.FC = () => {
                     <div className="grid grid-cols-2 gap-2">
                        {Object.values(Permission).map(p => (
                          <label key={p} className="flex items-center gap-3 p-3 bg-black/30 rounded-xl cursor-pointer hover:bg-white/5 border border-white/5 transition-colors">
-                            <input type="checkbox" checked={editingRole.permissions?.includes(p)} onChange={(e) => {
-                               const perms = editingRole.permissions || [];
-                               const next = e.target.checked ? [...perms, p] : perms.filter(x => x !== p);
-                               setEditingRole({...editingRole, permissions: next});
-                            }} className="w-4 h-4 rounded-md border-white/10 bg-slate-800 text-blue-600" />
+                            <input 
+                              type="checkbox" 
+                              checked={(editingRole.permissions || []).includes(p)} 
+                              onChange={(e) => {
+                                 const permsSet = new Set(editingRole.permissions || []);
+                                 if (e.target.checked) permsSet.add(p);
+                                 else permsSet.delete(p);
+                                 setEditingRole({...editingRole, permissions: Array.from(permsSet)});
+                              }} 
+                              className="w-4 h-4 rounded-md border-white/10 bg-slate-800 text-blue-600" 
+                            />
                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{p}</span>
                          </label>
                        ))}

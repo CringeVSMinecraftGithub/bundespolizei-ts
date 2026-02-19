@@ -335,7 +335,7 @@ const WarrantPage: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    </PoliceOSWindow>
   );
 };
 

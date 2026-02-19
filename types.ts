@@ -102,6 +102,7 @@ export interface Law {
   id: string;
   paragraph: string;
   title: string;
+  category: string;
   description?: string;
 }
 
@@ -137,7 +138,6 @@ export interface IncidentReport {
   reminders?: Reminder[];
   isOnlineSubmission?: boolean;
   contactData?: string;
-  // Neue Felder
   incidentTime?: string;
   incidentEnd?: string;
   witnesses?: string;

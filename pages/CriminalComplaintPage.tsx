@@ -7,21 +7,9 @@ import { useAuth } from '../App';
 import { Law } from '../types';
 
 const TEMPLATES: Record<string, { title: string, content: string, law?: string }> = {
-  "Diebstahl": { 
-    title: "Einfacher Diebstahl", 
-    content: "TATZEIT: ...\nTATORT: ...\nGEGENSTAND: ...\n\nSACHVERHALT:\n...",
-    law: "§ 242 StGB"
-  },
-  "Körperverletzung": { 
-    title: "Körperverletzung", 
-    content: "TATZEIT: ...\nTATORT: ...\n\nHERGANG:\n...",
-    law: "§ 223 StGB"
-  },
-  "Hausfriedensbruch": { 
-    title: "Hausfriedensbruch", 
-    content: "TATZEIT: ...\nTATORT: ...\n\nMASSNAHME:\n...",
-    law: "§ 123 StGB"
-  }
+  "Diebstahl": { title: "Einfacher Diebstahl", content: "TATZEIT: ...\nTATORT: ...\nGEGENSTAND: ...\n\nSACHVERHALT:\n...", law: "§ 242 StGB" },
+  "Körperverletzung": { title: "Körperverletzung", content: "TATZEIT: ...\nTATORT: ...\n\nHERGANG:\n...", law: "§ 223 StGB" },
+  "Hausfriedensbruch": { title: "Hausfriedensbruch", content: "TATZEIT: ...\nTATORT: ...\n\nMASSNAHME:\n...", law: "§ 123 StGB" }
 };
 
 const CriminalComplaintPage: React.FC = () => {
@@ -33,20 +21,7 @@ const CriminalComplaintPage: React.FC = () => {
   const [showLawDropdown, setShowLawDropdown] = useState(false);
 
   const [formData, setFormData] = useState({
-    applicant: '',
-    suspect: '',
-    suspectDescription: '',
-    witnesses: '',
-    location: '',
-    incidentTime: '',
-    violation: '',
-    evidenceList: '',
-    propertyValue: '',
-    status: 'Unbearbeitet',
-    securityLevel: '0',
-    incidentDetails: '',
-    notes: '',
-    template: 'Keine Vorlage'
+    applicant: '', suspect: '', suspectDescription: '', witnesses: '', location: '', incidentTime: '', violation: '', evidenceList: '', propertyValue: '', status: 'Unbearbeitet', securityLevel: '0', incidentDetails: '', notes: '', template: 'Keine Vorlage'
   });
 
   useEffect(() => {
@@ -56,28 +31,15 @@ const CriminalComplaintPage: React.FC = () => {
     return unsub;
   }, []);
 
-  const handleTemplateChange = (tmplName: string) => {
-    const tmpl = TEMPLATES[tmplName];
-    setFormData(prev => ({
-      ...prev,
-      template: tmplName,
-      violation: tmpl.law || prev.violation,
-      incidentDetails: tmpl.content
-    }));
-  };
-
   const selectLaw = (law: Law) => {
-    setFormData(prev => ({ ...prev, violation: `${law.paragraph} ${law.title}` }));
+    setFormData(prev => ({ ...prev, violation: `${law.paragraph} ${law.category} - ${law.title}` }));
     setShowLawDropdown(false);
     setLawSearch('');
   };
 
   const handleSave = async () => {
     if (!user) return;
-    if (!formData.applicant || !formData.violation || !formData.incidentDetails) {
-      alert("Pflichtfelder ausfüllen (Geschädigter, Delikt, Sachverhalt).");
-      return;
-    }
+    if (!formData.applicant || !formData.violation || !formData.incidentDetails) { alert("Pflichtfelder ausfüllen."); return; }
     setIsSaving(true);
     try {
       await addDoc(dbCollections.reports, {
@@ -89,160 +51,92 @@ const CriminalComplaintPage: React.FC = () => {
         timestamp: new Date().toISOString()
       });
       navigate('/cases');
-    } catch (e) {
-      alert("Fehler beim Speichern.");
-    } finally {
-      setIsSaving(false);
-    }
+    } catch (e) { alert("Fehler beim Speichern."); } finally { setIsSaving(false); }
   };
 
+  const filteredLaws = laws.filter(l => 
+    l.paragraph.toLowerCase().includes(lawSearch.toLowerCase()) || 
+    l.title.toLowerCase().includes(lawSearch.toLowerCase()) ||
+    l.category.toLowerCase().includes(lawSearch.toLowerCase())
+  );
+
+  const groupedLaws = filteredLaws.reduce((groups: Record<string, Law[]>, law) => {
+    const cat = law.category || 'Sonstige';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(law);
+    return groups;
+  }, {});
+
+  const sortedCategories = Object.keys(groupedLaws).sort();
+
   return (
-    <PoliceOSWindow title="Strafanzeige • Neuer Vorgang">
-      <div className="max-w-4xl mx-auto py-10 animate-in fade-in duration-500 pb-32">
-        
-        <div className="flex justify-between items-end mb-10 border-b border-white/10 pb-6">
+    <PoliceOSWindow title="Strafanzeige">
+      <div className="max-w-4xl mx-auto py-8 animate-in fade-in duration-500 pb-32">
+        <div className="flex justify-between items-end mb-8 border-b border-white/5 pb-6">
           <div>
             <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Strafanzeige <span className="text-blue-500">Erfassen</span></h1>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">Ermittlungsdienst Teamstadt</p>
           </div>
           <div className="flex gap-2">
              {Object.keys(TEMPLATES).map(t => (
-               <button key={t} onClick={() => handleTemplateChange(t)} className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase border transition-all ${formData.template === t ? 'bg-blue-600 text-white border-blue-500' : 'bg-white/5 border-white/10 text-slate-500'}`}>{t}</button>
+               <button key={t} onClick={() => setFormData(p => ({...p, template: t, violation: TEMPLATES[t].law || '', incidentDetails: TEMPLATES[t].content}))} className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase border transition-all ${formData.template === t ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-slate-500'}`}>{t}</button>
              ))}
           </div>
         </div>
 
         <div className="space-y-10">
-          
-          {/* Sektion 1: Personen */}
-          <section className="space-y-6">
-            <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Beteiligte Personen
-            </h2>
-            <div className="bg-[#1a1c23]/60 p-8 rounded-3xl border border-white/5 grid grid-cols-1 md:grid-cols-2 gap-6 shadow-xl">
-               <div className="space-y-2">
-                  <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Geschädigter / Anzeigender</label>
-                  <input value={formData.applicant} onChange={e => setFormData({...formData, applicant: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500 font-bold" placeholder="Name, Adresse..." />
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Beschuldigter</label>
-                  <input value={formData.suspect} onChange={e => setFormData({...formData, suspect: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-red-500" placeholder="Name oder 'Unbekannt'..." />
-               </div>
-               <div className="space-y-2 md:col-span-2">
-                  <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Zeugen / Weitere Beteiligte</label>
-                  <textarea value={formData.witnesses} onChange={e => setFormData({...formData, witnesses: e.target.value})} className="w-full h-16 bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500 resize-none" placeholder="Namen und Erreichbarkeit..." />
-               </div>
-               <div className="md:col-span-2 space-y-2">
-                  <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Täterbeschreibung / Merkmale</label>
-                  <textarea value={formData.suspectDescription} onChange={e => setFormData({...formData, suspectDescription: e.target.value})} className="w-full h-24 bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500 resize-none" placeholder="Größe, Kleidung, Tattoos..." />
-               </div>
+          <section className="space-y-4">
+            <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">Personen & Tatort</h2>
+            <div className="bg-[#1a1c23]/60 p-6 rounded-[32px] border border-white/5 grid grid-cols-2 gap-4 shadow-xl">
+               <input value={formData.applicant} onChange={e => setFormData({...formData, applicant: e.target.value})} className="bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none text-xs" placeholder="Geschädigter" />
+               <input value={formData.suspect} onChange={e => setFormData({...formData, suspect: e.target.value})} className="bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none text-xs" placeholder="Beschuldigter" />
+               <input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none text-xs" placeholder="Tatort" />
+               <input value={formData.incidentTime} onChange={e => setFormData({...formData, incidentTime: e.target.value})} className="bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none text-xs" placeholder="Tatzeit" />
             </div>
           </section>
 
-          {/* Sektion 2: Tatangaben & Rechtliches */}
-          <section className="space-y-6">
-            <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Tatort, Zeit & Einordnung
-            </h2>
-            <div className="bg-[#1a1c23]/60 p-8 rounded-3xl border border-white/5 space-y-6 shadow-xl">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Tatort</label>
-                    <input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500" placeholder="Anschrift / Ort der Tat..." />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Tatzeit / Zeitraum</label>
-                    <input value={formData.incidentTime} onChange={e => setFormData({...formData, incidentTime: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500" placeholder="z.B. 24.12.2025, 20:00 - 22:00 Uhr" />
-                  </div>
-               </div>
-               
+          <section className="space-y-4">
+            <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">Delikt & Sachverhalt</h2>
+            <div className="bg-[#1a1c23]/60 p-6 rounded-[32px] border border-white/5 space-y-4 shadow-xl">
                <div className="relative">
-                  <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Tatbestand / Delikt</label>
-                  <input 
-                    value={formData.violation} 
-                    onFocus={() => setShowLawDropdown(true)}
-                    onChange={e => { setFormData({...formData, violation: e.target.value}); setLawSearch(e.target.value); }}
-                    className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white font-black uppercase outline-none focus:border-blue-500" 
-                    placeholder="Suchen nach Paragraphen..." 
-                  />
+                  <div className="relative">
+                    <input 
+                      value={formData.violation} 
+                      onFocus={() => setShowLawDropdown(true)}
+                      onChange={e => { setFormData({...formData, violation: e.target.value}); setLawSearch(e.target.value); }}
+                      className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white font-black uppercase outline-none focus:border-blue-500 text-xs shadow-inner" 
+                      placeholder="Gesetzestext suchen (z.B. 242 StGB)..." 
+                    />
+                    {formData.violation && <button onClick={() => { setFormData({...formData, violation: ''}); setLawSearch(''); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors">✕</button>}
+                  </div>
                   {showLawDropdown && (
-                    <div className="absolute top-full left-0 w-full mt-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto">
-                      {laws.filter(l => l.paragraph.includes(lawSearch) || l.title.includes(lawSearch)).map(l => (
-                        <button key={l.id} onClick={() => selectLaw(l)} className="w-full text-left p-3 hover:bg-blue-600/20 border-b border-white/5 text-[10px] uppercase font-bold text-slate-300 transition-colors">{l.paragraph} - {l.title}</button>
+                    <div className="absolute top-full left-0 w-full mt-2 bg-[#0a0c10] border border-white/10 rounded-2xl shadow-2xl z-[100] max-h-96 overflow-y-auto custom-scrollbar p-2">
+                      {sortedCategories.map(cat => (
+                        <div key={cat} className="mb-2 last:mb-0">
+                          <div className="px-3 py-1 text-[7px] font-black text-blue-500/50 uppercase tracking-widest">{cat}</div>
+                          {groupedLaws[cat].map(l => (
+                            <button key={l.id} type="button" onClick={() => selectLaw(l)} className="w-full text-left px-3 py-2 hover:bg-white/5 rounded-lg flex items-center gap-3 group transition-colors">
+                              <span className="text-[10px] font-black text-blue-400 font-mono w-14 shrink-0">{l.paragraph}</span>
+                              <span className="text-[9px] font-bold text-slate-500 w-10 shrink-0">{l.category}</span>
+                              <span className="text-[10px] font-black text-white uppercase truncate flex-1">{l.title}</span>
+                            </button>
+                          ))}
+                        </div>
                       ))}
+                      {filteredLaws.length === 0 && (
+                        <div className="p-10 text-center text-[9px] font-black text-slate-700 uppercase tracking-widest">Keine Treffer</div>
+                      )}
+                      <div className="p-2 border-t border-white/5 mt-2"><button onClick={() => setShowLawDropdown(false)} className="w-full py-2 text-[8px] font-black uppercase text-slate-600 hover:text-white transition-colors">Schließen</button></div>
                     </div>
                   )}
                </div>
-
-               <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Status</label>
-                    <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none">
-                       <option value="Unbearbeitet">Unbearbeitet</option>
-                       <option value="In Prüfung">In Prüfung</option>
-                       <option value="Abgeschlossen">Abgeschlossen</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Dringlichkeit</label>
-                    <select value={formData.securityLevel} onChange={e => setFormData({...formData, securityLevel: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none">
-                       <option value="0">Normal</option>
-                       <option value="1">Hoch</option>
-                       <option value="2">Kritisch</option>
-                    </select>
-                  </div>
-               </div>
+               <textarea value={formData.incidentDetails} onChange={e => setFormData({...formData, incidentDetails: e.target.value})} className="w-full h-64 bg-black/40 border border-white/10 p-6 rounded-2xl text-slate-200 text-sm leading-relaxed outline-none focus:border-blue-500 resize-none shadow-inner" placeholder="Detaillierter Tathergang..." />
             </div>
           </section>
-
-          {/* Sektion 3: Beweise & Sachwerte */}
-          <section className="space-y-6">
-            <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Beweismittel & Sachwerte
-            </h2>
-            <div className="bg-[#1a1c23]/60 p-8 rounded-3xl border border-white/5 space-y-6 shadow-xl">
-               <div className="space-y-2">
-                  <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Sichergestellte Beweismittel / Asservaten</label>
-                  <textarea value={formData.evidenceList} onChange={e => setFormData({...formData, evidenceList: e.target.value})} className="w-full h-16 bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500 resize-none" placeholder="z.B. Tatwaffe, DNA-Spuren, Videoaufnahmen..." />
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[9px] font-black text-slate-600 uppercase ml-2">Schadenshöhe / Wert der Beute</label>
-                  <input value={formData.propertyValue} onChange={e => setFormData({...formData, propertyValue: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500" placeholder="z.B. 1.200 € oder 'Diverse elektronische Geräte'" />
-               </div>
-            </div>
-          </section>
-
-          {/* Sektion 4: Dokumentation */}
-          <section className="space-y-6">
-            <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Ausführlicher Sachverhalt
-            </h2>
-            <div className="bg-[#1a1c23]/60 p-8 rounded-3xl border border-white/5 shadow-xl">
-               <textarea value={formData.incidentDetails} onChange={e => setFormData({...formData, incidentDetails: e.target.value})} className="w-full h-80 bg-black/40 border border-white/10 p-6 rounded-2xl text-slate-200 text-base leading-relaxed outline-none focus:border-blue-500 resize-none shadow-inner" placeholder="Detaillierter Tathergang..." />
-            </div>
-          </section>
-
-          {/* Signatur-Block */}
-          <div className="border-t border-white/10 pt-10 mt-10">
-             <div className="flex flex-col items-end text-right">
-                <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Amtliche Signatur</div>
-                <div className="text-xl font-black text-white uppercase tracking-tighter">
-                   {user?.firstName} {user?.lastName}
-                </div>
-                <div className="h-px w-48 bg-blue-600/50 my-2"></div>
-                <div className="text-[10px] text-blue-500 font-black uppercase tracking-widest">
-                   Dienstgrad: {user?.rank}
-                </div>
-                <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">
-                   Dienstnummer: {user?.badgeNumber}
-                </div>
-             </div>
-          </div>
 
           <div className="flex justify-between items-center pt-8 border-t border-white/5">
-             <button onClick={() => navigate('/dashboard')} className="text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Abbrechen</button>
-             <button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-500 text-white px-12 py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95 disabled:opacity-50">
-                {isSaving ? 'Synchronisierung...' : 'Strafanzeige Absenden'}
+             <button type="button" onClick={() => navigate('/dashboard')} className="text-slate-500 hover:text-white text-[9px] font-black uppercase tracking-widest transition-colors">Abbrechen</button>
+             <button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-500 text-white px-12 py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-900/30 transition-all active:scale-95 disabled:opacity-50">
+                {isSaving ? 'Verarbeitung...' : 'Strafanzeige Einreichen'}
              </button>
           </div>
         </div>

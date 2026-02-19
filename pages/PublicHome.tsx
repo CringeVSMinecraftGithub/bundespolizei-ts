@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { POLICE_LOGO_RAW } from '../constants';
-import { dbCollections, addDoc, onSnapshot, query, orderBy, limit } from '../firebase';
-import { PressRelease } from '../types';
+import { dbCollections, addDoc, onSnapshot, query, orderBy, limit, getDocs } from '../firebase';
+import { PressRelease, User } from '../types';
 
 const PublicHome: React.FC = () => {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const PublicHome: React.FC = () => {
 
   const [badge, setBadge] = useState('');
   const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = onSnapshot(query(dbCollections.news, orderBy("timestamp", "desc"), limit(6)), (snap) => {
@@ -31,12 +31,33 @@ const PublicHome: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError(false);
+    setLoginError(null);
     setIsLoggingIn(true);
-    const success = await login(badge, password);
-    setIsLoggingIn(false);
-    if (success) navigate('/dashboard');
-    else setLoginError(true);
+    
+    try {
+      // Prüfe vorab, ob der Nutzer gesperrt ist
+      const snap = await getDocs(dbCollections.users);
+      const allUsers = snap.docs.map(d => d.data() as User);
+      const targetUser = allUsers.find(u => u.badgeNumber.toLowerCase() === badge.toLowerCase());
+      
+      if (targetUser && targetUser.isLocked) {
+        setLoginError("ZUGRIFF VERWEIGERT: IHR ACCOUNT WURDE TEMPORÄR GESPERRT.");
+        setIsLoggingIn(false);
+        return;
+      }
+      
+      const success = await login(badge, password);
+      if (success) {
+        navigate('/dashboard');
+      } else {
+        setLoginError("ZUGRIFF VERWEIGERT: DIENSTKENNUNG ODER SCHLÜSSEL UNGÜLTIG.");
+      }
+    } catch (err) {
+      console.error(err);
+      setLoginError("SYSTEMFEHLER BEIM LOGIN.");
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   const handleSubmission = async (e: React.FormEvent, type: 'Bewerbung' | 'Anzeige' | 'Hinweis') => {
@@ -55,7 +76,6 @@ const PublicHome: React.FC = () => {
           timestamp: new Date().toISOString()
         });
       } else if (type === 'Anzeige') {
-        // Strafanzeigen gehen direkt in die "Vorgangssuche" (Kollektion: reports)
         await addDoc(dbCollections.reports, {
           type: 'Strafanzeige',
           reportNumber: `ONL-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -73,7 +93,6 @@ const PublicHome: React.FC = () => {
           contactData: `Name: ${data.contact}, Geburtsdatum: ${data.birthdate}, Adresse: ${data.address}, Tel: ${data.phone}, Email: ${data.email}`
         });
       } else if (type === 'Hinweis') {
-        // Hinweise gehen in die Kollektion "submissions" (Bürgerhinweise im Dashboard)
         await addDoc(dbCollections.submissions, {
           type: 'Hinweis',
           title: data.subject || 'Bürgerhinweis',
@@ -82,7 +101,6 @@ const PublicHome: React.FC = () => {
           incidentTime: data.incident_time || '',
           suspectInfo: data.suspect_info || '',
           anonymous: isAnonymous,
-          // Kontaktdaten mitspeichern (nur wenn nicht anonym)
           contactName: isAnonymous ? 'Anonym' : data.contact,
           contactBirthdate: isAnonymous ? '' : data.birthdate,
           contactAddress: isAnonymous ? '' : data.address,
@@ -134,10 +152,12 @@ const PublicHome: React.FC = () => {
                       <h2 className="text-2xl font-black text-white uppercase tracking-tight">Intranet Login</h2>
                     </div>
                     <form onSubmit={handleLogin} className="space-y-6">
-                      <input type="text" value={badge} onChange={(e) => setBadge(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-5 text-white uppercase font-black" placeholder="Dienstnummer" required />
-                      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-5 text-white outline-none" placeholder="Sicherheitsschlüssel" required />
-                      {loginError && <div className="text-red-400 text-[10px] font-black uppercase text-center">Zugriff verweigert</div>}
-                      <button disabled={isLoggingIn} type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl transition-all">Login</button>
+                      <input type="text" value={badge} onChange={(e) => setBadge(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-5 text-white uppercase font-black outline-none focus:border-blue-500 transition-all" placeholder="Dienstnummer" required />
+                      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-5 text-white outline-none focus:border-blue-500 transition-all" placeholder="Sicherheitsschlüssel" required />
+                      {loginError && <div className="text-red-400 text-[9px] font-black uppercase text-center bg-red-400/10 border border-red-400/20 p-3 rounded-lg leading-relaxed">{loginError}</div>}
+                      <button disabled={isLoggingIn} type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 disabled:opacity-50">
+                        {isLoggingIn ? 'Lade...' : 'Login'}
+                      </button>
                     </form>
                   </div>
                 )}
@@ -177,7 +197,6 @@ const PublicHome: React.FC = () => {
                       </div>
                     ) : (
                       <form onSubmit={e => handleSubmission(e, iwStep === 'Anzeige' ? 'Anzeige' : 'Hinweis')} className="flex flex-col h-full overflow-hidden animate-in slide-in-from-right-8 duration-500">
-                        {/* Professional Form Header */}
                         <div className="p-10 bg-slate-800/60 border-b border-white/10 flex justify-between items-center shrink-0">
                            <div className="space-y-1">
                               <button type="button" onClick={() => { setIwStep('Selection'); setIsAnonymous(true); }} className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:text-white transition-colors">← Zurück zur Auswahl</button>
@@ -191,10 +210,7 @@ const PublicHome: React.FC = () => {
                            </div>
                         </div>
 
-                        {/* Detailed Form Content */}
                         <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
-                           
-                           {/* SECTION 1: Personalien & Anonymität Toggle für Hinweise */}
                            <section className="space-y-6">
                               <div className="flex items-center justify-between">
                                  <div className="flex items-center gap-4">
@@ -246,14 +262,7 @@ const PublicHome: React.FC = () => {
                                     <input name="email" type="email" required={!isAnonymous || iwStep === 'Anzeige'} placeholder="name@beispiel.de" className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-blue-500 outline-none transition-all" />
                                  </div>
                               </div>
-                              {isAnonymous && iwStep === 'Hinweis' && (
-                                 <div className="text-center">
-                                    <p className="text-[10px] text-amber-500/60 font-black uppercase tracking-[0.2em] italic">Ihre Identität bleibt bei dieser Übermittlung geschützt.</p>
-                                 </div>
-                              )}
                            </section>
-
-                           {/* SECTION 2: Tatangaben / Hinweisdetails */}
                            <section className="space-y-6">
                               <div className="flex items-center gap-4">
                                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-black text-xs text-slate-500 border border-white/10">02</div>
@@ -278,33 +287,8 @@ const PublicHome: React.FC = () => {
                                  </div>
                               </div>
                            </section>
-
-                           {/* SECTION 3: Weitere Infos / Täterbeschreibung */}
-                           <section className="space-y-6">
-                              <div className="flex items-center gap-4">
-                                 <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-black text-xs text-slate-500 border border-white/10">03</div>
-                                 <h4 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Zusätzliche Informationen</h4>
-                              </div>
-                              <div className="bg-black/20 p-8 rounded-[32px] border border-white/5 space-y-4">
-                                 <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Beweismittel (Zeugen, Kennzeichen, Links zu Medien)</label>
-                                 <textarea name="suspect_info" rows={4} className="w-full bg-slate-900/50 border border-white/10 p-6 rounded-2xl text-slate-300 outline-none resize-none text-sm focus:border-blue-500 transition-all" placeholder="Gibt es Zeugen? Haben Sie Beweisfotos gemacht? (Hier beschreiben)"></textarea>
-                              </div>
-                           </section>
-
-                           <div className={`p-8 rounded-[32px] space-y-4 border ${iwStep === 'Anzeige' ? 'bg-blue-600/5 border-blue-500/10' : 'bg-amber-600/5 border-amber-500/10'}`}>
-                              <h5 className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${iwStep === 'Anzeige' ? 'text-blue-500' : 'text-amber-500'}`}>
-                                 {iwStep === 'Anzeige' ? '⚖️ Rechtliche Belehrung' : '💡 Hinweis zu Ihrer Meldung'}
-                              </h5>
-                              <p className="text-[9px] text-slate-400 leading-relaxed font-bold uppercase tracking-widest">
-                                 {iwStep === 'Anzeige' 
-                                    ? "Ich versichere die Richtigkeit meiner Angaben. Mir ist bekannt, dass die bewusste Erstattung einer falschen Strafanzeige (§ 145d StGB) strafbar ist. Sämtliche Daten werden verschlüsselt übermittelt." 
-                                    : "Bürgerhinweise dienen der Prävention und Strafverfolgung. Ihre IP-Adresse wird bei anonymen Meldungen nicht mit dem Vorgang verknüpft, sofern kein Missbrauch des Notrufsystems vorliegt."
-                                 }
-                              </p>
-                           </div>
                         </div>
 
-                        {/* Professional Footer Actions */}
                         <div className="p-10 bg-slate-900/80 backdrop-blur-md border-t border-white/10 flex items-center justify-between shrink-0">
                            <div className="space-y-1">
                               <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Systemstatus</div>
@@ -385,7 +369,6 @@ const PublicHome: React.FC = () => {
         </div>
       )}
 
-      {/* Main UI Header */}
       <nav className="h-28 bg-[#1e293b]/95 backdrop-blur-xl border-b border-blue-800/40 flex items-center justify-between px-12 shadow-2xl relative z-[100] shrink-0">
         <img src={POLICE_LOGO_RAW} alt="BPOL" className="h-20 w-auto" />
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none">
@@ -397,7 +380,6 @@ const PublicHome: React.FC = () => {
         <button onClick={() => setModalType('Login')} className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all">Dienst-Login</button>
       </nav>
 
-      {/* Hero Section */}
       <section className="pt-32 pb-40 px-6 max-w-7xl mx-auto text-center relative z-10">
         <h1 className="text-8xl lg:text-[10rem] font-black tracking-tighter text-white mb-10 leading-[0.8] uppercase">
           Sicherheit für <br/>
@@ -423,7 +405,6 @@ const PublicHome: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer Preview Section */}
       <section className="bg-slate-900/50 border-y border-white/10 py-24 relative z-10">
         <div className="max-w-7xl mx-auto px-12">
            <div className="flex justify-between items-end mb-12">

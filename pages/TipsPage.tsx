@@ -42,170 +42,190 @@ const TipsPage: React.FC = () => {
   );
 
   return (
-    <PoliceOSWindow title="Ermittlung / Bürgerhinweise">
-      <div className="h-full flex flex-col gap-6 overflow-hidden animate-in fade-in duration-500">
+    <PoliceOSWindow title="Bürgerhinweise • Posteingang">
+      <div className="h-full flex flex-col gap-4 overflow-hidden animate-in fade-in duration-500">
         
-        {/* Modern Header */}
-        <div className="shrink-0 flex items-center justify-between bg-[#1a1c23]/60 backdrop-blur-md p-6 rounded-[32px] border border-white/5 shadow-2xl">
-          <div className="flex items-center gap-5">
-            <div className="w-12 h-12 bg-amber-600/10 border border-amber-500/20 text-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-inner">💡</div>
+        {/* Compact Search Header */}
+        <div className="shrink-0 flex items-center justify-between bg-[#1a1c23]/80 p-4 rounded-2xl border border-white/5 shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-amber-600/10 border border-amber-500/20 text-amber-500 rounded-xl flex items-center justify-center text-xl">💡</div>
             <div>
-              <h1 className="text-2xl font-black text-white tracking-tighter uppercase leading-none">Eingangs <span className="text-amber-500">Management</span></h1>
-              <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.3em] mt-1">Zentrale Auswertung Bürgerhinweise</p>
+              <h1 className="text-xl font-black text-white tracking-tighter uppercase leading-none">Hinweis <span className="text-amber-500">Eingang</span></h1>
             </div>
           </div>
-          <div className="flex items-center gap-4 bg-black/40 border border-white/10 p-3 rounded-2xl w-80 focus-within:border-amber-500 transition-all shadow-inner">
-            <span className="text-slate-600 ml-2">🔍</span>
-            <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Meldung suchen..." className="flex-1 bg-transparent border-none outline-none text-[10px] font-black uppercase text-slate-200 px-2 placeholder:text-slate-700" />
+          <div className="flex items-center gap-3 bg-black/40 border border-white/10 p-2 rounded-xl w-72 focus-within:border-amber-500 transition-all">
+            <input 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+              placeholder="Suchen..." 
+              className="flex-1 bg-transparent border-none outline-none text-[11px] font-black uppercase text-slate-200 px-2 placeholder:text-slate-700" 
+            />
           </div>
         </div>
 
-        <div className="flex-1 flex gap-6 min-h-0 overflow-hidden">
+        <div className="flex-1 flex gap-4 min-h-0 overflow-hidden">
           
-          {/* Enhanced List Panel */}
-          <div className="w-96 flex flex-col gap-3 shrink-0">
-            <div className="flex justify-between items-center px-4">
-               <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Posteingang ({filteredSubmissions.length})</h3>
-               <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div><div className="w-1.5 h-1.5 rounded-full bg-slate-700"></div></div>
+          {/* List Sidebar - More Compact */}
+          <div className="w-80 flex flex-col gap-2 shrink-0">
+            <div className="flex justify-between items-center px-2">
+               <h3 className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Eingang ({filteredSubmissions.length})</h3>
             </div>
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
+            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2">
               {filteredSubmissions.map(s => (
                 <button 
                   key={s.id} 
                   onClick={() => { setSelectedSubmission(s); if (s.status === 'Neu') updateStatus(s.id, 'Gelesen'); }} 
-                  className={`w-full text-left p-5 border rounded-[28px] transition-all relative overflow-hidden group ${selectedSubmission?.id === s.id ? 'bg-amber-600/10 border-amber-500/40 shadow-xl' : 'bg-[#1a1c23]/40 border-white/5 hover:bg-white/5 hover:border-white/10'}`}
+                  className={`w-full text-left p-5 border rounded-2xl transition-all relative ${selectedSubmission?.id === s.id ? 'bg-amber-600/10 border-amber-500/40 shadow-md' : 'bg-[#1a1c23]/40 border-white/5 hover:bg-white/5'}`}
                 >
-                  <div className="flex justify-between items-center w-full mb-3">
-                    <span className={`text-[7px] font-black px-2 py-1 rounded-lg border uppercase tracking-widest ${s.status === 'Neu' ? 'bg-blue-600/20 border-blue-500 text-blue-400 animate-pulse' : 'bg-black/30 border-white/10 text-slate-500'}`}>{s.status}</span>
-                    <span className="text-[8px] font-mono text-slate-600 font-bold">{new Date(s.timestamp).toLocaleDateString('de-DE')} • {new Date(s.timestamp).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}</span>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase ${s.status === 'Neu' ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-black/30 border-white/10 text-slate-500'}`}>{s.status}</span>
+                    <span className="text-[8px] font-mono text-slate-600">{new Date(s.timestamp).toLocaleDateString('de-DE')}</span>
                   </div>
-                  <div className="text-[12px] font-black text-white uppercase tracking-tight truncate group-hover:text-amber-500 transition-colors">{s.title}</div>
-                  <div className="flex items-center gap-2 mt-2">
-                     <span className="text-[8px] text-slate-500">📍</span>
-                     <div className="text-[9px] font-bold text-slate-500 truncate uppercase tracking-widest">{s.location || 'Keine Ortsangabe'}</div>
-                  </div>
-                  {s.anonymous && <div className="absolute top-0 right-0 p-1 px-3 bg-red-600/20 text-red-500 text-[6px] font-black uppercase tracking-widest border-l border-b border-red-500/20 rounded-bl-xl">Anonym</div>}
+                  <div className="text-[12px] font-black text-white uppercase truncate tracking-tight leading-tight">{s.title}</div>
+                  <div className="text-[10px] font-bold text-slate-600 truncate uppercase mt-1">📍 {s.location || 'N/A'}</div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Fully Detailed Content Panel */}
+          {/* Form-Style Detail Panel */}
           <div className="flex-1 min-w-0">
             {selectedSubmission ? (
-              <div className="h-full flex flex-col bg-[#1a1c23]/80 rounded-[40px] border border-white/5 overflow-hidden shadow-2xl animate-in slide-in-from-right-6 duration-500">
+              <div className="h-full flex flex-col bg-[#111317] rounded-[32px] border border-white/10 overflow-hidden shadow-2xl animate-in slide-in-from-right-4 duration-500">
                 
-                {/* Visual Identity Bar */}
-                <div className="p-10 border-b border-white/10 shrink-0 bg-gradient-to-r from-amber-600/10 to-transparent">
-                  <div className="flex justify-between items-start mb-8">
+                {/* Header Info Bar */}
+                <div className="p-8 bg-[#1a1c23] border-b border-white/10 flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-6">
+                    <div className="bg-amber-600/10 border border-amber-500/20 p-4 rounded-2xl flex flex-col items-center min-w-[120px]">
+                      <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Hinweis-ID</span>
+                      <span className="text-base font-mono font-black text-white">{selectedSubmission.id.slice(-8).toUpperCase()}</span>
+                    </div>
                     <div>
-                      <div className="flex items-center gap-4 mb-3">
-                        <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[9px] font-black text-amber-500 uppercase tracking-widest">BÜRGERHINWEIS ID: {selectedSubmission.id.slice(-8).toUpperCase()}</span>
-                        {selectedSubmission.anonymous && <span className="px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-xl text-[9px] font-black text-red-500 uppercase tracking-widest">ANONYME QUELLE</span>}
+                      <h2 className="text-2xl font-black text-white uppercase tracking-tighter leading-tight">{selectedSubmission.title}</h2>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-md uppercase border ${selectedSubmission.anonymous ? 'text-red-500 border-red-500/20' : 'text-emerald-500 border-emerald-500/20'}`}>
+                          {selectedSubmission.anonymous ? 'Anonyme Quelle' : 'Verifizierter Kontakt'}
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-600 uppercase">{new Date(selectedSubmission.timestamp).toLocaleString('de-DE')}</span>
                       </div>
-                      <h2 className="text-4xl font-black text-white uppercase tracking-tighter leading-none">{selectedSubmission.title}</h2>
-                    </div>
-                    <div className="text-right flex flex-col items-end">
-                       <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Status der Bearbeitung</div>
-                       <div className="text-amber-500 font-black text-xs uppercase bg-amber-500/10 px-6 py-3 rounded-2xl border border-amber-500/20 tracking-[0.2em] shadow-lg shadow-amber-900/10">{selectedSubmission.status}</div>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                     <div className="bg-black/30 p-5 rounded-3xl border border-white/5 shadow-inner">
-                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2">Ereignisort</div>
-                        <div className="text-[11px] font-black text-slate-200 uppercase truncate">{selectedSubmission.location || 'Keine Angabe'}</div>
-                     </div>
-                     <div className="bg-black/30 p-5 rounded-3xl border border-white/5 shadow-inner">
-                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2">Gemeldeter Zeitpunkt</div>
-                        <div className="text-[11px] font-black text-slate-200 uppercase">{selectedSubmission.incidentTime ? new Date(selectedSubmission.incidentTime).toLocaleString('de-DE') : 'Nicht erfasst'}</div>
-                     </div>
-                     <div className="bg-black/30 p-5 rounded-3xl border border-white/5 shadow-inner">
-                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2">Einreicher</div>
-                        <div className="text-[11px] font-black text-slate-200 uppercase truncate">{selectedSubmission.anonymous ? 'Anonyme Übermittlung' : selectedSubmission.contactName}</div>
-                     </div>
-                     <div className="bg-black/30 p-5 rounded-3xl border border-white/5 shadow-inner">
-                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2">Empfangsdatum</div>
-                        <div className="text-[11px] font-black text-slate-200 uppercase">{new Date(selectedSubmission.timestamp).toLocaleString('de-DE')}</div>
-                     </div>
+                  
+                  <div className="text-right">
+                    <div className="text-[9px] font-black text-slate-600 uppercase mb-1">Status</div>
+                    <div className="text-[12px] font-black text-amber-500 uppercase bg-amber-500/10 px-5 py-2 rounded-xl border border-amber-500/20">
+                      {selectedSubmission.status}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
-                   
-                   {/* Description Block */}
-                   <div className="space-y-5">
-                     <div className="flex items-center gap-4">
-                        <div className="h-0.5 flex-1 bg-amber-500/20"></div>
-                        <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em]">Detailbeschreibung des Vorfalls</h4>
-                        <div className="h-0.5 flex-1 bg-amber-500/20"></div>
+                {/* Form Content Area */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-8">
+                  
+                  {/* Metadata Matrix */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                     <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Ereignisort</div>
+                        <div className="text-[12px] font-bold text-slate-200 uppercase truncate">{selectedSubmission.location || 'N/A'}</div>
                      </div>
-                     <div className="bg-black/40 p-10 border border-white/5 rounded-[48px] text-slate-300 text-lg leading-relaxed whitespace-pre-wrap font-medium shadow-2xl italic tracking-wide">
-                        "{selectedSubmission.content}"
+                     <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Ereigniszeit</div>
+                        <div className="text-[12px] font-bold text-slate-200 uppercase">{selectedSubmission.incidentTime ? new Date(selectedSubmission.incidentTime).toLocaleString('de-DE') : 'Unbekannt'}</div>
                      </div>
-                   </div>
+                     <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Melder Name</div>
+                        <div className="text-[12px] font-bold text-slate-200 uppercase truncate">{selectedSubmission.anonymous ? 'GESCHÜTZT' : selectedSubmission.contactName}</div>
+                     </div>
+                     <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Eingang Zeit</div>
+                        <div className="text-[12px] font-bold text-slate-200 uppercase">{new Date(selectedSubmission.timestamp).toLocaleTimeString('de-DE')}</div>
+                     </div>
+                  </div>
 
-                   {/* Investigation Data Grid */}
-                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
-                      
-                      {/* Suspect & Evidence */}
-                      <div className="space-y-6">
-                        <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] flex items-center gap-3">
-                           <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span> 
-                           Täterbeschreibung / Beweismittel
+                  {/* Main Observation & Details Split */}
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                     
+                     {/* Observation Text */}
+                     <div className="space-y-4">
+                        <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                           <span className="w-5 h-0.5 bg-amber-500"></span> 
+                           Beobachtungsschilderung
                         </h4>
-                        <div className="bg-red-900/5 p-8 border border-red-500/10 rounded-[40px] text-slate-300 text-sm leading-relaxed min-h-[120px] shadow-inner">
-                           {selectedSubmission.suspectInfo ? selectedSubmission.suspectInfo : "Es wurden keine spezifischen Täter- oder Beweisinformationen hinterlegt."}
+                        <div className="bg-[#1a1c23]/40 border border-white/5 p-8 rounded-[32px] shadow-inner min-h-[200px]">
+                           <div className="text-slate-200 text-base leading-relaxed whitespace-pre-wrap font-medium">
+                              {selectedSubmission.content || 'Keine detaillierte Schilderung vorhanden.'}
+                           </div>
                         </div>
-                      </div>
+                     </div>
 
-                      {/* Contact & Witness Data */}
-                      <div className="space-y-6">
-                        <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] flex items-center gap-3">
-                           <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                           Ermittlungsrelevante Kontaktdaten
-                        </h4>
-                        {!selectedSubmission.anonymous ? (
-                          <div className="grid grid-cols-2 gap-4 bg-blue-600/5 p-8 rounded-[40px] border border-blue-500/10 shadow-inner">
-                             <div>
-                               <div className="text-[8px] font-black text-slate-600 uppercase mb-1">Geburtsdatum</div>
-                               <div className="text-xs font-black text-white uppercase">{selectedSubmission.contactBirthdate || 'N/A'}</div>
-                             </div>
-                             <div>
-                               <div className="text-[8px] font-black text-slate-600 uppercase mb-1">E-Mail Adresse</div>
-                               <div className="text-xs font-black text-blue-400">{selectedSubmission.contactEmail || 'N/A'}</div>
-                             </div>
-                             <div className="col-span-2 pt-4 border-t border-white/5 mt-4">
-                               <div className="text-[8px] font-black text-slate-600 uppercase mb-1">Meldeadresse des Zeugen</div>
-                               <div className="text-xs font-black text-white uppercase">{selectedSubmission.contactAddress || 'N/A'}</div>
-                             </div>
-                             <div className="pt-4">
-                               <div className="text-[8px] font-black text-slate-600 uppercase mb-1">Telefon / Erreichbarkeit</div>
-                               <div className="text-xs font-black text-blue-400">{selectedSubmission.contactPhone || 'N/A'}</div>
-                             </div>
-                          </div>
-                        ) : (
-                          <div className="bg-black/30 p-8 rounded-[40px] border border-white/5 flex flex-col items-center justify-center text-center opacity-40">
-                             <div className="text-3xl mb-3">🕵️‍♂️</div>
-                             <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Identität des Absenders ist durch das Anonymitäts-System geschützt.</p>
-                          </div>
-                        )}
-                      </div>
-                   </div>
+                     {/* Right Side: Suspect & Contact */}
+                     <div className="space-y-8">
+                        
+                        {/* Suspect / Evidence */}
+                        <div className="space-y-4">
+                           <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                              <span className="w-5 h-0.5 bg-red-600"></span> 
+                              Täter / Beweismittel
+                           </h4>
+                           <div className="bg-red-900/5 border border-red-500/10 p-6 rounded-[24px] shadow-inner text-slate-400 text-[12px] leading-relaxed">
+                              {selectedSubmission.suspectInfo || 'Keine Angaben zu Tätern oder Beweisen hinterlegt.'}
+                           </div>
+                        </div>
+
+                        {/* Contact Data (if not anonymous) */}
+                        <div className="space-y-4">
+                           <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                              <span className="w-5 h-0.5 bg-blue-600"></span> 
+                              Kontaktdaten (Zeuge)
+                           </h4>
+                           {!selectedSubmission.anonymous ? (
+                              <div className="grid grid-cols-2 gap-4 bg-blue-600/5 border border-blue-500/10 p-6 rounded-[24px] shadow-inner">
+                                 <div>
+                                    <div className="text-[9px] font-black text-slate-600 uppercase mb-1">Telefon</div>
+                                    <div className="text-[11px] font-bold text-blue-400">{selectedSubmission.contactPhone || 'N/A'}</div>
+                                 </div>
+                                 <div>
+                                    <div className="text-[9px] font-black text-slate-600 uppercase mb-1">E-Mail</div>
+                                    <div className="text-[11px] font-bold text-blue-400 truncate">{selectedSubmission.contactEmail || 'N/A'}</div>
+                                 </div>
+                                 <div className="col-span-2 pt-3 border-t border-white/5 mt-1">
+                                    <div className="text-[9px] font-black text-slate-600 uppercase mb-1">Adresse</div>
+                                    <div className="text-[11px] font-bold text-slate-300 uppercase truncate">{selectedSubmission.contactAddress || 'Keine Adresse'}</div>
+                                 </div>
+                              </div>
+                           ) : (
+                              <div className="bg-black/40 border border-white/5 p-8 rounded-[24px] flex flex-col items-center justify-center text-center opacity-40">
+                                 <span className="text-3xl mb-2">🕵️‍♂️</span>
+                                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Anonymität gewahrt</span>
+                              </div>
+                           )}
+                        </div>
+
+                     </div>
+                  </div>
                 </div>
 
-                {/* Interaction Area */}
-                {hasPermission(Permission.MANAGE_TIPS) && (
-                  <div className="p-8 border-t border-white/10 flex gap-6 shrink-0 bg-slate-900/60 backdrop-blur-xl">
-                    <button onClick={() => updateStatus(selectedSubmission.id, 'Archiviert')} className="flex-1 bg-white/5 hover:bg-white/10 text-white py-5 rounded-[24px] font-black uppercase text-[10px] tracking-[0.3em] border border-white/5 transition-all shadow-xl active:scale-95">In das Archiv verschieben</button>
-                    <button onClick={() => deleteSub(selectedSubmission.id)} className="flex-1 bg-red-600/10 text-red-500 border border-red-500/20 py-5 rounded-[24px] font-black uppercase text-[10px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all shadow-xl active:scale-95">Meldung Löschen</button>
-                  </div>
-                )}
+                {/* Fixed Footer Actions */}
+                <div className="p-8 bg-black/40 border-t border-white/10 flex gap-6 shrink-0">
+                  <button 
+                    onClick={() => updateStatus(selectedSubmission.id, 'Archiviert')} 
+                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                  >
+                    Meldung Archivieren
+                  </button>
+                  <button 
+                    onClick={() => deleteSub(selectedSubmission.id)} 
+                    className="flex-1 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/20 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                  >
+                    Eintrag Löschen
+                  </button>
+                </div>
+
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center bg-[#1a1c23]/30 border border-white/5 rounded-[40px] p-20 text-center space-y-6 opacity-30">
-                 <div className="text-7xl animate-bounce">💡</div>
-                 <div className="text-slate-600 font-black uppercase tracking-[0.5em] text-sm">Wählen Sie einen Datensatz zur Auswertung</div>
+              <div className="h-full flex flex-col items-center justify-center bg-[#1a1c23]/30 border border-white/5 rounded-[32px] p-20 text-center space-y-4 opacity-20">
+                 <div className="text-6xl animate-pulse">💡</div>
+                 <div className="text-slate-600 font-black uppercase tracking-widest text-[12px]">Wählen Sie einen Hinweis zur Bearbeitung</div>
               </div>
             )}
           </div>

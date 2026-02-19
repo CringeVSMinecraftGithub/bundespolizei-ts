@@ -38,6 +38,7 @@ export interface User {
   isAdmin: boolean;
   permissions: Permission[];
   password?: string;
+  isLocked?: boolean;
 }
 
 export interface PressRelease {

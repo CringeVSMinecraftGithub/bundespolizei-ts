@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../App';
 import { Permission, User, Law, UserRole } from '../types';
 import { POLICE_LOGO_RAW } from '../constants';
-import { dbCollections, onSnapshot, query, orderBy, setDoc, doc, db, deleteDoc, addDoc } from '../firebase';
+import { dbCollections, onSnapshot, query, setDoc, doc, db, deleteDoc, addDoc, updateDoc } from '../firebase';
 import PoliceOSWindow from '../components/PoliceOSWindow';
 
 const LEGACY_PERMISSION_MAP: Record<string, Permission> = {
@@ -47,72 +47,144 @@ const AdminPanel: React.FC = () => {
   const [laws, setLaws] = useState<Law[]>([]);
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [lawSearchTerm, setLawSearchTerm] = useState('');
+  
+  const [valErrors, setValErrors] = useState<string[]>([]);
+  const [statusMsg, setStatusMsg] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
+
+  const sortLawsNumerically = (lawsList: Law[]) => {
+    return [...lawsList].sort((a, b) => {
+      const getParts = (p: string) => {
+        const match = p.match(/(\d+)([a-z]*)/i);
+        if (!match) return { num: 0, suffix: p.toLowerCase() };
+        return { 
+          num: parseInt(match[1], 10), 
+          suffix: match[2].toLowerCase() 
+        };
+      };
+
+      const aParts = getParts(a.paragraph);
+      const bParts = getParts(b.paragraph);
+
+      if (aParts.num !== bParts.num) {
+        return aParts.num - bParts.num;
+      }
+      return aParts.suffix.localeCompare(bParts.suffix);
+    });
+  };
 
   useEffect(() => {
     const unsubUsers = onSnapshot(query(dbCollections.users), (snap) => {
       setUsers(snap.docs.map(d => ({ ...d.data(), id: d.id } as User)));
     });
-    const unsubLaws = onSnapshot(query(dbCollections.laws, orderBy("paragraph", "asc")), (snap) => {
-      setLaws(snap.docs.map(d => ({ id: d.id, ...d.data() } as Law)));
+    
+    const unsubLaws = onSnapshot(query(dbCollections.laws), (snap) => {
+      const rawLaws = snap.docs.map(d => ({ id: d.id, ...d.data() } as Law));
+      setLaws(sortLawsNumerically(rawLaws));
     });
+
     return () => { unsubUsers(); unsubLaws(); };
   }, []);
 
+  const showStatus = (text: string, type: 'error' | 'success' = 'error') => {
+    setStatusMsg({ text, type });
+    setTimeout(() => setStatusMsg(null), 4000);
+  };
+
   const normalizePermissions = (perms: any[] = []): Permission[] => {
     if (!perms || !Array.isArray(perms)) return [];
-    // Mappt sowohl interne Keys (view_reports) als auch bereits gesetzte Labels auf die aktuellen Enum-Werte
-    const normalized = perms.map(p => {
-      if (LEGACY_PERMISSION_MAP[p]) return LEGACY_PERMISSION_MAP[p];
-      return p as Permission;
-    });
+    const normalized = perms.map(p => LEGACY_PERMISSION_MAP[p] || p as Permission);
     const validValues = Object.values(Permission) as string[];
     return Array.from(new Set(normalized)).filter(p => validValues.includes(p as string)) as Permission[];
   };
 
   const saveUser = async () => {
-    if (editingUser) {
+    if (!editingUser) return;
+    try {
       await setDoc(doc(db, "users", editingUser.id), { 
         ...editingUser, 
         permissions: normalizePermissions(editingUser.permissions) 
       });
+      setIsUserModalOpen(false);
+      showStatus("Mitarbeiterprofil aktualisiert.", "success");
+    } catch (e) { showStatus("Fehler beim Speichern."); }
+  };
+
+  const toggleUserLock = async (user: User) => {
+    try {
+      await updateDoc(doc(db, "users", user.id), {
+        isLocked: !user.isLocked
+      });
+      showStatus(`Account ${user.isLocked ? 'entsperrt' : 'gesperrt'}.`, "success");
+    } catch (e) {
+      showStatus("Fehler beim Ändern des Sperrstatus.");
     }
-    setIsUserModalOpen(false);
+  };
+
+  const deleteUser = async (userId: string) => {
+    if (!confirm("Soll dieser Account wirklich vollständig aus der Datenbank gelöscht werden?")) return;
+    try {
+      await deleteDoc(doc(db, "users", userId));
+      showStatus("Account vollständig gelöscht.", "success");
+    } catch (e) {
+      showStatus("Fehler beim Löschen des Accounts.");
+    }
   };
 
   const saveRole = async () => {
-    if (editingRole) {
+    if (!editingRole) return;
+    if (!editingRole.name.trim()) { showStatus("Name erforderlich."); return; }
+    try {
       const id = editingRole.id || editingRole.name.toUpperCase().replace(/\s/g, '_');
       await setDoc(doc(db, "roles", id), { 
         ...editingRole, 
         id, 
         permissions: normalizePermissions(editingRole.permissions) 
       });
-    }
-    setIsRoleModalOpen(false);
+      setIsRoleModalOpen(false);
+      showStatus("Rolle erfolgreich gespeichert.", "success");
+    } catch (e) { showStatus("Fehler beim Speichern der Rolle."); }
   };
 
   const saveLaw = async () => {
-    if (editingLaw) {
-      if (!editingLaw.paragraph || !editingLaw.title || !editingLaw.category) {
-        alert("Bitte füllen Sie alle Pflichtfelder aus (Gesetz, Paragraph, Titel).");
-        return;
-      }
-      if (editingLaw.id) {
-        await setDoc(doc(db, "laws", editingLaw.id), editingLaw);
-      } else {
-        await addDoc(dbCollections.laws, { ...editingLaw });
-      }
+    if (!editingLaw) return;
+    const p = editingLaw.paragraph?.trim() || "";
+    const t = editingLaw.title?.trim() || "";
+    const c = editingLaw.category?.trim() || "";
+    const errors: string[] = [];
+    if (!p || p === '§') errors.push('paragraph');
+    if (!t) errors.push('title');
+    if (!c) errors.push('category');
+    if (errors.length > 0) {
+      setValErrors(errors);
+      showStatus("Bitte füllen Sie alle markierten Pflichtfelder aus.");
+      return;
     }
-    setIsLawModalOpen(false);
-    setEditingLaw(null);
+    try {
+      const dataToSave = { ...editingLaw, paragraph: p, title: t, category: c };
+      if (dataToSave.id) {
+        await setDoc(doc(db, "laws", dataToSave.id), dataToSave);
+      } else {
+        await addDoc(dbCollections.laws, dataToSave);
+      }
+      setIsLawModalOpen(false);
+      setEditingLaw(null);
+      setValErrors([]);
+      showStatus("Gesetzestext gespeichert.", "success");
+    } catch (e) { showStatus("Datenbankfehler."); }
   };
 
   const deleteLaw = async (id: string) => {
-    if (confirm("Gesetz wirklich löschen?")) await deleteDoc(doc(db, "laws", id));
+    if (confirm("Eintrag wirklich löschen?")) {
+      try {
+        await deleteDoc(doc(db, "laws", id));
+        showStatus("Gesetz gelöscht.", "success");
+      } catch (e) { showStatus("Fehler beim Löschen."); }
+    }
   };
 
   const filteredUsers = users.filter(u => 
     u.lastName.toLowerCase().includes(userSearchTerm.toLowerCase()) || 
+    u.firstName.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
     u.badgeNumber.toLowerCase().includes(userSearchTerm.toLowerCase())
   );
   
@@ -133,7 +205,17 @@ const AdminPanel: React.FC = () => {
 
   return (
     <PoliceOSWindow title="Systemadministration">
-      <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-700 pb-24">
+      <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-700 pb-24 relative">
+        
+        {statusMsg && (
+          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[2000] animate-in slide-in-from-top-4 duration-300">
+            <div className={`px-8 py-4 rounded-2xl shadow-2xl border flex items-center gap-4 backdrop-blur-xl ${statusMsg.type === 'error' ? 'bg-red-600/20 border-red-500 text-red-500' : 'bg-emerald-600/20 border-emerald-500 text-emerald-500'}`}>
+              <span className="text-lg">{statusMsg.type === 'error' ? '⚠️' : '✅'}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">{statusMsg.text}</span>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-6 mb-8 border-b border-white/5 pb-6">
           <img src={POLICE_LOGO_RAW} alt="BPOL Logo" className="h-16 w-auto" />
           <h1 className="text-3xl font-black text-white uppercase tracking-tighter">System <span className="text-blue-500">Administration</span></h1>
@@ -154,15 +236,47 @@ const AdminPanel: React.FC = () => {
             <div className="bg-[#1a1c23] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-black/50 text-slate-500 uppercase font-black tracking-widest border-b border-white/5">
-                    <tr><th className="p-5">Mitarbeiter</th><th className="p-5">Dienstnummer</th><th className="p-5">Hauptrolle</th><th className="p-5 text-right">Aktionen</th></tr>
+                    <tr>
+                      <th className="p-5">Mitarbeiter</th>
+                      <th className="p-5">Dienstgrad</th>
+                      <th className="p-5">Dienstnummer</th>
+                      <th className="p-5">Hauptrolle</th>
+                      <th className="p-5">Sonderrolle</th>
+                      <th className="p-5 text-right">Aktionen</th>
+                    </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 text-[11px]">
                     {filteredUsers.map(u => (
-                      <tr key={u.id} className="hover:bg-white/[0.02] transition-all">
-                        <td className="p-5 font-black text-white uppercase">{u.rank} {u.lastName}</td>
+                      <tr key={u.id} className={`hover:bg-white/[0.02] transition-all ${u.isLocked ? 'opacity-50' : ''}`}>
+                        <td className="p-5 font-black text-white uppercase">{u.firstName} {u.lastName}</td>
+                        <td className="p-5 text-slate-400 font-bold">{u.rank}</td>
                         <td className="p-5 font-mono text-blue-400 font-black">{u.badgeNumber}</td>
-                        <td className="p-5 text-slate-400">{allRoles.find(r => r.id === u.role)?.name || u.role}</td>
-                        <td className="p-5 text-right"><button onClick={() => { setEditingUser({ ...u, permissions: normalizePermissions(u.permissions) }); setIsUserModalOpen(true); }} className="text-blue-500 text-[10px] font-black uppercase hover:text-white transition-colors">Edit</button></td>
+                        <td className="p-5">
+                          <span className="bg-blue-600/10 text-blue-500 px-2 py-1 rounded text-[9px] font-black uppercase border border-blue-500/20">
+                            {allRoles.find(r => r.id === u.role)?.name || u.role}
+                          </span>
+                        </td>
+                        <td className="p-5">
+                          <div className="flex flex-wrap gap-1">
+                            {u.specialRoles?.length > 0 ? u.specialRoles.map(srId => {
+                              const sr = allRoles.find(r => r.id === srId);
+                              return (
+                                <span key={srId} className="bg-indigo-600/10 text-indigo-400 px-2 py-0.5 rounded text-[8px] font-black uppercase border border-indigo-600/20">
+                                  {sr?.name || srId}
+                                </span>
+                              );
+                            }) : <span className="text-slate-600 italic">Keine</span>}
+                          </div>
+                        </td>
+                        <td className="p-5 text-right">
+                          <div className="flex justify-end gap-3">
+                            <button onClick={() => { setEditingUser({ ...u, permissions: normalizePermissions(u.permissions) }); setIsUserModalOpen(true); }} className="text-blue-500 text-[10px] font-black uppercase hover:text-white transition-colors">Edit</button>
+                            <button onClick={() => toggleUserLock(u)} className={`${u.isLocked ? 'text-emerald-500' : 'text-amber-500'} text-[10px] font-black uppercase hover:text-white transition-colors`}>
+                              {u.isLocked ? 'Entsperren' : 'Sperren'}
+                            </button>
+                            <button onClick={() => deleteUser(u.id)} className="text-red-500 text-[10px] font-black uppercase hover:text-white transition-colors">Löschen</button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -182,7 +296,7 @@ const AdminPanel: React.FC = () => {
                    <div className="space-y-2">
                       {allRoles.filter(r => type === 'Sonderrollen' ? r.isSpecial : !r.isSpecial).map(r => (
                         <div key={r.id} className="bg-black/30 border border-white/5 p-4 rounded-2xl flex justify-between items-center group hover:border-blue-500/30 transition-all">
-                           <div className="text-[10px] font-black text-white uppercase">{r.name} <span className="text-slate-500 font-bold ml-2">({r.permissions?.length || 0} Rechte)</span></div>
+                           <div className="text-[10px] font-black text-white uppercase">{r.name} <span className="text-slate-500 font-bold ml-2">({normalizePermissions(r.permissions).length} Rechte)</span></div>
                            <button onClick={() => { setEditingRole({ ...r, permissions: normalizePermissions(r.permissions) }); setIsRoleModalOpen(true); }} className="text-blue-500 text-[10px] font-black uppercase">Edit</button>
                         </div>
                       ))}
@@ -199,7 +313,7 @@ const AdminPanel: React.FC = () => {
                   <span className="text-slate-600">🔍</span>
                   <input value={lawSearchTerm} onChange={e => setLawSearchTerm(e.target.value)} placeholder="Suche nach § oder Titel..." className="bg-transparent border-none outline-none text-[10px] font-black uppercase text-white flex-1" />
                </div>
-               <button onClick={() => { setEditingLaw({ paragraph: '§ ', title: '', category: 'StGB', description: '' }); setIsLawModalOpen(true); }} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20">Neues Gesetz erfassen</button>
+               <button onClick={() => { setValErrors([]); setEditingLaw({ paragraph: '§ ', title: '', category: '', description: '' }); setIsLawModalOpen(true); }} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20">Neues Gesetz erfassen</button>
             </div>
             
             <div className="space-y-6">
@@ -231,7 +345,7 @@ const AdminPanel: React.FC = () => {
                             <td className="px-6 py-1.5 text-slate-500 italic truncate max-w-xs">{l.description || 'N/A'}</td>
                             <td className="px-6 py-1.5 text-right">
                                <div className="flex justify-end gap-3">
-                                  <button onClick={() => { setEditingLaw(l); setIsLawModalOpen(true); }} className="text-blue-500 font-black uppercase text-[9px] hover:text-white transition-colors">Edit</button>
+                                  <button onClick={() => { setValErrors([]); setEditingLaw(l); setIsLawModalOpen(true); }} className="text-blue-500 font-black uppercase text-[9px] hover:text-white transition-colors">Edit</button>
                                   <button onClick={() => deleteLaw(l.id)} className="text-red-500 font-black uppercase text-[9px] hover:text-white transition-colors">Löschen</button>
                                </div>
                             </td>
@@ -248,18 +362,20 @@ const AdminPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Law Edit Modal - Updated with Dropdown */}
       {isLawModalOpen && editingLaw && (
         <div className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-8 animate-in fade-in duration-200">
-           <div className="bg-[#0a0c10] border border-white/10 p-10 rounded-[40px] w-full max-w-xl space-y-8 shadow-2xl">
+           <div className="bg-[#0a0c10] border border-white/10 p-10 rounded-[40px] w-full max-w-xl space-y-8 shadow-2xl relative">
               <h2 className="text-2xl font-black text-white uppercase tracking-tighter">{editingLaw.id ? 'Gesetz editieren' : 'Neuer Eintrag'}</h2>
               <div className="grid grid-cols-2 gap-6">
                  <div className="space-y-1">
                     <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Gesetz (Kürzel)</label>
                     <select 
                       value={editingLaw.category} 
-                      onChange={e => setEditingLaw({...editingLaw, category: e.target.value})} 
-                      className="w-full bg-black border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-600 uppercase font-black appearance-none cursor-pointer"
+                      onChange={e => {
+                        setEditingLaw({...editingLaw, category: e.target.value});
+                        setValErrors(prev => prev.filter(err => err !== 'category'));
+                      }} 
+                      className={`w-full bg-black border p-4 rounded-xl text-white outline-none focus:border-blue-600 uppercase font-black appearance-none cursor-pointer transition-all ${valErrors.includes('category') ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-white/10'}`}
                     >
                       <option value="" disabled>Auswählen...</option>
                       {LAW_ABBREVIATIONS.map(abbr => (
@@ -269,29 +385,83 @@ const AdminPanel: React.FC = () => {
                  </div>
                  <div className="space-y-1">
                     <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Paragraph</label>
-                    <input value={editingLaw.paragraph} onChange={e => setEditingLaw({...editingLaw, paragraph: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-600 font-mono" placeholder="§ 242" />
+                    <input 
+                      value={editingLaw.paragraph} 
+                      onChange={e => {
+                        setEditingLaw({...editingLaw, paragraph: e.target.value});
+                        setValErrors(prev => prev.filter(err => err !== 'paragraph'));
+                      }} 
+                      className={`w-full bg-black border p-4 rounded-xl text-white outline-none focus:border-blue-600 font-mono transition-all ${valErrors.includes('paragraph') ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-white/10'}`} 
+                      placeholder="§ 242" 
+                    />
                  </div>
                  <div className="col-span-2 space-y-1">
                     <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Titel</label>
-                    <input value={editingLaw.title} onChange={e => setEditingLaw({...editingLaw, title: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-600 uppercase font-black" placeholder="Diebstahl" />
+                    <input 
+                      value={editingLaw.title} 
+                      onChange={e => {
+                        setEditingLaw({...editingLaw, title: e.target.value});
+                        setValErrors(prev => prev.filter(err => err !== 'title'));
+                      }} 
+                      className={`w-full bg-black border p-4 rounded-xl text-white outline-none focus:border-blue-600 uppercase font-black transition-all ${valErrors.includes('title') ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-white/10'}`} 
+                      placeholder="Diebstahl" 
+                    />
                  </div>
                  <div className="col-span-2 space-y-1">
                     <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Beschreibung</label>
-                    <textarea value={editingLaw.description} onChange={e => setEditingLaw({...editingLaw, description: e.target.value})} className="w-full bg-black border border-white/10 p-4 rounded-xl text-white text-xs h-24 outline-none resize-none focus:border-blue-600" placeholder="Tatbestandsmerkmale..." />
+                    <textarea 
+                      value={editingLaw.description} 
+                      onChange={e => setEditingLaw({...editingLaw, description: e.target.value})} 
+                      className="w-full bg-black border border-white/10 p-4 rounded-xl text-white text-xs h-24 outline-none resize-none focus:border-blue-600" 
+                      placeholder="Zusätzliche Informationen..." 
+                    />
                  </div>
               </div>
               <div className="flex gap-4 pt-4">
-                 <button onClick={() => setIsLawModalOpen(false)} className="flex-1 py-4 text-[9px] font-black uppercase text-slate-500 hover:text-white transition-colors">Abbrechen</button>
-                 <button onClick={saveLaw} className="flex-2 bg-blue-600 py-4 px-10 rounded-2xl font-black uppercase text-[9px] tracking-widest text-white shadow-xl active:scale-95 transition-all">In Datenbank schreiben</button>
+                 <button onClick={() => { setIsLawModalOpen(false); setStatusMsg(null); setValErrors([]); }} className="flex-1 py-4 text-[9px] font-black uppercase text-slate-500 hover:text-white transition-colors">Abbrechen</button>
+                 <button onClick={saveLaw} className="flex-2 bg-blue-600 py-4 px-10 rounded-2xl font-black uppercase text-[9px] tracking-widest text-white shadow-xl active:scale-95 transition-all">Daten Speichern</button>
               </div>
            </div>
         </div>
       )}
 
-      {/* User Modal */}
+      {isRoleModalOpen && editingRole && (
+        <div className="fixed inset-0 z-[1000] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-8 animate-in fade-in">
+           <div className="bg-[#0a111f] border border-white/10 p-12 rounded-[50px] w-full max-w-2xl space-y-10 shadow-2xl relative">
+              <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Rolle konfigurieren</h2>
+              <input value={editingRole.name} onChange={e => setEditingRole({...editingRole, name: e.target.value})} className="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white font-black uppercase outline-none focus:border-blue-600" placeholder="Rollenname" />
+              <div className="grid grid-cols-2 gap-2 max-h-[40vh] overflow-y-auto custom-scrollbar p-2 bg-black/20 rounded-3xl border border-white/5">
+                 {Object.values(Permission).map(p => {
+                   const isChecked = (editingRole.permissions || []).includes(p);
+                   return (
+                     <label key={p} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 border border-white/5 transition-all group">
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked} 
+                          onChange={e => {
+                            const currentPerms = editingRole.permissions || [];
+                            const permsSet = new Set(currentPerms);
+                            if (e.target.checked) permsSet.add(p); else permsSet.delete(p);
+                            setEditingRole({...editingRole, permissions: Array.from(permsSet)});
+                          }} 
+                          className="w-5 h-5 rounded-lg border-white/10 bg-slate-800 text-blue-600 focus:ring-0" 
+                        />
+                        <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${isChecked ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'}`}>{p}</span>
+                     </label>
+                   );
+                 })}
+              </div>
+              <div className="flex gap-4 pt-8 border-t border-white/5">
+                 <button onClick={() => { setIsRoleModalOpen(false); setStatusMsg(null); }} className="flex-1 bg-white/5 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:text-white transition-colors">Abbrechen</button>
+                 <button onClick={saveRole} className="flex-1 bg-blue-600 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white shadow-xl shadow-blue-900/40 active:scale-95 transition-all">Rolle Speichern</button>
+              </div>
+           </div>
+        </div>
+      )}
+
       {isUserModalOpen && editingUser && (
         <div className="fixed inset-0 z-[1000] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-8 animate-in fade-in">
-           <div className="bg-[#0a111f] border border-white/10 p-12 rounded-[50px] w-full max-w-2xl space-y-10 shadow-2xl">
+           <div className="bg-[#0a111f] border border-white/10 p-12 rounded-[50px] w-full max-w-2xl space-y-10 shadow-2xl relative">
               <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Mitarbeiterprofil</h2>
               <div className="grid grid-cols-2 gap-6">
                  <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Vorname</label><input value={editingUser.firstName} onChange={e => setEditingUser({...editingUser, firstName: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none" /></div>
@@ -323,48 +493,13 @@ const AdminPanel: React.FC = () => {
                  </div>
               </div>
               <div className="flex gap-4 pt-8">
-                 <button onClick={() => setIsUserModalOpen(false)} className="flex-1 bg-white/5 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest">Abbrechen</button>
-                 <button onClick={saveUser} className="flex-1 bg-blue-600 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95">Speichern</button>
+                 <button onClick={() => { setIsUserModalOpen(false); setStatusMsg(null); }} className="flex-1 bg-white/5 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all">Abbrechen</button>
+                 <button onClick={saveUser} className="flex-1 bg-blue-600 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">Speichern</button>
               </div>
            </div>
         </div>
       )}
-
-      {/* Role Modal - Improved data mapping for persistent checkboxes */}
-      {isRoleModalOpen && editingRole && (
-        <div className="fixed inset-0 z-[1000] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-8 animate-in fade-in">
-           <div className="bg-[#0a111f] border border-white/10 p-12 rounded-[50px] w-full max-w-2xl space-y-10 shadow-2xl">
-              <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Rolle konfigurieren</h2>
-              <input value={editingRole.name} onChange={e => setEditingRole({...editingRole, name: e.target.value})} className="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white font-black uppercase outline-none focus:border-blue-600" placeholder="Rollenname" />
-              <div className="grid grid-cols-2 gap-2 max-h-[40vh] overflow-y-auto custom-scrollbar p-2 bg-black/20 rounded-3xl border border-white/5">
-                 {Object.values(Permission).map(p => {
-                   const isChecked = (editingRole.permissions || []).includes(p);
-                   return (
-                     <label key={p} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 border border-white/5 transition-all group">
-                        <input 
-                          type="checkbox" 
-                          checked={isChecked} 
-                          onChange={e => {
-                            const currentPerms = editingRole.permissions || [];
-                            const permsSet = new Set(currentPerms);
-                            if (e.target.checked) permsSet.add(p); else permsSet.delete(p);
-                            setEditingRole({...editingRole, permissions: Array.from(permsSet)});
-                          }} 
-                          className="w-5 h-5 rounded-lg border-white/10 bg-slate-800 text-blue-600 focus:ring-0" 
-                        />
-                        <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${isChecked ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'}`}>{p}</span>
-                     </label>
-                   );
-                 })}
-              </div>
-              <div className="flex gap-4 pt-8 border-t border-white/5">
-                 <button onClick={() => setIsRoleModalOpen(false)} className="flex-1 bg-white/5 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest text-slate-500 hover:text-white transition-colors">Abbrechen</button>
-                 <button onClick={saveRole} className="flex-1 bg-blue-600 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white shadow-xl shadow-blue-900/40 active:scale-95 transition-all">Rolle Speichern</button>
-              </div>
-           </div>
-        </div>
-      )}
-    </PoliceOSWindow>
+    </div>
   );
 };
 

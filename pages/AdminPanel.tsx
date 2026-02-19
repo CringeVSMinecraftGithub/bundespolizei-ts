@@ -61,13 +61,9 @@ const AdminPanel: React.FC = () => {
           suffix: match[2].toLowerCase() 
         };
       };
-
       const aParts = getParts(a.paragraph);
       const bParts = getParts(b.paragraph);
-
-      if (aParts.num !== bParts.num) {
-        return aParts.num - bParts.num;
-      }
+      if (aParts.num !== bParts.num) return aParts.num - bParts.num;
       return aParts.suffix.localeCompare(bParts.suffix);
     });
   };
@@ -231,7 +227,7 @@ const AdminPanel: React.FC = () => {
           <div className="space-y-4 animate-in slide-in-from-bottom-2">
             <div className="flex justify-between items-center bg-[#1a1c23]/50 p-4 rounded-3xl border border-white/5">
                <input value={userSearchTerm} onChange={e => setUserSearchTerm(e.target.value)} placeholder="Personal suchen..." className="bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-xs text-white w-72 outline-none focus:border-blue-500" />
-               <button onClick={() => { setEditingUser({ id: `user-${Date.now()}`, firstName: '', lastName: '', rank: '', badgeNumber: '', role: 'DSL', specialRoles: [], isAdmin: false, permissions: [] }); setIsUserModalOpen(true); }} className="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest">Account anlegen</button>
+               <button onClick={() => { setEditingUser({ id: `user-${Date.now()}`, firstName: '', lastName: '', rank: '', badgeNumber: '', role: 'DSL', specialRoles: [], isAdmin: false, permissions: [], isLocked: false }); setIsUserModalOpen(true); }} className="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Account anlegen</button>
             </div>
             <div className="bg-[#1a1c23] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
                 <table className="w-full text-left text-xs">
@@ -247,9 +243,14 @@ const AdminPanel: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-white/5 text-[11px]">
                     {filteredUsers.map(u => (
-                      <tr key={u.id} className={`hover:bg-white/[0.02] transition-all ${u.isLocked ? 'opacity-50' : ''}`}>
-                        <td className="p-5 font-black text-white uppercase">{u.firstName} {u.lastName}</td>
-                        <td className="p-5 text-slate-400 font-bold">{u.rank}</td>
+                      <tr key={u.id} className={`hover:bg-white/[0.02] transition-all ${u.isLocked ? 'bg-red-900/10' : ''}`}>
+                        <td className="p-5">
+                          <div className="flex flex-col">
+                            <span className={`font-black text-white uppercase ${u.isLocked ? 'text-red-400' : ''}`}>{u.firstName} {u.lastName}</span>
+                            {u.isLocked && <span className="text-[7px] font-black text-red-500 uppercase tracking-widest">Konto gesperrt</span>}
+                          </div>
+                        </td>
+                        <td className="p-5 text-slate-400 font-bold uppercase">{u.rank}</td>
                         <td className="p-5 font-mono text-blue-400 font-black">{u.badgeNumber}</td>
                         <td className="p-5">
                           <span className="bg-blue-600/10 text-blue-500 px-2 py-1 rounded text-[9px] font-black uppercase border border-blue-500/20">
@@ -499,7 +500,7 @@ const AdminPanel: React.FC = () => {
            </div>
         </div>
       )}
-    </div>
+    </PoliceOSWindow>
   );
 };
 

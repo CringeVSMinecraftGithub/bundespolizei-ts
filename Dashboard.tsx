@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../App';
-import { Permission, CitizenSubmission, IncidentReport, Reminder } from '../types';
-import { DASHBOARD_BG } from '../constants';
-import { dbCollections, onSnapshot, query, orderBy, limit, doc, updateDoc, db } from '../firebase';
+import { useAuth } from './App';
+import { Permission, CitizenSubmission, IncidentReport, Reminder } from './types';
+import { DASHBOARD_BG } from './constants';
+import { dbCollections, onSnapshot, query, orderBy, limit, doc, updateDoc, db } from './firebase';
 
 interface DesktopApp {
   id: string;

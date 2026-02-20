@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import PoliceOSWindow from '../components/PoliceOSWindow';
+import DataModal from '../components/DataModal';
 import { dbCollections, onSnapshot, query, orderBy, addDoc, deleteDoc, doc, db } from '../firebase';
 import { Evidence } from '../types';
 import { useAuth } from '../App';
@@ -15,6 +16,8 @@ const EvidencePage: React.FC = () => {
   const [locationFilter, setLocationFilter] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; order: SortOrder }>({ key: 'timestamp', order: 'desc' });
   const [isAdding, setIsAdding] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<Evidence | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const initialTimestamp = new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Berlin' }).replace(' ', 'T').slice(0, 16);
   const [newItem, setNewItem] = useState({ 
@@ -63,6 +66,7 @@ const EvidencePage: React.FC = () => {
     if (confirm("Sind Sie sicher, dass Sie dieses Beweismittel unwiderruflich löschen möchten?")) {
       try {
         await deleteDoc(doc(db, "evidence", id));
+        setIsModalOpen(false);
       } catch (e) {
         console.error(e);
         alert("Fehler beim Löschen des Datensatzes.");
@@ -101,127 +105,176 @@ const EvidencePage: React.FC = () => {
     return locs.sort();
   }, [evidence]);
 
+  const handleOpenItem = (e: Evidence) => {
+    setSelectedItem(e);
+    setIsModalOpen(true);
+  };
+
   return (
-    <PoliceOSWindow title="Asservatenkammer">
-      <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500 pb-20">
-        <div className="flex justify-between items-end">
-          <div>
-            <h1 className="text-4xl font-light text-white tracking-tight uppercase">Asservaten <span className="text-orange-500 font-bold">Kammer</span></h1>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-2">Beweismittel-Datenbank Teamstadt</p>
+    <PoliceOSWindow title="Asservatenkammer • Beweismittelverwaltung">
+      <div className="h-full flex flex-col gap-4 overflow-hidden">
+        
+        {/* Header & Controls */}
+        <div className="shrink-0 flex items-center justify-between bg-[#1a1c23]/60 backdrop-blur-md p-4 rounded-[24px] border border-white/5 shadow-2xl">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-orange-600/10 border border-orange-500/20 text-orange-500 rounded-xl flex items-center justify-center text-xl">📦</div>
+            <div>
+              <h1 className="text-lg font-black text-white uppercase tracking-tighter leading-none">Asservaten <span className="text-orange-500 font-bold">Kammer</span></h1>
+            </div>
           </div>
-          <button onClick={() => setIsAdding(true)} className="bg-orange-600 hover:bg-orange-500 text-white px-8 py-3 rounded-sm text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-orange-950/20">Neues Beweismittel</button>
+          <button onClick={() => setIsAdding(true)} className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95">Neues Beweismittel</button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-3 bg-[#1a1d24] border border-slate-700/50 p-6 rounded-sm flex items-center gap-4">
-            <span className="text-slate-500">🔍</span>
-            <input 
-              value={searchTerm} 
-              onChange={e => setSearchTerm(e.target.value)} 
-              placeholder="Nach Aktenzeichen oder Gegenstand suchen..." 
-              className="flex-1 bg-transparent border-none outline-none text-sm text-slate-200" 
-            />
-          </div>
-          <div className="bg-[#1a1d24] border border-slate-700/50 p-6 rounded-sm flex items-center gap-4">
-             <span className="text-[10px] font-black uppercase text-slate-500 whitespace-nowrap">Lagerort:</span>
-             <select 
-               value={locationFilter} 
-               onChange={e => setLocationFilter(e.target.value)}
-               className="flex-1 bg-transparent border-none outline-none text-sm text-slate-200 cursor-pointer"
-             >
-                <option value="" className="bg-slate-900">Alle Orte</option>
-                {uniqueLocations.map(loc => (
-                  <option key={loc} value={loc} className="bg-slate-900">{loc}</option>
-                ))}
-             </select>
-          </div>
+        {/* Search & Filter Bar */}
+        <div className="shrink-0 grid grid-cols-1 md:grid-cols-2 gap-4 bg-black/20 p-3 rounded-2xl border border-white/5">
+           <div className="flex items-center gap-3 bg-black/40 border border-white/5 rounded-xl px-4 py-2 focus-within:border-orange-500 transition-all">
+              <span className="text-slate-600 text-xs">🔍</span>
+              <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Aktenzeichen oder Gegenstand..." className="bg-transparent border-none outline-none text-[9px] font-black uppercase text-white placeholder:text-slate-700 flex-1" />
+           </div>
+           <div className="flex items-center gap-3 bg-black/40 border border-white/5 rounded-xl px-4 py-2">
+              <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">Lagerort:</span>
+              <select value={locationFilter} onChange={e => setLocationFilter(e.target.value)} className="bg-transparent border-none outline-none text-[9px] font-black uppercase text-white flex-1 cursor-pointer">
+                 <option className="bg-slate-900" value="">Alle Orte</option>
+                 {uniqueLocations.map(loc => (
+                   <option key={loc} value={loc} className="bg-slate-900">{loc}</option>
+                 ))}
+              </select>
+           </div>
         </div>
 
         {isAdding && (
-          <div className="bg-[#1f2937] border border-orange-500/30 p-8 rounded-sm space-y-6 animate-in slide-in-from-top-4">
-            <h3 className="text-lg font-bold text-white uppercase tracking-tighter">Beweismittel erfassen</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="shrink-0 bg-orange-950/10 border border-orange-500/30 p-6 rounded-[32px] space-y-4 animate-in slide-in-from-top-4 backdrop-blur-md shadow-2xl">
+            <h3 className="text-sm font-black text-white uppercase tracking-tighter">Beweismittel erfassen</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Aktenzeichen</label>
-                <input placeholder="z.B. ANZ-1234" className="w-full bg-black/40 border border-white/10 p-4 text-sm text-white outline-none focus:border-orange-500 transition-all" value={newItem.caseNumber} onChange={e => setNewItem({...newItem, caseNumber: e.target.value})} />
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Aktenzeichen</label>
+                <input placeholder="z.B. ANZ-1234" className="w-full bg-black/60 border border-white/10 p-3 rounded-xl text-[10px] text-white outline-none focus:border-orange-500 transition-all" value={newItem.caseNumber} onChange={e => setNewItem({...newItem, caseNumber: e.target.value})} />
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Bezeichnung *</label>
-                <input placeholder="Name des Gegenstands" className="w-full bg-black/40 border border-white/10 p-4 text-sm text-white outline-none focus:border-orange-500 transition-all" value={newItem.itemName} onChange={e => setNewItem({...newItem, itemName: e.target.value})} />
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Bezeichnung *</label>
+                <input placeholder="Name des Gegenstands" className="w-full bg-black/60 border border-white/10 p-3 rounded-xl text-[10px] text-white outline-none focus:border-orange-500 transition-all" value={newItem.itemName} onChange={e => setNewItem({...newItem, itemName: e.target.value})} />
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Lagerort</label>
-                <input placeholder="z.B. Regal B-12" className="w-full bg-black/40 border border-white/10 p-4 text-sm text-white outline-none focus:border-orange-500 transition-all" value={newItem.location} onChange={e => setNewItem({...newItem, location: e.target.value})} />
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Lagerort</label>
+                <input placeholder="z.B. Regal B-12" className="w-full bg-black/60 border border-white/10 p-3 rounded-xl text-[10px] text-white outline-none focus:border-orange-500 transition-all" value={newItem.location} onChange={e => setNewItem({...newItem, location: e.target.value})} />
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Zeitpunkt der Sicherstellung</label>
-                <input type="datetime-local" className="w-full bg-black/40 border border-white/10 p-4 text-sm text-white outline-none [color-scheme:dark] focus:border-orange-500 transition-all" value={newItem.timestamp} onChange={e => setNewItem({...newItem, timestamp: e.target.value})} />
-              </div>
-              <div className="md:col-span-2 space-y-1">
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Beschreibung / Zustand</label>
-                <textarea placeholder="Detaillierte Angaben zum Zustand des Gegenstands..." className="w-full bg-black/40 border border-white/10 p-4 text-sm text-white outline-none resize-none h-24 focus:border-orange-500 transition-all" value={newItem.description} onChange={e => setNewItem({...newItem, description: e.target.value})} />
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Zeitpunkt</label>
+                <input type="datetime-local" className="w-full bg-black/60 border border-white/10 p-3 rounded-xl text-[10px] text-white outline-none [color-scheme:dark]" value={newItem.timestamp} onChange={e => setNewItem({...newItem, timestamp: e.target.value})} />
               </div>
             </div>
-            <div className="flex gap-4">
-              <button onClick={handleAdd} className="bg-orange-600 hover:bg-orange-500 px-10 py-3 rounded-sm text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-orange-950/20 active:scale-95">Einlagern</button>
-              <button onClick={() => setIsAdding(false)} className="bg-slate-700 hover:bg-slate-600 px-10 py-3 rounded-sm text-[11px] font-black uppercase tracking-widest transition-all active:scale-95">Abbrechen</button>
+            <div className="flex gap-3">
+              <button onClick={handleAdd} className="bg-orange-600 hover:bg-orange-500 text-white px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95">Einlagern</button>
+              <button onClick={() => setIsAdding(false)} className="bg-white/5 hover:bg-white/10 text-slate-400 px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Abbrechen</button>
             </div>
           </div>
         )}
 
-        <div className="overflow-x-auto bg-[#1a1d24] border border-slate-700/50 rounded-sm">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-black/50 text-slate-500 uppercase font-black tracking-widest border-b border-white/10 select-none">
-              <tr>
-                <th className="p-6 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort('caseNumber')}>
-                  Aktenzeichen {sortConfig.key === 'caseNumber' && (sortConfig.order === 'asc' ? '↑' : '↓')}
-                </th>
-                <th className="p-6 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort('itemName')}>
-                  Gegenstand {sortConfig.key === 'itemName' && (sortConfig.order === 'asc' ? '↑' : '↓')}
-                </th>
-                <th className="p-6">Lagerort</th>
-                <th className="p-6">Beamter</th>
-                <th className="p-6 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort('timestamp')}>
-                  Datum {sortConfig.key === 'timestamp' && (sortConfig.order === 'asc' ? '↑' : '↓')}
-                </th>
-                <th className="p-6 text-right">Aktionen</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {processedEvidence.map(e => (
-                <tr key={e.id} className="hover:bg-white/[0.02] transition-all group">
-                  <td className="p-6 font-mono text-orange-500 font-bold">{e.caseNumber || 'N/A'}</td>
-                  <td className="p-6 font-bold text-slate-200">{e.itemName}</td>
-                  <td className="p-6">
-                    <span className="bg-slate-800 px-2 py-1 rounded text-[10px] text-slate-400 border border-white/5 uppercase font-black tracking-widest">
-                      {e.location || 'UNBEKANNT'}
-                    </span>
-                  </td>
-                  <td className="p-6 text-slate-400">{e.seizedBy}</td>
-                  <td className="p-6 text-slate-500 font-mono">
-                    {new Date(e.timestamp).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </td>
-                  <td className="p-6 text-right">
-                    <button 
-                      onClick={() => handleDelete(e.id)} 
-                      className="text-red-500/50 hover:text-red-500 transition-all p-2 rounded-lg hover:bg-red-500/10"
-                      title="Eintrag löschen"
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {processedEvidence.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-20 text-center text-slate-600 italic uppercase tracking-widest text-[10px]">
-                    Keine entsprechenden Beweismittel in der Datenbank gefunden
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        {/* Full-Width List */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+          <div className="grid grid-cols-1 gap-3">
+            {processedEvidence.map(e => (
+              <div 
+                key={e.id} 
+                className="bg-[#1a1c23]/40 border border-white/5 rounded-[24px] p-6 flex items-center justify-between group hover:bg-white/5 transition-all"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-12 h-12 bg-orange-600/10 text-orange-500 rounded-2xl flex items-center justify-center text-2xl shadow-xl">📦</div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-[7px] font-mono text-orange-500 font-bold uppercase tracking-widest">#{e.caseNumber || 'N/A'}</span>
+                      <span className="text-[7px] font-mono text-slate-600 uppercase tracking-widest">{new Date(e.timestamp).toLocaleString('de-DE')}</span>
+                    </div>
+                    <h3 className="text-sm font-black text-white uppercase tracking-tight">{e.itemName}</h3>
+                    <p className="text-[9px] font-bold text-slate-600 uppercase mt-1">Lagerort: {e.location || 'Kein Ort'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-right hidden md:block">
+                    <div className="text-[8px] font-black text-slate-600 uppercase">Sichergestellt von</div>
+                    <div className="text-[10px] font-black text-orange-500 uppercase">{e.seizedBy || 'N/A'}</div>
+                  </div>
+                  <button 
+                    onClick={() => handleOpenItem(e)}
+                    className="px-6 py-2.5 bg-orange-600/10 hover:bg-orange-600 text-orange-500 hover:text-white border border-orange-500/20 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all active:scale-95"
+                  >
+                    Anzeigen
+                  </button>
+                </div>
+              </div>
+            ))}
+            {processedEvidence.length === 0 && (
+              <div className="py-20 text-center opacity-20">
+                <div className="text-6xl mb-4">📦</div>
+                <div className="text-xs font-black uppercase tracking-[0.4em]">Kein Bestand gefunden</div>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Modal for Details */}
+        <DataModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={selectedItem?.itemName || 'Beweismitteldetails'}
+          subtitle={`Aktenzeichen: ${selectedItem?.caseNumber || 'N/A'}`}
+          icon="📦"
+          footer={
+            <div className="flex items-center justify-between">
+              <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest italic">Zentrales Asservatenregister BTS-KAMMER • AES-256 Verschlüsselt</div>
+              <div className="flex gap-4">
+                {selectedItem && (
+                  <button 
+                    onClick={() => handleDelete(selectedItem.id)} 
+                    className="px-6 py-3 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/20 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2"
+                  >
+                    🗑️ Beweismittel vernichten
+                  </button>
+                )}
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-8 py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-orange-900/20"
+                >
+                  Schließen
+                </button>
+              </div>
+            </div>
+          }
+        >
+          {selectedItem && (
+            <div className="space-y-10">
+              {/* Matrix Grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Sichergestellt von</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase truncate">{selectedItem.seizedBy || 'N/A'}</div>
+                 </div>
+                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Einlagerungsdatum</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase">{new Date(selectedItem.timestamp).toLocaleDateString('de-DE')}</div>
+                 </div>
+                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Lagerort-Sektor</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase truncate">{selectedItem.location || 'N/A'}</div>
+                 </div>
+              </div>
+
+              {/* Description Section */}
+              <div className="space-y-4">
+                 <h4 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                    <span className="w-5 h-0.5 bg-orange-600"></span> 
+                    Beschreibung & Zustand
+                 </h4>
+                 <div className="bg-[#1a1c23]/40 border border-white/5 p-10 rounded-[40px] shadow-inner">
+                    <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                       {selectedItem.description || 'Keine detaillierte Beschreibung hinterlegt.'}
+                    </div>
+                 </div>
+              </div>
+            </div>
+          )}
+        </DataModal>
+
       </div>
     </PoliceOSWindow>
   );

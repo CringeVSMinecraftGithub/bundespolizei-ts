@@ -179,4 +179,7 @@ export interface JobApplication {
   oocAge?: string;
   icBirthDate?: string;
   icPhone?: string;
+  gender?: string;
+  education?: string;
+  experience?: string;
 }

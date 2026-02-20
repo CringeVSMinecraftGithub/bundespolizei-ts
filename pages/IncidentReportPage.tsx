@@ -88,192 +88,165 @@ const IncidentReportPage: React.FC = () => {
 
   return (
     <PoliceOSWindow title="Einsatzdokumentation • Erfassung">
-      <div className="max-w-4xl mx-auto py-10 animate-in fade-in duration-500 pb-32">
+      <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 pb-20">
         
-        {/* Header mit Aktenzeichen */}
-        <div className="flex justify-between items-center mb-10 border-b border-white/10 pb-6">
-          <div>
-            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Einsatzbericht <span className="text-blue-500">Erstellen</span></h1>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">Status: Erfassung läuft</p>
+        {/* Header Section */}
+        <div className="flex justify-between items-end border-b border-white/10 pb-6">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Einsatz <span className="text-blue-500">Bericht</span></h1>
+            <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.3em]">Dokumentation polizeilicher Maßnahmen</p>
           </div>
           <div className="text-right">
-             <div className="text-[9px] font-black text-slate-500 uppercase mb-1">Aktenzeichen</div>
+             <div className="text-[8px] font-black text-slate-600 uppercase mb-1">Berichts-Status</div>
              <div className="text-xl font-mono font-black text-blue-400 bg-blue-500/5 px-4 py-2 rounded-lg border border-blue-500/20">{reportId}</div>
           </div>
         </div>
 
-        <div className="space-y-12">
+        {/* Template Selection */}
+        <div className="bg-[#1a1c23]/60 p-4 rounded-2xl border border-white/5 flex items-center gap-6 shadow-xl">
+           <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap ml-2">Vorlage wählen:</div>
+           <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
+              {Object.keys(TEMPLATES).map(t => (
+                <button 
+                  key={t} 
+                  onClick={() => handleTemplateChange(t)}
+                  className={`px-4 py-2 border rounded-xl text-[9px] font-black uppercase transition-all whitespace-nowrap ${formData.template === t ? 'bg-blue-600 border-blue-500 text-white shadow-lg' : 'bg-black/40 border-white/5 text-slate-400 hover:text-white'}`}
+                >
+                  {t}
+                </button>
+              ))}
+           </div>
+        </div>
+
+        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
           
-          {/* 01 Basisdaten */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-4">
-              <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-xs">01</span>
-              <h2 className="text-sm font-black text-white uppercase tracking-widest">Einsatz-Stammdaten</h2>
+          {/* Section 01: Basisdaten */}
+          <div className="bg-[#111317] border border-white/10 rounded-[32px] overflow-hidden shadow-2xl">
+            <div className="px-6 py-4 bg-[#1a1c23] border-b border-white/10 flex items-center gap-3">
+               <span className="w-8 h-8 bg-blue-600/10 border border-blue-500/20 rounded-lg flex items-center justify-center text-blue-500 text-xs font-black">01</span>
+               <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Basisdaten & Einsatzort</h3>
             </div>
-            <div className="bg-[#1a1c23]/60 p-8 rounded-3xl border border-white/5 space-y-6 shadow-xl">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="space-y-2 md:col-span-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Einsatztitel / Betreff</label>
-                    <input 
-                      value={formData.title} 
-                      onChange={e => setFormData({...formData, title: e.target.value})} 
-                      className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500 transition-all font-bold" 
-                      placeholder="Kurzbeschreibung des Vorfalls..." 
-                    />
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Einsatzort</label>
-                    <input 
-                      value={formData.location} 
-                      onChange={e => setFormData({...formData, location: e.target.value})} 
-                      className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500 transition-all" 
-                      placeholder="Ort, Sektor, Gleis..." 
-                    />
-                 </div>
-                 <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                       <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Beginn</label>
-                       <input type="time" value={formData.incidentTime} onChange={e => setFormData({...formData, incidentTime: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none [color-scheme:dark]" />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Ende</label>
-                       <input type="time" value={formData.incidentEnd} onChange={e => setFormData({...formData, incidentEnd: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none [color-scheme:dark]" />
-                    </div>
-                 </div>
-               </div>
-               <div className="pt-4 border-t border-white/5">
-                  <div className="text-[9px] font-black text-slate-600 uppercase mb-3">Berichtsvorlage wählen (Optional)</div>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.keys(TEMPLATES).map(t => (
-                      <button 
-                        key={t}
-                        onClick={() => handleTemplateChange(t)}
-                        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all ${formData.template === t ? 'bg-blue-600 border-blue-500 text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-500 hover:bg-white/10'}`}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                    <button onClick={() => setFormData({...formData, title: '', incidentDetails: '', template: 'Keine Vorlage'})} className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest bg-red-600/10 text-red-500 border border-red-500/20">Leeren</button>
-                  </div>
-               </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2 space-y-1">
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Einsatztitel / Stichwort</label>
+                <input 
+                  className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-[11px] text-white outline-none focus:border-blue-500 transition-all" 
+                  placeholder="z.B. Verkehrsunfall mit Personenschaden"
+                  value={formData.title}
+                  onChange={e => setFormData({...formData, title: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Einsatzort</label>
+                <input 
+                  className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-[11px] text-white outline-none focus:border-blue-500 transition-all" 
+                  placeholder="Straße / Viertel"
+                  value={formData.location}
+                  onChange={e => setFormData({...formData, location: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Beginn</label>
+                <input type="time" value={formData.incidentTime} onChange={e => setFormData({...formData, incidentTime: e.target.value})} className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-[11px] text-white outline-none [color-scheme:dark]" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Ende</label>
+                <input type="time" value={formData.incidentEnd} onChange={e => setFormData({...formData, incidentEnd: e.target.value})} className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-[11px] text-white outline-none [color-scheme:dark]" />
+              </div>
             </div>
-          </section>
+          </div>
 
-          {/* 02 Beteiligte */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-4">
-              <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-xs">02</span>
-              <h2 className="text-sm font-black text-white uppercase tracking-widest">Beteiligte & Zeugen</h2>
+          {/* Section 02: Beteiligte */}
+          <div className="bg-[#111317] border border-white/10 rounded-[32px] overflow-hidden shadow-2xl">
+            <div className="px-6 py-4 bg-[#1a1c23] border-b border-white/10 flex items-center gap-3">
+               <span className="w-8 h-8 bg-blue-600/10 border border-blue-500/20 rounded-lg flex items-center justify-center text-blue-500 text-xs font-black">02</span>
+               <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Beteiligte Personen & Fahrzeuge</h3>
             </div>
-            <div className="bg-[#1a1c23]/60 p-8 rounded-3xl border border-white/5 space-y-6 shadow-xl">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Eingesetzte Einheiten</label>
-                    <input 
-                      value={formData.involvedUnits} 
-                      onChange={e => setFormData({...formData, involvedUnits: e.target.value})} 
-                      className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500" 
-                      placeholder="z.B. Adler 10-1..." 
-                    />
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Beteiligte Beamte</label>
-                    <input 
-                      value={formData.involvedOfficers} 
-                      onChange={e => setFormData({...formData, involvedOfficers: e.target.value})} 
-                      className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500" 
-                      placeholder="Namen oder Dienstnummern..." 
-                    />
-                 </div>
-                 <div className="space-y-2 md:col-span-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Zeugen / Geschädigte (Vor Ort)</label>
-                    <textarea 
-                      value={formData.witnesses} 
-                      onChange={e => setFormData({...formData, witnesses: e.target.value})} 
-                      className="w-full h-20 bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500 resize-none" 
-                      placeholder="Name, Kontakt, Rolle..." 
-                    />
-                 </div>
-               </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Eingesetzte Einheiten</label>
+                <input value={formData.involvedUnits} onChange={e => setFormData({...formData, involvedUnits: e.target.value})} className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-[11px] text-white outline-none focus:border-blue-500" placeholder="z.B. Adler 10-1..." />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Beteiligte Beamte</label>
+                <input value={formData.involvedOfficers} onChange={e => setFormData({...formData, involvedOfficers: e.target.value})} className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-[11px] text-white outline-none focus:border-blue-500" placeholder="Namen oder Dienstnummern..." />
+              </div>
+              <div className="md:col-span-2 space-y-1">
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Zeugen / Geschädigte</label>
+                <textarea 
+                  className="w-full bg-black/40 border border-white/10 p-4 rounded-2xl text-[11px] text-slate-300 outline-none focus:border-blue-500 transition-all resize-none h-24 font-medium" 
+                  placeholder="Name, Kontakt, Rolle..."
+                  value={formData.witnesses}
+                  onChange={e => setFormData({...formData, witnesses: e.target.value})}
+                />
+              </div>
             </div>
-          </section>
+          </div>
 
-          {/* 03 Operative Details */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-4">
-              <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-xs">03</span>
-              <h2 className="text-sm font-black text-white uppercase tracking-widest">Maßnahmen & Ergebnis</h2>
+          {/* Section 03: Sachverhalt */}
+          <div className="bg-[#111317] border border-white/10 rounded-[32px] overflow-hidden shadow-2xl">
+            <div className="px-6 py-4 bg-[#1a1c23] border-b border-white/10 flex items-center gap-3">
+               <span className="w-8 h-8 bg-blue-600/10 border border-blue-500/20 rounded-lg flex items-center justify-center text-blue-500 text-xs font-black">03</span>
+               <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Detaillierter Sachverhalt</h3>
             </div>
-            <div className="bg-[#1a1c23]/60 p-8 rounded-3xl border border-white/5 space-y-6 shadow-xl">
-               <div className="space-y-2">
-                  <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Getroffene polizeiliche Maßnahmen</label>
-                  <input 
-                    value={formData.measures} 
-                    onChange={e => setFormData({...formData, measures: e.target.value})} 
-                    className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500" 
-                    placeholder="z.B. Identitätsfeststellung, Platzverweis, Durchsuchung..." 
+            <div className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Schilderung des Einsatzverlaufs</label>
+                <textarea 
+                  className="w-full bg-black/40 border border-white/10 p-6 rounded-[24px] text-[12px] text-slate-200 leading-relaxed outline-none focus:border-blue-500 transition-all resize-none h-64 font-medium shadow-inner" 
+                  placeholder="Chronologische Schilderung..."
+                  value={formData.incidentDetails}
+                  onChange={e => setFormData({...formData, incidentDetails: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Getroffene Maßnahmen</label>
+                  <textarea 
+                    className="w-full bg-black/40 border border-white/10 p-4 rounded-2xl text-[11px] text-slate-300 outline-none focus:border-blue-500 transition-all resize-none h-24 font-medium" 
+                    placeholder="z.B. Platzverweis, Festnahme..."
+                    value={formData.measures}
+                    onChange={e => setFormData({...formData, measures: e.target.value})}
                   />
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Einsatzergebnis</label>
-                  <input 
-                    value={formData.result} 
-                    onChange={e => setFormData({...formData, result: e.target.value})} 
-                    className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-500 font-bold" 
-                    placeholder="z.B. Person festgenommen, Gefahr beseitigt, Weiterfahrt gestattet..." 
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Ergebnis / Verbleib</label>
+                  <textarea 
+                    className="w-full bg-black/40 border border-white/10 p-4 rounded-2xl text-[11px] text-slate-300 outline-none focus:border-blue-500 transition-all resize-none h-24 font-medium" 
+                    placeholder="z.B. Person entlassen, Fahrzeug abgeschleppt..."
+                    value={formData.result}
+                    onChange={e => setFormData({...formData, result: e.target.value})}
                   />
-               </div>
+                </div>
+              </div>
             </div>
-          </section>
+          </div>
 
-          {/* 04 Dokumentation */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-4">
-              <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-xs">04</span>
-              <h2 className="text-sm font-black text-white uppercase tracking-widest">Vollständige Schilderung</h2>
-            </div>
-            <div className="bg-[#1a1c23]/60 p-8 rounded-3xl border border-white/5 shadow-xl">
-               <textarea 
-                  value={formData.incidentDetails} 
-                  onChange={e => setFormData({...formData, incidentDetails: e.target.value})} 
-                  className="w-full h-80 bg-black/40 border border-white/10 p-6 rounded-2xl text-slate-200 text-base leading-relaxed outline-none focus:border-blue-500 resize-none custom-scrollbar shadow-inner" 
-                  placeholder="Detaillierte Schilderung des Ablaufs..."
-               />
-               <div className="mt-4 flex justify-end">
-                  <span className="text-[9px] font-mono text-slate-600 uppercase">Zeichen: {formData.incidentDetails.length}</span>
-               </div>
-            </div>
-          </section>
-
-          {/* NEU: Signatur-Block */}
-          <div className="border-t border-white/10 pt-10 mt-10">
-             <div className="flex flex-col items-end text-right">
-                <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Digitale Beglaubigung</div>
-                <div className="text-xl font-black text-white uppercase tracking-tighter">
-                   {user?.firstName} {user?.lastName}
+          {/* Signature Block */}
+          <div className="bg-[#1a1c23]/40 p-8 rounded-[32px] border border-white/5 flex flex-col md:flex-row justify-between items-center gap-8 shadow-xl">
+             <div className="space-y-2 text-center md:text-left">
+                <div className="text-[10px] font-black text-white uppercase tracking-widest">Elektronische Signatur</div>
+                <div className="text-[9px] text-slate-500 uppercase font-bold">Durch Absenden bestätigen Sie die Richtigkeit der Angaben.</div>
+             </div>
+             <div className="flex items-center gap-6">
+                <div className="text-right">
+                   <div className="text-[11px] font-black text-white uppercase italic">{user?.firstName} {user?.lastName}</div>
+                   <div className="text-[8px] font-bold text-slate-600 uppercase">{user?.rank} • {user?.badgeNumber}</div>
                 </div>
-                <div className="h-px w-48 bg-blue-600/50 my-2"></div>
-                <div className="text-[10px] text-blue-500 font-black uppercase tracking-widest">
-                   Dienstgrad: {user?.rank}
-                </div>
-                <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">
-                   Dienstnummer: {user?.badgeNumber}
-                </div>
+                <button 
+                  type="submit"
+                  disabled={isSaving}
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-12 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isSaving ? 'Übermittlung...' : 'Bericht Einreichen'}
+                </button>
              </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-between items-center pt-8 border-t border-white/5">
-             <button onClick={() => navigate('/dashboard')} className="text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Vorgang Verwerfen</button>
-             <button 
-                onClick={handleSave} 
-                disabled={isSaving} 
-                className="bg-blue-600 hover:bg-blue-500 text-white px-12 py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95 disabled:opacity-50"
-             >
-                {isSaving ? 'Speichere...' : 'Einsatzbericht Finalisieren'}
-             </button>
-          </div>
-        </div>
+        </form>
       </div>
     </PoliceOSWindow>
   );

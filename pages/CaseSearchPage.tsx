@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import PoliceOSWindow from '../components/PoliceOSWindow';
+import DataModal from '../components/DataModal';
 import { dbCollections, onSnapshot, query, orderBy, updateDoc, doc, db } from '../firebase';
 import { IncidentReport, Reminder } from '../types';
 
@@ -17,6 +18,7 @@ const CaseSearchPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const [selectedCase, setSelectedCase] = useState<IncidentReport | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [newReminderText, setNewReminderText] = useState('');
   const [newReminderDate, setNewReminderDate] = useState('');
 
@@ -29,7 +31,10 @@ const CaseSearchPage: React.FC = () => {
         const targetNumber = (location.state as any).selectedReportNumber;
         setSearchTerm(targetNumber);
         const targetCase = cases.find(c => c.reportNumber === targetNumber);
-        if (targetCase) setSelectedCase(targetCase);
+        if (targetCase) {
+          setSelectedCase(targetCase);
+          setIsModalOpen(true);
+        }
       }
     });
     return unsub;
@@ -55,6 +60,11 @@ const CaseSearchPage: React.FC = () => {
     const updated = (selectedCase.reminders || []).map(r => r.id === remId ? { ...r, completed: !r.completed } : r);
     await updateDoc(doc(db, "reports", selectedCase.id), { reminders: updated });
     setSelectedCase({ ...selectedCase, reminders: updated });
+  };
+
+  const handleOpenCase = (c: IncidentReport) => {
+    setSelectedCase(c);
+    setIsModalOpen(true);
   };
 
   return (
@@ -92,176 +102,160 @@ const CaseSearchPage: React.FC = () => {
           </div>
         )}
 
-        <div className="flex-1 flex gap-4 min-h-0 overflow-hidden">
-          
-          {/* Results Sidebar (Condensed) */}
-          <div className="w-72 flex flex-col gap-2 shrink-0">
-            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-2">
-              {filteredCases.map(c => (
-                <button 
-                  key={c.id} 
-                  onClick={() => setSelectedCase(c)}
-                  className={`w-full text-left p-4 border rounded-[20px] transition-all flex flex-col gap-1 relative ${selectedCase?.id === c.id ? 'bg-blue-600/10 border-blue-500/40 shadow-lg' : 'bg-[#1a1c23]/40 border-white/5 hover:bg-white/5'}`}
-                >
-                  <div className="text-[7px] font-black text-slate-500 uppercase tracking-widest mb-1">#{c.reportNumber}</div>
-                  <div className="text-[10px] font-black text-white uppercase truncate tracking-tight">{c.title || c.violation || 'Unbenannt'}</div>
-                  <div className="text-[8px] font-bold text-slate-600 uppercase">{c.officerName}</div>
-                  {selectedCase?.id === c.id && <div className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 text-xs">➔</div>}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Details Panel (The optimized "Form Sheet") */}
-          <div className="flex-1 min-w-0">
-            {selectedCase ? (
-              <div className="h-full flex flex-col bg-[#111317] rounded-[32px] border border-white/10 overflow-hidden shadow-2xl animate-in fade-in duration-500">
-                
-                {/* Header: Compact & Info-Dense */}
-                <div className="p-6 bg-[#1a1c23] border-b border-white/10 flex justify-between items-center shrink-0">
-                  <div className="flex items-center gap-6">
-                    <div className="bg-blue-600/10 border border-blue-500/20 p-3 rounded-2xl flex flex-col items-center min-w-[100px]">
-                      <span className="text-[7px] font-black text-blue-500 uppercase tracking-widest">Aktenzeichen</span>
-                      <span className="text-sm font-mono font-black text-white">{selectedCase.reportNumber}</span>
+        {/* Full-Width List */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+          <div className="grid grid-cols-1 gap-3">
+            {filteredCases.map(c => (
+              <div 
+                key={c.id} 
+                className="bg-[#1a1c23]/40 border border-white/5 rounded-[24px] p-6 flex items-center justify-between group hover:bg-white/5 transition-all"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-12 h-12 bg-blue-600/10 text-blue-500 rounded-2xl flex items-center justify-center text-2xl">📁</div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">#{c.reportNumber}</span>
+                      <span className={`text-[8px] font-black px-2 py-0.5 rounded-md uppercase border ${c.type === 'Strafanzeige' ? 'text-orange-400 border-orange-400/20' : 'text-blue-400 border-blue-400/20'}`}>{c.type}</span>
+                      <span className="text-[8px] font-mono text-slate-600 uppercase tracking-widest">{new Date(c.timestamp).toLocaleString('de-DE')}</span>
                     </div>
-                    <div>
-                      <h2 className="text-xl font-black text-white uppercase tracking-tighter leading-tight">{selectedCase.title || selectedCase.violation}</h2>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className={`text-[8px] font-black px-2 py-0.5 rounded-md uppercase border ${selectedCase.type === 'Strafanzeige' ? 'text-orange-400 border-orange-400/20' : 'text-blue-400 border-blue-400/20'}`}>{selectedCase.type}</span>
-                        <span className="text-[8px] font-bold text-slate-500 uppercase">{new Date(selectedCase.timestamp).toLocaleString('de-DE')}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Signature integrated in Header */}
-                  <div className="flex items-center gap-4 border-l border-white/5 pl-6">
-                    <div className="text-right">
-                       <div className="text-[8px] font-black text-slate-600 uppercase">Zuständiger Beamter</div>
-                       <div className="text-[10px] font-black text-white uppercase">{selectedCase.officerName}</div>
-                       <div className="text-[8px] font-bold text-blue-500/60 uppercase">{selectedCase.officerBadge}</div>
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-blue-600/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
-                      👮
-                    </div>
+                    <h3 className="text-sm font-black text-white uppercase tracking-tight">{c.title || c.violation || 'Unbenannt'}</h3>
+                    <p className="text-[9px] font-bold text-slate-600 uppercase mt-1">Beamter: {c.officerName} ({c.officerBadge})</p>
                   </div>
                 </div>
-
-                {/* Main Content Area: Compact Matrix View */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-[#0a0c10]">
-                  
-                  {/* The Fact Sheet Grid - Everything at a glance */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                     <div className="bg-[#1a1c23]/60 p-4 rounded-2xl border border-white/5 space-y-1">
-                        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Ereignisort</div>
-                        <div className="text-[10px] font-bold text-slate-200 uppercase truncate">{selectedCase.location || 'N/A'}</div>
-                     </div>
-                     <div className="bg-[#1a1c23]/60 p-4 rounded-2xl border border-white/5 space-y-1">
-                        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Einsatzzeit</div>
-                        <div className="text-[10px] font-bold text-slate-200 uppercase">{selectedCase.incidentTime || '--:--'} {selectedCase.incidentEnd ? `bis ${selectedCase.incidentEnd}` : ''}</div>
-                     </div>
-                     <div className="bg-[#1a1c23]/60 p-4 rounded-2xl border border-white/5 space-y-1">
-                        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Status / Priorität</div>
-                        <div className="flex items-center gap-2">
-                           <div className="text-[10px] font-black text-blue-500 uppercase">{selectedCase.status}</div>
-                           <div className="w-1 h-1 rounded-full bg-slate-600"></div>
-                           <div className="text-[10px] font-black text-slate-400 uppercase">LVL {selectedCase.securityLevel || '0'}</div>
-                        </div>
-                     </div>
-                     <div className="bg-[#1a1c23]/60 p-4 rounded-2xl border border-white/5 space-y-1">
-                        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Kräfte / Einheiten</div>
-                        <div className="text-[10px] font-bold text-slate-200 uppercase truncate">{selectedCase.involvedUnits || 'N/A'}</div>
-                     </div>
-
-                     {/* Second Row of Metadata */}
-                     <div className="bg-[#1a1c23]/60 p-4 rounded-2xl border border-white/5 space-y-1 col-span-2">
-                        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Involvierte Personen / Zeugen</div>
-                        <div className="text-[10px] font-medium text-slate-300 truncate">{selectedCase.witnesses || selectedCase.applicant || 'Keine Angaben'}</div>
-                     </div>
-                     {selectedCase.type === 'Strafanzeige' ? (
-                       <div className="bg-[#1a1c23]/60 p-4 rounded-2xl border border-white/5 space-y-1 col-span-2">
-                          <div className="text-[8px] font-black text-orange-500 uppercase tracking-widest">Beweismittel / Schadenswert</div>
-                          <div className="text-[10px] font-medium text-slate-300 truncate">{selectedCase.evidenceList || 'Keine'} {selectedCase.propertyValue ? `| Wert: ${selectedCase.propertyValue}` : ''}</div>
-                       </div>
-                     ) : (
-                       <div className="bg-[#1a1c23]/60 p-4 rounded-2xl border border-white/5 space-y-1 col-span-2">
-                          <div className="text-[8px] font-black text-blue-500 uppercase tracking-widest">Maßnahmen & Ergebnis</div>
-                          <div className="text-[10px] font-medium text-slate-300 truncate">{selectedCase.measures || 'N/A'} ➔ {selectedCase.result || 'Offen'}</div>
-                       </div>
-                     )}
+                <div className="flex items-center gap-6">
+                  <div className="text-right hidden md:block">
+                    <div className="text-[8px] font-black text-slate-600 uppercase">Status</div>
+                    <div className="text-[10px] font-black text-blue-500 uppercase">{c.status}</div>
                   </div>
-
-                  {/* Main Content Area: 2-Column for longer Text vs Notes */}
-                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                     
-                     {/* The Documentation (Sachverhalt) - High Readability */}
-                     <div className="xl:col-span-2 space-y-3">
-                        <h4 className="text-[9px] font-black text-white uppercase tracking-[0.2em] px-2 flex items-center gap-3">
-                           <span className="w-4 h-0.5 bg-blue-600"></span> 
-                           Dokumentierter Sachverhalt
-                        </h4>
-                        <div className="bg-[#1a1c23]/40 border border-white/5 p-8 rounded-[32px] shadow-inner">
-                           <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                              {selectedCase.content || selectedCase.incidentDetails || 'Kein Text hinterlegt.'}
-                           </div>
-                        </div>
-                     </div>
-
-                     {/* Side Sidebar: Internals & Tasks */}
-                     <div className="space-y-6">
-                        
-                        {/* Tasks / Reminders */}
-                        <div className="bg-blue-600/5 border border-blue-500/10 p-6 rounded-[28px] space-y-4 shadow-inner">
-                           <h4 className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Wiedervorlage</h4>
-                           <div className="space-y-2">
-                              {(selectedCase.reminders || []).map(r => (
-                                <button key={r.id} onClick={() => toggleReminder(r.id)} className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${r.completed ? 'bg-black/20 border-white/5 opacity-50' : 'bg-blue-600/10 border-blue-500/20'}`}>
-                                   <div className={`w-4 h-4 rounded border flex items-center justify-center text-[10px] ${r.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700'}`}>{r.completed && '✓'}</div>
-                                   <div className="text-left flex-1 min-w-0">
-                                      <div className={`text-[10px] font-bold uppercase truncate ${r.completed ? 'line-through' : 'text-white'}`}>{r.text}</div>
-                                      <div className="text-[7px] text-slate-500 font-black">{new Date(r.dueDate).toLocaleDateString('de-DE')}</div>
-                                   </div>
-                                </button>
-                              ))}
-                              {(!selectedCase.reminders || selectedCase.reminders.length === 0) && (
-                                <div className="text-[9px] font-bold text-slate-600 uppercase text-center py-4 italic">Keine Aufgaben</div>
-                              )}
-                           </div>
-                        </div>
-
-                        {/* Internal Notes */}
-                        <div className="bg-black/30 border border-white/5 p-6 rounded-[28px] space-y-4 shadow-inner">
-                           <h4 className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Dienstliche Notizen</h4>
-                           <div className="text-[10px] text-slate-400 italic leading-relaxed whitespace-pre-wrap">
-                              {selectedCase.notes || 'Keine internen Notizen vorhanden.'}
-                           </div>
-                        </div>
-                        
-                        {/* Download / Print */}
-                        <button onClick={() => window.print()} className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[9px] font-black uppercase tracking-widest text-slate-300 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-xl">
-                           <span>🖨️</span> Dossier Exportieren
-                        </button>
-                     </div>
-                  </div>
+                  <button 
+                    onClick={() => handleOpenCase(c)}
+                    className="px-6 py-2.5 bg-blue-600/10 hover:bg-blue-600 text-blue-500 hover:text-white border border-blue-500/20 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all active:scale-95"
+                  >
+                    Anzeigen
+                  </button>
                 </div>
-
-                {/* Status Bar */}
-                <div className="h-10 bg-black/60 border-t border-white/5 flex items-center justify-between px-8 shrink-0">
-                   <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Datenbank-Synchronisiert am {new Date().toLocaleTimeString()} • AES-256 Active</div>
-                   <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      <span className="text-[8px] font-black text-slate-600 uppercase">Systemzugriff gesichert</span>
-                   </div>
-                </div>
-
               </div>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center bg-[#1a1c23]/30 border border-white/5 rounded-[32px] p-20 text-center space-y-4 opacity-20">
-                 <div className="text-5xl animate-pulse">📂</div>
-                 <div className="text-slate-600 font-black uppercase tracking-widest text-xs">Vorgang auswählen um Details anzuzeigen</div>
+            ))}
+            {filteredCases.length === 0 && (
+              <div className="py-20 text-center opacity-20">
+                <div className="text-6xl mb-4">📂</div>
+                <div className="text-xs font-black uppercase tracking-[0.4em]">Keine Vorgänge gefunden</div>
               </div>
             )}
           </div>
         </div>
+
+        {/* Modal for Details */}
+        <DataModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={selectedCase?.title || selectedCase?.violation || 'Vorgangsdetails'}
+          subtitle={`Aktenzeichen: ${selectedCase?.reportNumber || 'N/A'}`}
+          icon={selectedCase?.type === 'Strafanzeige' ? '⚖️' : '🚔'}
+          maxWidth="max-w-6xl"
+          footer={
+            <div className="flex items-center justify-between">
+              <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Datenbank-Synchronisiert am {new Date().toLocaleTimeString()} • AES-256 Active</div>
+              <div className="flex gap-4">
+                <button onClick={() => window.print()} className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-300 transition-all active:scale-95 flex items-center gap-2">
+                  <span>🖨️</span> Dossier Exportieren
+                </button>
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-blue-900/20"
+                >
+                  Schließen
+                </button>
+              </div>
+            </div>
+          }
+        >
+          {selectedCase && (
+            <div className="space-y-10">
+              {/* Fact Sheet Grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Ereignisort</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase truncate">{selectedCase.location || 'N/A'}</div>
+                 </div>
+                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Einsatzzeit</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedCase.incidentTime || '--:--'} {selectedCase.incidentEnd ? `bis ${selectedCase.incidentEnd}` : ''}</div>
+                 </div>
+                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Status / Priorität</div>
+                    <div className="flex items-center gap-2">
+                       <div className="text-[11px] font-black text-blue-500 uppercase">{selectedCase.status}</div>
+                       <div className="w-1 h-1 rounded-full bg-slate-600"></div>
+                       <div className="text-[11px] font-black text-slate-400 uppercase">LVL {selectedCase.securityLevel || '0'}</div>
+                    </div>
+                 </div>
+                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Kräfte / Einheiten</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase truncate">{selectedCase.involvedUnits || 'N/A'}</div>
+                 </div>
+
+                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 col-span-2 shadow-inner">
+                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Involvierte Personen / Zeugen</div>
+                    <div className="text-[11px] font-medium text-slate-300 truncate">{selectedCase.witnesses || selectedCase.applicant || 'Keine Angaben'}</div>
+                 </div>
+                 {selectedCase.type === 'Strafanzeige' ? (
+                   <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 col-span-2 shadow-inner">
+                      <div className="text-[9px] font-black text-orange-500 uppercase tracking-widest">Beweismittel / Schadenswert</div>
+                      <div className="text-[11px] font-medium text-slate-300 truncate">{selectedCase.evidenceList || 'Keine'} {selectedCase.propertyValue ? `| Wert: ${selectedCase.propertyValue}` : ''}</div>
+                   </div>
+                 ) : (
+                   <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 col-span-2 shadow-inner">
+                      <div className="text-[9px] font-black text-blue-500 uppercase tracking-widest">Maßnahmen & Ergebnis</div>
+                      <div className="text-[11px] font-medium text-slate-300 truncate">{selectedCase.measures || 'N/A'} ➔ {selectedCase.result || 'Offen'}</div>
+                   </div>
+                 )}
+              </div>
+
+              {/* Main Content Area */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                 <div className="xl:col-span-2 space-y-4">
+                    <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                       <span className="w-5 h-0.5 bg-blue-600"></span> 
+                       Dokumentierter Sachverhalt
+                    </h4>
+                    <div className="bg-[#1a1c23]/40 border border-white/5 p-10 rounded-[40px] shadow-inner">
+                       <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                          {selectedCase.content || selectedCase.incidentDetails || 'Kein Text hinterlegt.'}
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="space-y-8">
+                    <div className="bg-blue-600/5 border border-blue-500/10 p-8 rounded-[32px] space-y-6 shadow-inner">
+                       <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Wiedervorlage</h4>
+                       <div className="space-y-3">
+                          {(selectedCase.reminders || []).map(r => (
+                            <button key={r.id} onClick={() => toggleReminder(r.id)} className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all ${r.completed ? 'bg-black/20 border-white/5 opacity-50' : 'bg-blue-600/10 border-blue-500/20'}`}>
+                               <div className={`w-5 h-5 rounded border flex items-center justify-center text-[12px] ${r.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700'}`}>{r.completed && '✓'}</div>
+                               <div className="text-left flex-1 min-w-0">
+                                  <div className={`text-[11px] font-bold uppercase truncate ${r.completed ? 'line-through' : 'text-white'}`}>{r.text}</div>
+                                  <div className="text-[8px] text-slate-500 font-black">{new Date(r.dueDate).toLocaleDateString('de-DE')}</div>
+                               </div>
+                            </button>
+                          ))}
+                          {(!selectedCase.reminders || selectedCase.reminders.length === 0) && (
+                            <div className="text-[10px] font-bold text-slate-600 uppercase text-center py-6 italic">Keine Aufgaben</div>
+                          )}
+                       </div>
+                    </div>
+
+                    <div className="bg-black/30 border border-white/5 p-8 rounded-[32px] space-y-6 shadow-inner">
+                       <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Dienstliche Notizen</h4>
+                       <div className="text-[11px] text-slate-400 italic leading-relaxed whitespace-pre-wrap">
+                          {selectedCase.notes || 'Keine internen Notizen vorhanden.'}
+                       </div>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          )}
+        </DataModal>
       </div>
     </PoliceOSWindow>
   );

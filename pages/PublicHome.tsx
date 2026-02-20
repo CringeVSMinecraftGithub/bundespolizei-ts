@@ -10,7 +10,7 @@ const PublicHome: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [modalType, setModalType] = useState<'Internetwache' | 'Bewerbung' | 'News' | 'Login' | null>(null);
-  const [appStep, setAppStep] = useState<'Selection' | 'Form'>('Selection');
+  const [appStep, setAppStep] = useState<'Selection' | 'Info' | 'Form'>('Selection');
   const [iwStep, setIwStep] = useState<'Selection' | 'Anzeige' | 'Hinweis'>('Selection');
   const [careerPath, setCareerPath] = useState<'Mittlerer Dienst' | 'Gehobener Dienst'>('Mittlerer Dienst');
   const [submitted, setSubmitted] = useState(false);
@@ -127,7 +127,7 @@ const PublicHome: React.FC = () => {
 
       {modalType && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/90 backdrop-blur-3xl animate-in fade-in">
-          <div className={`w-full ${(modalType === 'Bewerbung' && appStep === 'Form') || (modalType === 'Internetwache') ? 'max-w-6xl' : 'max-w-xl'} bg-[#1e293b] border border-white/10 rounded-[40px] p-0 shadow-2xl max-h-[95vh] flex flex-col relative overflow-hidden transition-all duration-500`}>
+          <div className={`w-full ${(modalType === 'Bewerbung') || (modalType === 'Internetwache') ? 'max-w-6xl' : 'max-w-xl'} bg-[#1e293b] border border-white/10 rounded-[40px] p-0 shadow-2xl max-h-[95vh] flex flex-col relative overflow-hidden transition-all duration-500`}>
             
             <button 
               onClick={() => { setModalType(null); setAppStep('Selection'); setIwStep('Selection'); setIsAnonymous(true); }} 
@@ -304,45 +304,221 @@ const PublicHome: React.FC = () => {
                 )}
 
                 {modalType === 'Bewerbung' && (
-                  <div className="flex flex-col h-full space-y-8 p-12 overflow-y-auto">
-                    {appStep === 'Selection' ? (
-                       <div className="space-y-10 py-4 text-center">
-                        <div className="space-y-4">
-                          <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Karriereportal</h2>
-                          <p className="text-slate-300 text-sm max-w-lg mx-auto uppercase tracking-widest font-bold">Ihre Zukunft bei der Bundespolizei</p>
+                  <div className="flex flex-col h-full overflow-hidden">
+                    {appStep === 'Selection' && (
+                       <div className="flex-1 overflow-y-auto p-12 space-y-10 custom-scrollbar">
+                        <div className="text-center space-y-4">
+                          <h2 className="text-5xl font-black text-white uppercase tracking-tighter">Karriere<span className="text-emerald-500">portal</span></h2>
+                          <p className="text-slate-400 text-[10px] uppercase tracking-[0.4em] font-black">Ihre Zukunft bei der Bundespolizei</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                           <button onClick={() => { setCareerPath('Mittlerer Dienst'); setAppStep('Form'); }} className="bg-slate-800/50 border border-white/10 p-8 rounded-[40px] text-left hover:border-blue-500/50 transition-all group">
-                              <div className="text-4xl mb-6">👮‍♂️</div>
-                              <h3 className="text-2xl font-black text-white uppercase mb-2">Mittlerer Dienst</h3>
-                              <p className="text-slate-400 text-[10px] leading-relaxed uppercase font-bold tracking-widest">Einstieg in den Steifendienst.</p>
-                              <div className="mt-6 text-[10px] font-black text-blue-400 uppercase tracking-widest">Auswählen ➔</div>
+                           <button onClick={() => { setCareerPath('Mittlerer Dienst'); setAppStep('Info'); }} className="bg-slate-800/40 border border-white/5 p-10 rounded-[48px] text-left hover:border-emerald-500/50 hover:bg-emerald-600/5 transition-all group shadow-2xl">
+                              <div className="w-16 h-16 bg-emerald-600/10 text-emerald-500 rounded-3xl flex items-center justify-center text-3xl mb-8 border border-emerald-600/20 group-hover:scale-110 transition-transform">👮‍♂️</div>
+                              <h3 className="text-3xl font-black text-white uppercase mb-4 tracking-tighter">Mittlerer <span className="text-emerald-500">Dienst</span></h3>
+                              <p className="text-slate-400 text-[11px] leading-relaxed uppercase font-bold tracking-widest mb-6">Einstieg in den operativen Polizeidienst. Vielseitig, spannend und nah am Bürger.</p>
+                              <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest pt-6 border-t border-white/5">Details ansehen ➔</div>
                            </button>
-                           <button onClick={() => { setCareerPath('Gehobener Dienst'); setAppStep('Form'); }} className="bg-slate-800/50 border border-white/10 p-8 rounded-[40px] text-left hover:border-indigo-500/50 transition-all group">
-                              <div className="text-4xl mb-6">🎓</div>
-                              <h3 className="text-2xl font-black text-white uppercase mb-2">Gehobener Dienst</h3>
-                              <p className="text-slate-400 text-[10px] leading-relaxed uppercase font-bold tracking-widest">Führungsverantwortung & Studium.</p>
-                              <div className="mt-6 text-[10px] font-black text-indigo-400 uppercase tracking-widest">Auswählen ➔</div>
+                           <button onClick={() => { setCareerPath('Gehobener Dienst'); setAppStep('Info'); }} className="bg-slate-800/40 border border-white/5 p-10 rounded-[48px] text-left hover:border-indigo-500/50 hover:bg-indigo-600/5 transition-all group shadow-2xl">
+                              <div className="w-16 h-16 bg-indigo-600/10 text-indigo-500 rounded-3xl flex items-center justify-center text-3xl mb-8 border border-indigo-600/20 group-hover:scale-110 transition-transform">🎓</div>
+                              <h3 className="text-3xl font-black text-white uppercase mb-4 tracking-tighter">Gehobener <span className="text-indigo-500">Dienst</span></h3>
+                              <p className="text-slate-400 text-[11px] leading-relaxed uppercase font-bold tracking-widest mb-6">Führungsverantwortung übernehmen. Duales Studium mit Bachelor-Abschluss.</p>
+                              <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest pt-6 border-t border-white/5">Details ansehen ➔</div>
                            </button>
                         </div>
                       </div>
-                    ) : (
-                      <form onSubmit={e => handleSubmission(e, 'Bewerbung')} className="space-y-8 animate-in slide-in-from-right-4">
-                        <div className="flex justify-between items-center mb-4">
-                           <button type="button" onClick={() => setAppStep('Selection')} className="text-[10px] font-black text-slate-400 uppercase">← Zurück</button>
-                           <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Bewerbung: {careerPath}</h3>
+                    )}
+
+                    {appStep === 'Info' && (
+                      <div className="flex flex-col h-full overflow-hidden animate-in slide-in-from-right-8 duration-500">
+                        <div className="p-10 bg-slate-800/60 border-b border-white/10 flex justify-between items-center shrink-0">
+                           <div className="space-y-1">
+                              <button type="button" onClick={() => setAppStep('Selection')} className="text-[10px] font-black text-emerald-500 uppercase tracking-widest hover:text-white transition-colors">← Zurück zur Auswahl</button>
+                              <h3 className="text-4xl font-black text-white uppercase tracking-tighter">
+                                Laufbahn: <span className={careerPath === 'Mittlerer Dienst' ? 'text-emerald-500' : 'text-indigo-500'}>{careerPath}</span>
+                              </h3>
+                           </div>
+                           <div className="text-right hidden sm:block">
+                              <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Status</div>
+                              <div className="text-emerald-500 font-bold text-xs uppercase bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20 tracking-widest">Bewerbungsphase Offen</div>
+                           </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <input name="firstname" required placeholder="Vorname" className="bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none" />
-                          <input name="lastname" required placeholder="Nachname" className="bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none" />
-                          <input name="discordId" required placeholder="Discord ID" className="bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none" />
-                          <input name="icPhone" required placeholder="Telefonnummer" className="bg-black/40 border border-white/10 p-5 rounded-2xl text-white outline-none" />
+
+                        <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
+                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                              <section className="space-y-6">
+                                 <h4 className="text-[11px] font-black text-emerald-500 uppercase tracking-[0.2em] flex items-center gap-3">
+                                    <span className="w-5 h-0.5 bg-emerald-600"></span> 
+                                    Der Bewerbungsablauf
+                                 </h4>
+                                 <div className="space-y-4">
+                                    {[
+                                       { step: "01", title: "Online-Bewerbung", desc: "Einreichen Ihrer Unterlagen über dieses Portal." },
+                                       { step: "02", title: "Vorauswahl", desc: "Prüfung Ihrer Daten durch unsere Personalabteilung." },
+                                       { step: "03", title: "Eignungstest", desc: "Sporttest und persönliches Auswahlgespräch." },
+                                       { step: "04", title: "Ärztliche Untersuchung", desc: "Feststellung der Polizeidiensttauglichkeit." },
+                                       { step: "05", title: "Einstellung", desc: "Beginn Ihrer Karriere bei der Bundespolizei." }
+                                    ].map((item, idx) => (
+                                       <div key={idx} className="flex gap-6 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                          <div className="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-500 flex items-center justify-center font-black text-xs shrink-0">{item.step}</div>
+                                          <div>
+                                             <div className="text-sm font-black text-white uppercase tracking-tight">{item.title}</div>
+                                             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{item.desc}</div>
+                                          </div>
+                                       </div>
+                                    ))}
+                                 </div>
+                              </section>
+
+                              <section className="space-y-6">
+                                 <h4 className="text-[11px] font-black text-indigo-500 uppercase tracking-[0.2em] flex items-center gap-3">
+                                    <span className="w-5 h-0.5 bg-indigo-600"></span> 
+                                    {careerPath === 'Mittlerer Dienst' ? 'Ausbildungsübersicht' : 'Studienübersicht'}
+                                 </h4>
+                                 <div className="bg-black/20 p-8 rounded-[32px] border border-white/5 space-y-8">
+                                    <div className="space-y-2">
+                                       <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Dauer</div>
+                                       <div className="text-xl font-black text-white uppercase">{careerPath === 'Mittlerer Dienst' ? '2,5 Jahre Ausbildung' : '3 Jahre Duales Studium'}</div>
+                                    </div>
+                                    <div className="space-y-2">
+                                       <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Inhalte</div>
+                                       <ul className="space-y-3">
+                                          {(careerPath === 'Mittlerer Dienst' ? 
+                                             ['Einsatztraining & Selbstverteidigung', 'Waffenausbildung & Schießtraining', 'Rechtskunde & Kriminalistik', 'Praktika in Dienststellen'] :
+                                             ['Führungslehre & Management', 'Staats- & Verwaltungsrecht', 'Psychologie & Ethik', 'Einsatzmanagement & Taktik']
+                                          ).map((content, idx) => (
+                                             <li key={idx} className="flex items-center gap-3 text-[11px] font-bold text-slate-300 uppercase tracking-widest">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                                {content}
+                                             </li>
+                                          ))}
+                                       </ul>
+                                    </div>
+                                    <div className="pt-6 border-t border-white/5">
+                                       <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Abschluss</div>
+                                       <div className="text-sm font-black text-emerald-500 uppercase tracking-tighter">
+                                          {careerPath === 'Mittlerer Dienst' ? 'Polizeimeister/in (m/w/d)' : 'Bachelor of Arts (B.A.) & Polizeikommissar/in'}
+                                       </div>
+                                    </div>
+                                 </div>
+                              </section>
+                           </div>
                         </div>
-                        <div className="space-y-4">
-                          <textarea name="motivation" required rows={6} className="w-full bg-black/40 border border-white/10 p-6 rounded-[32px] text-white outline-none resize-none focus:border-blue-500" placeholder="Motivation..."></textarea>
-                          <textarea name="cv" required rows={6} className="w-full bg-black/40 border border-white/10 p-6 rounded-[32px] text-white outline-none resize-none focus:border-blue-500" placeholder="Lebenslauf..."></textarea>
+
+                        <div className="p-10 bg-slate-900/80 backdrop-blur-md border-t border-white/10 flex items-center justify-center shrink-0">
+                           <button 
+                              onClick={() => setAppStep('Form')}
+                              className="px-32 py-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black uppercase text-xs tracking-[0.3em] transition-all active:scale-95 shadow-2xl shadow-emerald-900/30"
+                           >
+                              Jetzt Bewerben
+                           </button>
                         </div>
-                        <button className="w-full bg-emerald-600 hover:bg-emerald-500 py-6 rounded-3xl font-black uppercase tracking-widest transition-all shadow-xl">Bewerbung einreichen</button>
+                      </div>
+                    )}
+
+                    {appStep === 'Form' && (
+                      <form onSubmit={e => handleSubmission(e, 'Bewerbung')} className="flex flex-col h-full overflow-hidden animate-in slide-in-from-right-8 duration-500">
+                        <div className="p-10 bg-slate-800/60 border-b border-white/10 flex justify-between items-center shrink-0">
+                           <div className="space-y-1">
+                              <button type="button" onClick={() => setAppStep('Info')} className="text-[10px] font-black text-emerald-500 uppercase tracking-widest hover:text-white transition-colors">← Zurück zur Info</button>
+                              <h3 className="text-4xl font-black text-white uppercase tracking-tighter">
+                                 Online-<span className="text-emerald-500">Bewerbung</span>
+                              </h3>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Laufbahn: {careerPath}</p>
+                           </div>
+                           <div className="text-right hidden sm:block">
+                              <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Übermittlung</div>
+                              <div className="text-emerald-500 font-bold text-xs uppercase bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20 tracking-widest">Sicher & Verschlüsselt</div>
+                           </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
+                           <section className="space-y-6">
+                              <div className="flex items-center gap-4">
+                                 <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-black text-xs text-slate-500 border border-white/10">01</div>
+                                 <h4 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Persönliche Daten</h4>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-black/20 p-8 rounded-[32px] border border-white/5">
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Vorname</label>
+                                    <input name="firstname" required placeholder="Max" className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-emerald-500 outline-none transition-all" />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Nachname</label>
+                                    <input name="lastname" required placeholder="Mustermann" className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-emerald-500 outline-none transition-all" />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Geschlecht</label>
+                                    <select name="gender" required className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-emerald-500 outline-none transition-all cursor-pointer">
+                                       <option value="" className="bg-slate-900">Bitte wählen</option>
+                                       <option value="Männlich" className="bg-slate-900">Männlich</option>
+                                       <option value="Weiblich" className="bg-slate-900">Weiblich</option>
+                                       <option value="Divers" className="bg-slate-900">Divers</option>
+                                    </select>
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Geburtsdatum</label>
+                                    <input name="icBirthDate" type="date" required className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 [color-scheme:dark]" />
+                                 </div>
+                              </div>
+                           </section>
+
+                           <section className="space-y-6">
+                              <div className="flex items-center gap-4">
+                                 <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-black text-xs text-slate-500 border border-white/10">02</div>
+                                 <h4 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Erreichbarkeit</h4>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/20 p-8 rounded-[32px] border border-white/5">
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Discord ID</label>
+                                    <input name="discordId" required placeholder="max.mustermann#1234" className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-emerald-500 outline-none transition-all" />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Telefonnummer</label>
+                                    <input name="icPhone" required placeholder="+49..." className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-emerald-500 outline-none transition-all" />
+                                 </div>
+                              </div>
+                           </section>
+
+                           <section className="space-y-6">
+                              <div className="flex items-center gap-4">
+                                 <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-black text-xs text-slate-500 border border-white/10">03</div>
+                                 <h4 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Qualifikation</h4>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/20 p-8 rounded-[32px] border border-white/5">
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Höchster Schulabschluss</label>
+                                    <input name="education" required placeholder="z.B. Abitur, Realschulabschluss..." className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-emerald-500 outline-none transition-all" />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Bisherige Erfahrung (RP/Polizei)</label>
+                                    <input name="experience" placeholder="Hatten Sie bereits Berührungspunkte?" className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-emerald-500 outline-none transition-all" />
+                                 </div>
+                              </div>
+                           </section>
+
+                           <section className="space-y-6">
+                              <div className="flex items-center gap-4">
+                                 <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center font-black text-xs text-slate-500 border border-white/10">04</div>
+                                 <h4 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Schriftlicher Teil</h4>
+                              </div>
+                              <div className="space-y-8 bg-black/20 p-8 rounded-[32px] border border-white/5">
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Motivation (Warum möchten Sie zu uns?)</label>
+                                    <textarea name="motivation" required rows={6} className="w-full bg-slate-900/50 border border-white/10 p-8 rounded-[32px] text-slate-200 text-base leading-relaxed outline-none resize-none focus:border-emerald-500 transition-all custom-scrollbar" placeholder="Beschreiben Sie Ihre Beweggründe..."></textarea>
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Lebenslauf (Ihr bisheriger Werdegang)</label>
+                                    <textarea name="cv" required rows={6} className="w-full bg-slate-900/50 border border-white/10 p-8 rounded-[32px] text-slate-200 text-base leading-relaxed outline-none resize-none focus:border-emerald-500 transition-all custom-scrollbar" placeholder="Listen Sie Ihren Werdegang auf..."></textarea>
+                                 </div>
+                              </div>
+                           </section>
+                        </div>
+
+                        <div className="p-10 bg-slate-900/80 backdrop-blur-md border-t border-white/10 flex items-center justify-center shrink-0">
+                           <button className="px-32 py-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black uppercase text-xs tracking-[0.3em] transition-all active:scale-95 shadow-2xl shadow-emerald-900/30">
+                              Bewerbung jetzt einreichen
+                           </button>
+                        </div>
                       </form>
                     )}
                   </div>

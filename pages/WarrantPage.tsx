@@ -218,13 +218,13 @@ const WarrantPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Modal for Details */}
         <DataModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           title={selectedWarrant?.targetName || 'Fahndungsdetails'}
           subtitle={`Gefahrenstufe: ${selectedWarrant?.dangerLevel || 'N/A'}`}
           icon={selectedWarrant?.dangerLevel === 'Extrem' ? '💀' : '👤'}
+          maxWidth="max-w-4xl"
           footer={
             <div className="flex items-center justify-between">
               <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest italic">Fahndungsdatenbank BTS-ZENTRALE • Letzte Aktualisierung: {new Date().toLocaleTimeString()}</div>
@@ -245,74 +245,83 @@ const WarrantPage: React.FC = () => {
           }
         >
           {selectedWarrant && (
-            <div className="space-y-10">
-              {/* Matrix Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Zuletzt gesehen</div>
-                    <div className="text-[11px] font-bold text-slate-200 uppercase truncate">{selectedWarrant.lastSeen || 'N/A'}</div>
-                 </div>
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Alter</div>
+            <div className="space-y-8">
+              {/* Section: Personal Characteristics */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                  <span className="w-5 h-0.5 bg-red-600"></span> 
+                  Personenbeschreibung
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Zuletzt gesehen</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedWarrant.lastSeen || 'N/A'}</div>
+                  </div>
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Alter</div>
                     <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedWarrant.age || 'N/A'}</div>
-                 </div>
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Größe / Gewicht</div>
+                  </div>
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Größe / Gewicht</div>
                     <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedWarrant.height || 'N/A'} {selectedWarrant.weight ? `(${selectedWarrant.weight})` : ''}</div>
-                 </div>
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Haare / Augen</div>
+                  </div>
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Haare / Augen</div>
                     <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedWarrant.hairColor || 'N/A'} / {selectedWarrant.eyeColor || 'N/A'}</div>
-                 </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Description & Features */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                 <div className="xl:col-span-2 space-y-8">
-                    <div className="space-y-4">
-                       <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
-                          <span className="w-5 h-0.5 bg-red-600"></span> 
-                          Fahndungsgrund / Delikte
-                       </h4>
-                       <div className="bg-[#1a1c23]/40 border border-white/5 p-10 rounded-[40px] shadow-inner">
-                          <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                             {selectedWarrant.reason}
-                          </div>
-                       </div>
-                    </div>
-                    <div className="space-y-4">
-                       <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
-                          <span className="w-5 h-0.5 bg-slate-600"></span> 
-                          Besondere Merkmale
-                       </h4>
-                       <div className="bg-[#1a1c23]/40 border border-white/5 p-10 rounded-[40px] shadow-inner italic text-slate-400 text-sm leading-relaxed">
-                          {selectedWarrant.features || 'Keine besonderen Merkmale hinterlegt.'}
-                       </div>
-                    </div>
-                 </div>
+              {/* Section: Reason */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                  <span className="w-5 h-0.5 bg-red-600"></span> 
+                  Fahndungsgrund / Delikte
+                </h4>
+                <div className="bg-[#1a1c23]/40 border border-white/5 p-8 rounded-xl shadow-inner">
+                  <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                    {selectedWarrant.reason}
+                  </div>
+                </div>
+              </div>
 
-                 <div className="space-y-8">
-                    {selectedWarrant.caseNumber && (
-                       <div className="bg-blue-600/5 border border-blue-500/10 p-8 rounded-[32px] space-y-6 shadow-inner">
-                          <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Verknüpfte Akte</h4>
-                          <div className="text-center py-4">
-                             <div className="text-2xl font-mono font-black text-white mb-6 tracking-tighter">#{selectedWarrant.caseNumber}</div>
-                             <button 
-                                onClick={() => navigate('/cases', { state: { selectedReportNumber: selectedWarrant.caseNumber } })}
-                                className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95"
-                             >
-                                Vorgang öffnen 📁
-                             </button>
-                          </div>
-                       </div>
-                    )}
-                    <div className="bg-red-600/5 border border-red-500/10 p-8 rounded-[32px] space-y-4 text-center shadow-inner">
-                       <div className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-2">Sicherheitshinweis</div>
-                       <p className="text-[10px] text-slate-500 leading-relaxed uppercase font-bold">
-                          {selectedWarrant.dangerLevel === 'Extrem' ? 'Eigensicherung beachten. Zielperson gilt als bewaffnet und gefährlich.' : 'Standard-Eigensicherung gemäß PDV 100.'}
-                       </p>
+              {/* Section: Features */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                  <span className="w-5 h-0.5 bg-slate-600"></span> 
+                  Besondere Merkmale
+                </h4>
+                <div className="bg-[#1a1c23]/40 border border-white/5 p-8 rounded-xl shadow-inner italic text-slate-400 text-sm leading-relaxed">
+                  {selectedWarrant.features || 'Keine besonderen Merkmale hinterlegt.'}
+                </div>
+              </div>
+
+              {/* Section: Case Link & Security */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {selectedWarrant.caseNumber && (
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-widest px-2">Verknüpfte Akte</h4>
+                    <div className="bg-blue-600/5 border border-blue-500/10 p-6 rounded-xl space-y-4 shadow-inner">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xl font-mono font-black text-white tracking-tighter">#{selectedWarrant.caseNumber}</div>
+                        <button 
+                          onClick={() => navigate('/cases', { state: { selectedReportNumber: selectedWarrant.caseNumber } })}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95"
+                        >
+                          Öffnen 📁
+                        </button>
+                      </div>
                     </div>
-                 </div>
+                  </div>
+                )}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-red-500 uppercase tracking-widest px-2">Sicherheitshinweis</h4>
+                  <div className="bg-red-600/5 border border-red-500/10 p-6 rounded-xl shadow-inner h-full flex items-center justify-center text-center">
+                    <p className="text-[10px] text-slate-500 leading-relaxed uppercase font-bold">
+                      {selectedWarrant.dangerLevel === 'Extrem' ? 'Eigensicherung beachten. Zielperson gilt als bewaffnet und gefährlich.' : 'Standard-Eigensicherung gemäß PDV 100.'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}

@@ -26,7 +26,8 @@ export const dbCollections = {
   warrants: collection(db, "warrants"),
   calendar: collection(db, "calendar"),
   news: collection(db, "news"),
-  roles: collection(db, "roles")
+  roles: collection(db, "roles"),
+  orgNodes: collection(db, "orgNodes")
 };
 
 export { collection, addDoc, getDocs, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where };

@@ -17,7 +17,8 @@ export enum Permission {
   MANAGE_TIPS = 'Hinweise verwalten',
   VIEW_CALENDAR = 'Kalender einsehen',
   MANAGE_CALENDAR = 'Kalender verwalten',
-  MANAGE_NEWS = 'Presse verwalten'
+  MANAGE_NEWS = 'Presse verwalten',
+  MANAGE_ORG = 'Organigramm verwalten'
 }
 
 export interface UserRole {
@@ -182,4 +183,13 @@ export interface JobApplication {
   gender?: string;
   education?: string;
   experience?: string;
+}
+
+export interface OrgNode {
+  id: string;
+  shortName: string;
+  fullName: string;
+  parentId: string | null;
+  rankGroup: 'Top' | 'Middle' | 'Operational';
+  assignedUserId: string | null;
 }

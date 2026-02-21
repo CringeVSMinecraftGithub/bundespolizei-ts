@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../App';
 import { Permission, User, Law, UserRole } from '../types';
-import { POLICE_LOGO_RAW } from '../constants';
+import { POLICE_LOGO_RAW, POLICE_RANKS } from '../constants';
 import { dbCollections, onSnapshot, query, setDoc, doc, db, deleteDoc, addDoc, updateDoc } from '../firebase';
 import PoliceOSWindow from '../components/PoliceOSWindow';
 
@@ -24,7 +24,8 @@ const LEGACY_PERMISSION_MAP: Record<string, Permission> = {
   'manage_tips': Permission.MANAGE_TIPS,
   'view_calendar': Permission.VIEW_CALENDAR,
   'manage_calendar': Permission.MANAGE_CALENDAR,
-  'manage_news': Permission.MANAGE_NEWS
+  'manage_news': Permission.MANAGE_NEWS,
+  'manage_org': Permission.MANAGE_ORG
 };
 
 const LAW_ABBREVIATIONS = [
@@ -464,16 +465,31 @@ const AdminPanel: React.FC = () => {
         <div className="fixed inset-0 z-[1000] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-8 animate-in fade-in">
            <div className="bg-[#0a111f] border border-white/10 p-12 rounded-[50px] w-full max-w-2xl space-y-10 shadow-2xl relative">
               <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Mitarbeiterprofil</h2>
-              <div className="grid grid-cols-2 gap-6">
+               <div className="grid grid-cols-2 gap-6">
                  <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Vorname</label><input value={editingUser.firstName} onChange={e => setEditingUser({...editingUser, firstName: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none" /></div>
                  <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Nachname</label><input value={editingUser.lastName} onChange={e => setEditingUser({...editingUser, lastName: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none" /></div>
                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Dienstgrad</label>
+                    <select value={editingUser.rank} onChange={e => setEditingUser({...editingUser, rank: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none">
+                       <option value="" disabled>Auswählen...</option>
+                       {['Höherer Dienst', 'Gehobener Dienst', 'Mittlerer Dienst'].map(group => (
+                         <optgroup key={group} label={group} className="bg-slate-950 text-blue-500 font-black">
+                           {POLICE_RANKS.filter(r => r.group === group).map(rank => (
+                             <option key={rank.name} value={rank.name} className="bg-slate-900 text-white font-bold">
+                               {rank.name}
+                             </option>
+                           ))}
+                         </optgroup>
+                       ))}
+                    </select>
+                 </div>
+                 <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Dienstnummer</label><input value={editingUser.badgeNumber} onChange={e => setEditingUser({...editingUser, badgeNumber: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-blue-400 font-black uppercase outline-none" /></div>
+                 <div className="col-span-2 space-y-2">
                     <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Hauptrolle</label>
                     <select value={editingUser.role} onChange={e => setEditingUser({...editingUser, role: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none">
                        {allRoles.filter(r => !r.isSpecial).map(r => <option key={r.id} value={r.id} className="bg-slate-900">{r.name}</option>)}
                     </select>
                  </div>
-                 <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Dienstnummer</label><input value={editingUser.badgeNumber} onChange={e => setEditingUser({...editingUser, badgeNumber: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-blue-400 font-black uppercase outline-none" /></div>
                  <div className="col-span-2 space-y-2">
                     <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Zusätzliche Berechtigungen</label>
                     <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar bg-black/20 p-4 rounded-xl">

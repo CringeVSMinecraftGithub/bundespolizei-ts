@@ -242,34 +242,40 @@ const EvidencePage: React.FC = () => {
           }
         >
           {selectedItem && (
-            <div className="space-y-10">
-              {/* Matrix Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Sichergestellt von</div>
-                    <div className="text-[11px] font-bold text-slate-200 uppercase truncate">{selectedItem.seizedBy || 'N/A'}</div>
-                 </div>
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Einlagerungsdatum</div>
+            <div className="space-y-8">
+              {/* Section: Storage Info */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                  <span className="w-5 h-0.5 bg-orange-600"></span> 
+                  Lagerinformationen
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Sichergestellt von</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedItem.seizedBy || 'N/A'}</div>
+                  </div>
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Einlagerungsdatum</div>
                     <div className="text-[11px] font-bold text-slate-200 uppercase">{new Date(selectedItem.timestamp).toLocaleDateString('de-DE')}</div>
-                 </div>
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Lagerort-Sektor</div>
-                    <div className="text-[11px] font-bold text-slate-200 uppercase truncate">{selectedItem.location || 'N/A'}</div>
-                 </div>
+                  </div>
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Lagerort-Sektor</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedItem.location || 'N/A'}</div>
+                  </div>
+                </div>
               </div>
 
-              {/* Description Section */}
+              {/* Section: Description */}
               <div className="space-y-4">
-                 <h4 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
-                    <span className="w-5 h-0.5 bg-orange-600"></span> 
-                    Beschreibung & Zustand
-                 </h4>
-                 <div className="bg-[#1a1c23]/40 border border-white/5 p-10 rounded-[40px] shadow-inner">
-                    <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                       {selectedItem.description || 'Keine detaillierte Beschreibung hinterlegt.'}
-                    </div>
-                 </div>
+                <h4 className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                  <span className="w-5 h-0.5 bg-orange-600"></span> 
+                  Beschreibung & Zustand
+                </h4>
+                <div className="bg-[#1a1c23]/40 border border-white/5 p-8 rounded-xl shadow-inner">
+                  <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                    {selectedItem.description || 'Keine detaillierte Beschreibung hinterlegt.'}
+                  </div>
+                </div>
               </div>
             </div>
           )}

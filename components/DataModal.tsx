@@ -26,12 +26,12 @@ const DataModal: React.FC<DataModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-      <div className={`w-full ${maxWidth} bg-[#0f172a] border border-white/10 rounded-[40px] shadow-[0_0_150px_rgba(0,0,0,0.9)] flex flex-col animate-in zoom-in duration-300 overflow-hidden max-h-[90vh]`}>
+      <div className={`w-full ${maxWidth} bg-[#0f172a] border border-white/10 rounded-2xl shadow-[0_0_150px_rgba(0,0,0,0.9)] flex flex-col animate-in zoom-in duration-300 overflow-hidden max-h-[90vh]`}>
         
         {/* Modal Header */}
-        <div className="h-20 bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-8 md:px-10 border-b border-white/5 shrink-0">
+        <div className="h-20 bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-8 md:px-10 border-b border-white/5 shrink-0 select-none">
           <div className="flex items-center gap-5">
-            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
+            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-2xl shadow-inner">
               {icon}
             </div>
             <div>
@@ -50,7 +50,7 @@ const DataModal: React.FC<DataModalProps> = ({
         </div>
         
         {/* Modal Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar bg-[#0a0c10]">
+        <div className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar bg-[#0a0c10] select-text">
           {children}
         </div>
 

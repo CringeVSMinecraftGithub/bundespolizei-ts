@@ -145,14 +145,13 @@ const CaseSearchPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Modal for Details */}
         <DataModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           title={selectedCase?.title || selectedCase?.violation || 'Vorgangsdetails'}
           subtitle={`Aktenzeichen: ${selectedCase?.reportNumber || 'N/A'}`}
           icon={selectedCase?.type === 'Strafanzeige' ? '⚖️' : '🚔'}
-          maxWidth="max-w-6xl"
+          maxWidth="max-w-4xl"
           footer={
             <div className="flex items-center justify-between">
               <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Datenbank-Synchronisiert am {new Date().toLocaleTimeString()} • AES-256 Active</div>
@@ -171,87 +170,113 @@ const CaseSearchPage: React.FC = () => {
           }
         >
           {selectedCase && (
-            <div className="space-y-10">
-              {/* Fact Sheet Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Ereignisort</div>
-                    <div className="text-[11px] font-bold text-slate-200 uppercase truncate">{selectedCase.location || 'N/A'}</div>
-                 </div>
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Einsatzzeit</div>
+            <div className="space-y-8">
+              {/* Section: Basic Information */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                  <span className="w-5 h-0.5 bg-blue-600"></span> 
+                  Stammdaten & Einsatzdetails
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Ereignisort</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedCase.location || 'N/A'}</div>
+                  </div>
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Einsatzzeit</div>
                     <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedCase.incidentTime || '--:--'} {selectedCase.incidentEnd ? `bis ${selectedCase.incidentEnd}` : ''}</div>
-                 </div>
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Status / Priorität</div>
+                  </div>
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Status / Priorität</div>
                     <div className="flex items-center gap-2">
                        <div className="text-[11px] font-black text-blue-500 uppercase">{selectedCase.status}</div>
                        <div className="w-1 h-1 rounded-full bg-slate-600"></div>
                        <div className="text-[11px] font-black text-slate-400 uppercase">LVL {selectedCase.securityLevel || '0'}</div>
                     </div>
-                 </div>
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Kräfte / Einheiten</div>
-                    <div className="text-[11px] font-bold text-slate-200 uppercase truncate">{selectedCase.involvedUnits || 'N/A'}</div>
-                 </div>
-
-                 <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 col-span-2 shadow-inner">
-                    <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Involvierte Personen / Zeugen</div>
-                    <div className="text-[11px] font-medium text-slate-300 truncate">{selectedCase.witnesses || selectedCase.applicant || 'Keine Angaben'}</div>
-                 </div>
-                 {selectedCase.type === 'Strafanzeige' ? (
-                   <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 col-span-2 shadow-inner">
-                      <div className="text-[9px] font-black text-orange-500 uppercase tracking-widest">Beweismittel / Schadenswert</div>
-                      <div className="text-[11px] font-medium text-slate-300 truncate">{selectedCase.evidenceList || 'Keine'} {selectedCase.propertyValue ? `| Wert: ${selectedCase.propertyValue}` : ''}</div>
-                   </div>
-                 ) : (
-                   <div className="bg-[#1a1c23]/60 p-5 rounded-2xl border border-white/5 space-y-1 col-span-2 shadow-inner">
-                      <div className="text-[9px] font-black text-blue-500 uppercase tracking-widest">Maßnahmen & Ergebnis</div>
-                      <div className="text-[11px] font-medium text-slate-300 truncate">{selectedCase.measures || 'N/A'} ➔ {selectedCase.result || 'Offen'}</div>
-                   </div>
-                 )}
+                  </div>
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Kräfte / Einheiten</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedCase.involvedUnits || 'N/A'}</div>
+                  </div>
+                </div>
               </div>
 
-              {/* Main Content Area */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                 <div className="xl:col-span-2 space-y-4">
-                    <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em] px-2 flex items-center gap-3">
-                       <span className="w-5 h-0.5 bg-blue-600"></span> 
-                       Dokumentierter Sachverhalt
-                    </h4>
-                    <div className="bg-[#1a1c23]/40 border border-white/5 p-10 rounded-[40px] shadow-inner">
-                       <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                          {selectedCase.content || selectedCase.incidentDetails || 'Kein Text hinterlegt.'}
-                       </div>
-                    </div>
-                 </div>
+              {/* Section: Involved Parties */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                  <span className="w-5 h-0.5 bg-blue-600"></span> 
+                  Involvierte Personen
+                </h4>
+                <div className="bg-[#1a1c23]/60 p-5 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                  <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Zeugen / Antragsteller / Geschädigte</div>
+                  <div className="text-[11px] font-medium text-slate-300 whitespace-pre-wrap">{selectedCase.witnesses || selectedCase.applicant || 'Keine Angaben'}</div>
+                </div>
+              </div>
 
-                 <div className="space-y-8">
-                    <div className="bg-blue-600/5 border border-blue-500/10 p-8 rounded-[32px] space-y-6 shadow-inner">
-                       <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Wiedervorlage</h4>
-                       <div className="space-y-3">
-                          {(selectedCase.reminders || []).map(r => (
-                            <button key={r.id} onClick={() => toggleReminder(r.id)} className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all ${r.completed ? 'bg-black/20 border-white/5 opacity-50' : 'bg-blue-600/10 border-blue-500/20'}`}>
-                               <div className={`w-5 h-5 rounded border flex items-center justify-center text-[12px] ${r.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700'}`}>{r.completed && '✓'}</div>
-                               <div className="text-left flex-1 min-w-0">
-                                  <div className={`text-[11px] font-bold uppercase truncate ${r.completed ? 'line-through' : 'text-white'}`}>{r.text}</div>
-                                  <div className="text-[8px] text-slate-500 font-black">{new Date(r.dueDate).toLocaleDateString('de-DE')}</div>
-                               </div>
-                            </button>
-                          ))}
-                          {(!selectedCase.reminders || selectedCase.reminders.length === 0) && (
-                            <div className="text-[10px] font-bold text-slate-600 uppercase text-center py-6 italic">Keine Aufgaben</div>
-                          )}
-                       </div>
-                    </div>
+              {/* Section: Evidence/Measures */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                  <span className="w-5 h-0.5 bg-blue-600"></span> 
+                  {selectedCase.type === 'Strafanzeige' ? 'Beweismittel & Werte' : 'Maßnahmen & Ergebnis'}
+                </h4>
+                <div className="bg-[#1a1c23]/60 p-5 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                  {selectedCase.type === 'Strafanzeige' ? (
+                    <>
+                      <div className="text-[8px] font-black text-orange-500 uppercase tracking-widest">Beweismittel / Schadenswert</div>
+                      <div className="text-[11px] font-medium text-slate-300">{selectedCase.evidenceList || 'Keine'} {selectedCase.propertyValue ? `| Wert: ${selectedCase.propertyValue}` : ''}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-[8px] font-black text-blue-500 uppercase tracking-widest">Maßnahmen & Ergebnis</div>
+                      <div className="text-[11px] font-medium text-slate-300">{selectedCase.measures || 'N/A'} ➔ {selectedCase.result || 'Offen'}</div>
+                    </>
+                  )}
+                </div>
+              </div>
 
-                    <div className="bg-black/30 border border-white/5 p-8 rounded-[32px] space-y-6 shadow-inner">
-                       <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Dienstliche Notizen</h4>
-                       <div className="text-[11px] text-slate-400 italic leading-relaxed whitespace-pre-wrap">
-                          {selectedCase.notes || 'Keine internen Notizen vorhanden.'}
-                       </div>
+              {/* Section: Narrative */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                  <span className="w-5 h-0.5 bg-blue-600"></span> 
+                  Dokumentierter Sachverhalt
+                </h4>
+                <div className="bg-[#1a1c23]/40 border border-white/5 p-8 rounded-2xl shadow-inner">
+                  <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                    {selectedCase.content || selectedCase.incidentDetails || 'Kein Text hinterlegt.'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Section: Internal Notes & Reminders */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-widest px-2">Wiedervorlage</h4>
+                  <div className="bg-blue-600/5 border border-blue-500/10 p-6 rounded-2xl space-y-4 shadow-inner">
+                    <div className="space-y-2">
+                      {(selectedCase.reminders || []).map(r => (
+                        <button key={r.id} onClick={() => toggleReminder(r.id)} className={`w-full flex items-center gap-4 p-3 rounded-xl border transition-all ${r.completed ? 'bg-black/20 border-white/5 opacity-50' : 'bg-blue-600/10 border-blue-500/20'}`}>
+                           <div className={`w-4 h-4 rounded border flex items-center justify-center text-[10px] ${r.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-700'}`}>{r.completed && '✓'}</div>
+                           <div className="text-left flex-1 min-w-0">
+                              <div className={`text-[10px] font-bold uppercase truncate ${r.completed ? 'line-through' : 'text-white'}`}>{r.text}</div>
+                              <div className="text-[8px] text-slate-500 font-black">{new Date(r.dueDate).toLocaleDateString('de-DE')}</div>
+                           </div>
+                        </button>
+                      ))}
+                      {(!selectedCase.reminders || selectedCase.reminders.length === 0) && (
+                        <div className="text-[9px] font-bold text-slate-600 uppercase text-center py-4 italic">Keine Aufgaben</div>
+                      )}
                     </div>
-                 </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">Dienstliche Notizen</h4>
+                  <div className="bg-black/30 border border-white/5 p-6 rounded-2xl shadow-inner h-full">
+                    <div className="text-[10px] text-slate-400 italic leading-relaxed whitespace-pre-wrap">
+                      {selectedCase.notes || 'Keine internen Notizen vorhanden.'}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

@@ -2,9 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
-import { Permission, CitizenSubmission, IncidentReport, Reminder } from '../types';
+import { Permission, CitizenSubmission, IncidentReport, Reminder, User } from '../types';
 import { DASHBOARD_BG } from '../constants';
-import { dbCollections, onSnapshot, query, orderBy, limit, doc, updateDoc, db } from '../firebase';
+import { dbCollections, onSnapshot, query, orderBy, limit, doc, updateDoc, db, deleteDoc } from '../firebase';
+
+interface SystemNotification {
+  id: string;
+  type: 'SYSTEM' | 'ALERT';
+  title: string;
+  message: string;
+  timestamp: string;
+  userId?: string;
+  read: boolean;
+}
 
 interface DesktopApp {
   id: string;
@@ -20,6 +30,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
   const [newTips, setNewTips] = useState<CitizenSubmission[]>([]);
+  const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>([]);
   const [showNotification, setShowNotification] = useState(false);
   const [upcomingReminders, setUpcomingReminders] = useState<{caseId: string, caseTitle: string, reminder: Reminder}[]>([]);
 
@@ -70,6 +81,24 @@ const Dashboard: React.FC = () => {
 
     return () => unsubReports();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubNotifications = onSnapshot(query(dbCollections.notifications, orderBy("timestamp", "desc"), limit(10)), (snap) => {
+      setSystemNotifications(snap.docs.map(d => ({ id: d.id, ...d.data() } as SystemNotification)));
+    });
+
+    return () => unsubNotifications();
+  }, [user]);
+
+  const deleteNotification = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "notifications", id));
+    } catch (e) {
+      console.error("Error deleting notification:", e);
+    }
+  };
 
   const toggleReminder = async (caseId: string, reminderId: string) => {
     const reportRef = doc(db, "reports", caseId);
@@ -230,6 +259,32 @@ const Dashboard: React.FC = () => {
                 </div>
              </div>
            )}
+
+           {/* System-Bestätigungen Widget */}
+           <div className="bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 rounded-[40px] p-8 shadow-2xl">
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-blue-500">System-Bestätigungen</h3>
+                <span className="text-[10px] bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20 font-black">{systemNotifications.length}</span>
+              </div>
+              <div className="space-y-4">
+                {systemNotifications.map(notif => (
+                  <div key={notif.id} className="bg-blue-600/5 border border-blue-500/10 p-5 rounded-2xl relative group">
+                    <button 
+                      onClick={() => deleteNotification(notif.id)}
+                      className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all text-xs"
+                    >
+                      ✕
+                    </button>
+                    <div className="text-[8px] font-black text-blue-500 uppercase tracking-widest mb-1">{notif.title}</div>
+                    <div className="text-[11px] font-bold text-white uppercase tracking-tight mb-2">{notif.message}</div>
+                    <div className="text-[7px] font-mono text-slate-600 uppercase tracking-widest">
+                      {new Date(notif.timestamp).toLocaleString('de-DE')}
+                    </div>
+                  </div>
+                ))}
+                {systemNotifications.length === 0 && <div className="py-8 text-center opacity-20 text-[10px] font-black uppercase tracking-widest">Keine neuen Bestätigungen</div>}
+              </div>
+           </div>
         </div>
       </div>
     </div>

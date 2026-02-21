@@ -22,22 +22,18 @@ interface OrgCardProps {
   onAddChild: (parentId: string) => void;
 }
 
-const OrgCard: React.FC<OrgCardProps> = ({ node, level = 0, canManage, users, nodes, onEdit, onAddChild }) => {
+const OrgCard: React.FC<{ node: OrgNode; canManage: boolean; users: User[]; onEdit: (node: OrgNode) => void }> = ({ node, canManage, users, onEdit }) => {
   const assignedUser = users.find(u => u.id === node.assignedUserId);
   const group = RANK_GROUPS.find(g => g.id === node.rankGroup) || RANK_GROUPS[2];
 
   return (
-    <div className="flex flex-col items-center relative">
-      {/* Connection Line from Parent */}
-      {level > 0 && (
-        <div className="w-px h-8 bg-white/10 mb-2"></div>
-      )}
-
+    <div className="flex flex-col items-center">
       <div 
         className={`
-          w-72 bg-[#1a1c23]/80 backdrop-blur-md border ${group.color} ${group.glow} 
+          w-80 bg-[#1a1c23]/80 backdrop-blur-md border ${group.color} ${group.glow} 
           p-5 rounded-2xl shadow-2xl transition-all relative group
-          ${canManage ? 'hover:scale-105 cursor-pointer' : ''}
+          ${canManage ? 'hover:scale-[1.02] cursor-pointer' : ''}
+          z-10
         `}
         onClick={() => canManage && onEdit(node)}
       >
@@ -72,41 +68,7 @@ const OrgCard: React.FC<OrgCardProps> = ({ node, level = 0, canManage, users, no
             </div>
           )}
         </div>
-
-        {canManage && (
-          <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-             <button 
-               onClick={(e) => { e.stopPropagation(); onAddChild(node.id); }}
-               className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl hover:bg-blue-500"
-               title="Untergeordneten hinzufügen"
-             >
-               +
-             </button>
-          </div>
-        )}
       </div>
-
-      {/* Children Container */}
-      {node.children.length > 0 && (
-        <div className="relative pt-8 flex flex-col items-center gap-8">
-          {/* Vertical line to children */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-white/10"></div>
-          
-          {node.children.map((child) => (
-            <div key={child.id} className="relative">
-              <OrgCard 
-                node={child} 
-                level={level + 1} 
-                canManage={canManage} 
-                users={users} 
-                nodes={nodes} 
-                onEdit={onEdit} 
-                onAddChild={onAddChild} 
-              />
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
@@ -118,6 +80,8 @@ const OrgChartPage: React.FC = () => {
   const [nodes, setNodes] = useState<OrgNode[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [nodeToDelete, setNodeToDelete] = useState<string | null>(null);
   const [editingNode, setEditingNode] = useState<Partial<OrgNode> | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -131,36 +95,24 @@ const OrgChartPage: React.FC = () => {
     return () => { unsubNodes(); unsubUsers(); };
   }, []);
 
-  const treeData = useMemo(() => {
-    const nodeMap: Record<string, OrgNode & { children: any[] }> = {};
-    nodes.forEach(node => {
-      nodeMap[node.id] = { ...node, children: [] };
-    });
-    
-    const roots: any[] = [];
-    nodes.forEach(node => {
-      if (node.parentId && nodeMap[node.parentId]) {
-        nodeMap[node.parentId].children.push(nodeMap[node.id]);
-      } else {
-        roots.push(nodeMap[node.id]);
-      }
-    });
-
+  const layers = useMemo(() => {
     const getRankLevel = (fullName: string) => {
       return POLICE_RANKS.find(r => r.name === fullName)?.level || 999;
     };
 
-    const sortByRank = (a: any, b: any) => getRankLevel(a.fullName) - getRankLevel(b.fullName);
+    // Group nodes by their rank level
+    const grouped: Record<number, OrgNode[]> = {};
+    nodes.forEach(node => {
+      const level = getRankLevel(node.fullName);
+      if (!grouped[level]) grouped[level] = [];
+      grouped[level].push(node);
+    });
 
-    const sortTree = (nodesList: any[]) => {
-      nodesList.sort(sortByRank);
-      nodesList.forEach(n => {
-        if (n.children.length > 0) sortTree(n.children);
-      });
-    };
-
-    sortTree(roots);
-    return roots;
+    // Sort levels and return as array of layers
+    return Object.keys(grouped)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map(level => grouped[level]);
   }, [nodes]);
 
   const saveNode = async () => {
@@ -171,7 +123,6 @@ const OrgChartPage: React.FC = () => {
       } else {
         await addDoc(dbCollections.orgNodes, {
           ...editingNode,
-          parentId: editingNode.parentId || null,
           assignedUserId: editingNode.assignedUserId || null,
           rankGroup: editingNode.rankGroup || 'Operational'
         });
@@ -183,15 +134,23 @@ const OrgChartPage: React.FC = () => {
     }
   };
 
-  const deleteNode = async (id: string) => {
-    if (!confirm("Dienstgrad wirklich löschen? Alle Untergeordneten werden zu Wurzelknoten.")) return;
+  const deleteNode = async () => {
+    if (!nodeToDelete) return;
     try {
-      // Update children to have no parent
-      const children = nodes.filter(n => n.parentId === id);
-      for (const child of children) {
-        await setDoc(doc(db, "orgNodes", child.id), { ...child, parentId: null });
-      }
-      await deleteDoc(doc(db, "orgNodes", id));
+      const node = nodes.find(n => n.id === nodeToDelete);
+      await deleteDoc(doc(db, "orgNodes", nodeToDelete));
+      
+      await addDoc(dbCollections.notifications, {
+        type: 'SYSTEM',
+        title: 'Organigramm aktualisiert',
+        message: `Dienstgrad "${node?.fullName}" wurde gelöscht.`,
+        timestamp: new Date().toISOString(),
+        userId: user?.id,
+        read: false
+      });
+
+      setIsConfirmDeleteOpen(false);
+      setNodeToDelete(null);
       setIsModalOpen(false);
       setEditingNode(null);
     } catch (e) {
@@ -218,24 +177,71 @@ const OrgChartPage: React.FC = () => {
               onClick={() => { setEditingNode({ rankGroup: 'Top' }); setIsModalOpen(true); }}
               className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20"
             >
-              Wurzelknoten hinzufügen
+              Dienstgrad hinzufügen
             </button>
           )}
         </div>
 
         <div className="flex flex-col items-center min-w-max pb-32">
-          {treeData.length > 0 ? (
-            <div className="flex gap-24">
-              {treeData.map(root => (
-                <OrgCard 
-                  key={root.id} 
-                  node={root} 
-                  canManage={canManage} 
-                  users={users} 
-                  nodes={nodes} 
-                  onEdit={(node) => { setEditingNode(node); setIsModalOpen(true); }}
-                  onAddChild={(parentId) => { setEditingNode({ parentId, rankGroup: 'Operational' }); setIsModalOpen(true); }}
-                />
+          {layers.length > 0 ? (
+            <div className="flex flex-col items-center">
+              {layers.map((layerNodes, layerIdx) => (
+                <React.Fragment key={layerIdx}>
+                  {/* Layer Nodes */}
+                  <div className="flex gap-12 relative">
+                    {layerNodes.map(node => (
+                      <div key={node.id} className="relative flex flex-col items-center">
+                        <OrgCard 
+                          node={node} 
+                          canManage={canManage} 
+                          users={users} 
+                          onEdit={(node) => { setEditingNode(node); setIsModalOpen(true); }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Connection Lines to Next Layer */}
+                  {layerIdx < layers.length - 1 && (
+                    <div className="w-full flex flex-col items-center relative h-32 shrink-0">
+                      {/* Vertical lines from top layer down to the shared bar */}
+                      <div className="absolute top-0 flex gap-12">
+                        {layerNodes.map((_, idx) => (
+                          <div key={idx} className="w-80 flex justify-center">
+                            <div className="w-0.5 h-16 bg-white/30"></div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Vertical lines from bottom layer up to the shared bar */}
+                      <div className="absolute bottom-0 flex gap-12">
+                        {layers[layerIdx + 1].map((_, idx) => (
+                          <div key={idx} className="w-80 flex justify-center">
+                            <div className="w-0.5 h-16 bg-white/30"></div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* The single shared horizontal connector bar (The Bridge) - Rendered last to be on top */}
+                      <div className="absolute top-1/2 left-0 right-0 flex justify-center">
+                        <div className="flex gap-12">
+                          {Array.from({ length: Math.max(layerNodes.length, layers[layerIdx + 1].length) }).map((_, idx) => (
+                            <div key={idx} className="w-80 relative h-px">
+                              {/* Horizontal bar segment - only if more than one node in either layer needs connecting */}
+                              {(layerNodes.length > 1 || layers[layerIdx + 1].length > 1) && (
+                                <div className={`absolute top-0 h-0.5 bg-white/30 
+                                  ${idx === 0 ? 'left-1/2 right-0' : 
+                                    idx === Math.max(layerNodes.length, layers[layerIdx + 1].length) - 1 ? 'left-0 right-1/2' : 
+                                    'left-0 right-0'}`}
+                                ></div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
               ))}
             </div>
           ) : (
@@ -329,26 +335,15 @@ const OrgChartPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-
-                <div className="col-span-2 space-y-1">
-                  <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Übergeordneter Dienstgrad</label>
-                  <select 
-                    value={editingNode.parentId || ''} 
-                    onChange={e => setEditingNode({...editingNode, parentId: e.target.value || null})}
-                    className="w-full bg-black border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-600 uppercase font-black appearance-none cursor-pointer"
-                  >
-                    <option value="">Keiner (Wurzel)</option>
-                    {nodes.filter(n => n.id !== editingNode.id).map(n => (
-                      <option key={n.id} value={n.id} className="bg-slate-900">{n.shortName} - {n.fullName}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
               <div className="flex gap-4 pt-4">
                 {editingNode.id && (
                   <button 
-                    onClick={() => deleteNode(editingNode.id!)}
+                    onClick={() => {
+                      setNodeToDelete(editingNode.id!);
+                      setIsConfirmDeleteOpen(true);
+                    }}
                     className="px-6 py-4 text-[9px] font-black uppercase text-red-500 hover:bg-red-500/10 rounded-2xl transition-colors"
                   >
                     Löschen
@@ -366,6 +361,31 @@ const OrgChartPage: React.FC = () => {
                   className="bg-blue-600 py-4 px-10 rounded-2xl font-black uppercase text-[9px] tracking-widest text-white shadow-xl active:scale-95 transition-all"
                 >
                   Speichern
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {isConfirmDeleteOpen && (
+          <div className="fixed inset-0 z-[3000] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-8 animate-in fade-in duration-200">
+            <div className="bg-[#1a1c23] border border-red-500/20 p-10 rounded-[40px] w-full max-w-md space-y-8 shadow-2xl text-center">
+              <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6">⚠️</div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Löschen bestätigen</h2>
+              <p className="text-slate-400 text-sm font-bold uppercase tracking-tight leading-relaxed">
+                Möchten Sie diesen Dienstgrad wirklich löschen?
+              </p>
+              <div className="flex gap-4 pt-4">
+                <button 
+                  onClick={() => { setIsConfirmDeleteOpen(false); setNodeToDelete(null); }}
+                  className="flex-1 px-8 py-4 text-[9px] font-black uppercase text-slate-500 hover:text-white transition-colors"
+                >
+                  Abbrechen
+                </button>
+                <button 
+                  onClick={deleteNode}
+                  className="flex-1 bg-red-600 py-4 px-10 rounded-2xl font-black uppercase text-[9px] tracking-widest text-white shadow-xl shadow-red-900/20 active:scale-95 transition-all"
+                >
+                  Endgültig löschen
                 </button>
               </div>
             </div>

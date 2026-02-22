@@ -192,4 +192,5 @@ export interface OrgNode {
   parentId: string | null;
   rankGroup: 'Top' | 'Middle' | 'Operational';
   assignedUserId: string | null;
+  specialFunction?: string;
 }

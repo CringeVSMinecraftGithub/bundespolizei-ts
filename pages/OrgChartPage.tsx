@@ -51,6 +51,13 @@ const OrgCard: React.FC<{ node: OrgNode; canManage: boolean; users: User[]; onEd
           {node.fullName}
         </div>
 
+        {node.specialFunction && (
+          <div className="mb-4 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <div className="text-[7px] font-black text-blue-500 uppercase tracking-[0.2em] mb-0.5">Sonderfunktion</div>
+            <div className="text-[10px] font-black text-white uppercase tracking-tight">{node.specialFunction}</div>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 pt-4 border-t border-white/5">
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${assignedUser ? 'bg-blue-600/20 text-blue-400' : 'bg-white/5 text-white/20'}`}>
             👤
@@ -124,6 +131,7 @@ const OrgChartPage: React.FC = () => {
         await addDoc(dbCollections.orgNodes, {
           ...editingNode,
           assignedUserId: editingNode.assignedUserId || null,
+          specialFunction: editingNode.specialFunction || '',
           rankGroup: editingNode.rankGroup || 'Operational'
         });
       }
@@ -334,6 +342,17 @@ const OrgChartPage: React.FC = () => {
                       </button>
                     </div>
                   )}
+                </div>
+
+                <div className="col-span-2 space-y-1">
+                  <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Sonderfunktion (Optional)</label>
+                  <input 
+                    type="text"
+                    placeholder="z.B. Abteilungsleitung, Pressesprecher..."
+                    value={editingNode.specialFunction || ''}
+                    onChange={e => setEditingNode({...editingNode, specialFunction: e.target.value})}
+                    className="w-full bg-black border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-600 text-xs font-bold uppercase"
+                  />
                 </div>
               </div>
 

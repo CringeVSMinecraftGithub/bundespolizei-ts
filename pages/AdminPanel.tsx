@@ -34,7 +34,7 @@ const LAW_ABBREVIATIONS = [
 ];
 
 const AdminPanel: React.FC = () => {
-  const { roles: allRoles } = useAuth();
+  const { roles: allRoles, hasPermission, user: currentUser } = useAuth();
   const [tab, setTab] = useState<'Users' | 'Roles' | 'Laws'>('Users');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
@@ -220,8 +220,12 @@ const AdminPanel: React.FC = () => {
 
         <div className="flex gap-2 p-1.5 bg-[#1a1c23] border border-white/5 rounded-2xl w-fit shadow-xl">
           <button onClick={() => setTab('Users')} className={`px-8 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${tab === 'Users' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Mitarbeiter</button>
-          <button onClick={() => setTab('Roles')} className={`px-8 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${tab === 'Roles' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Rollen & Rechte</button>
-          <button onClick={() => setTab('Laws')} className={`px-8 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${tab === 'Laws' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Gesetzestexte</button>
+          {(currentUser?.isAdmin || hasPermission(Permission.ADMIN_ACCESS)) && (
+            <>
+              <button onClick={() => setTab('Roles')} className={`px-8 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${tab === 'Roles' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Rollen & Rechte</button>
+              <button onClick={() => setTab('Laws')} className={`px-8 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${tab === 'Laws' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Gesetzestexte</button>
+            </>
+          )}
         </div>
 
         {tab === 'Users' && (
@@ -272,7 +276,19 @@ const AdminPanel: React.FC = () => {
                         </td>
                         <td className="p-5 text-right">
                           <div className="flex justify-end gap-3">
-                            <button onClick={() => { setEditingUser({ ...u, permissions: normalizePermissions(u.permissions) }); setIsUserModalOpen(true); }} className="text-blue-500 text-[10px] font-black uppercase hover:text-white transition-colors">Edit</button>
+                            <button onClick={() => { 
+                              setEditingUser({ 
+                                ...u, 
+                                firstName: u.firstName || '',
+                                lastName: u.lastName || '',
+                                rank: u.rank || '',
+                                badgeNumber: u.badgeNumber || '',
+                                role: u.role || 'DSL',
+                                specialRoles: u.specialRoles || [],
+                                permissions: normalizePermissions(u.permissions) 
+                              }); 
+                              setIsUserModalOpen(true); 
+                            }} className="text-blue-500 text-[10px] font-black uppercase hover:text-white transition-colors">Edit</button>
                             <button onClick={() => toggleUserLock(u)} className={`${u.isLocked ? 'text-emerald-500' : 'text-amber-500'} text-[10px] font-black uppercase hover:text-white transition-colors`}>
                               {u.isLocked ? 'Entsperren' : 'Sperren'}
                             </button>
@@ -299,7 +315,15 @@ const AdminPanel: React.FC = () => {
                       {allRoles.filter(r => type === 'Sonderrollen' ? r.isSpecial : !r.isSpecial).map(r => (
                         <div key={r.id} className="bg-black/30 border border-white/5 p-4 rounded-2xl flex justify-between items-center group hover:border-blue-500/30 transition-all">
                            <div className="text-[10px] font-black text-white uppercase">{r.name} <span className="text-slate-500 font-bold ml-2">({normalizePermissions(r.permissions).length} Rechte)</span></div>
-                           <button onClick={() => { setEditingRole({ ...r, permissions: normalizePermissions(r.permissions) }); setIsRoleModalOpen(true); }} className="text-blue-500 text-[10px] font-black uppercase">Edit</button>
+                           <button onClick={() => { 
+                              setEditingRole({ 
+                                ...r, 
+                                name: r.name || '',
+                                permissions: normalizePermissions(r.permissions),
+                                isSpecial: r.isSpecial || false
+                              }); 
+                              setIsRoleModalOpen(true); 
+                            }} className="text-blue-500 text-[10px] font-black uppercase">Edit</button>
                         </div>
                       ))}
                    </div>
@@ -347,7 +371,17 @@ const AdminPanel: React.FC = () => {
                             <td className="px-6 py-1.5 text-slate-500 italic truncate max-w-xs">{l.description || 'N/A'}</td>
                             <td className="px-6 py-1.5 text-right">
                                <div className="flex justify-end gap-3">
-                                  <button onClick={() => { setValErrors([]); setEditingLaw(l); setIsLawModalOpen(true); }} className="text-blue-500 font-black uppercase text-[9px] hover:text-white transition-colors">Edit</button>
+                                  <button onClick={() => { 
+                                    setValErrors([]); 
+                                    setEditingLaw({
+                                      ...l,
+                                      paragraph: l.paragraph || '',
+                                      title: l.title || '',
+                                      category: l.category || '',
+                                      description: l.description || ''
+                                    }); 
+                                    setIsLawModalOpen(true); 
+                                  }} className="text-blue-500 font-black uppercase text-[9px] hover:text-white transition-colors">Edit</button>
                                   <button onClick={() => deleteLaw(l.id)} className="text-red-500 font-black uppercase text-[9px] hover:text-white transition-colors">Löschen</button>
                                </div>
                             </td>
@@ -431,7 +465,7 @@ const AdminPanel: React.FC = () => {
         <div className="fixed inset-0 z-[1000] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-8 animate-in fade-in">
            <div className="bg-[#0a111f] border border-white/10 p-12 rounded-[50px] w-full max-w-2xl space-y-10 shadow-2xl relative">
               <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Rolle konfigurieren</h2>
-              <input value={editingRole.name} onChange={e => setEditingRole({...editingRole, name: e.target.value})} className="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white font-black uppercase outline-none focus:border-blue-600" placeholder="Rollenname" />
+              <input value={editingRole.name || ''} onChange={e => setEditingRole({...editingRole, name: e.target.value})} className="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-white font-black uppercase outline-none focus:border-blue-600" placeholder="Rollenname" />
               <div className="grid grid-cols-2 gap-2 max-h-[40vh] overflow-y-auto custom-scrollbar p-2 bg-black/20 rounded-3xl border border-white/5">
                  {Object.values(Permission).map(p => {
                    const isChecked = (editingRole.permissions || []).includes(p);
@@ -466,11 +500,11 @@ const AdminPanel: React.FC = () => {
            <div className="bg-[#0a111f] border border-white/10 p-12 rounded-[50px] w-full max-w-2xl space-y-10 shadow-2xl relative">
               <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Mitarbeiterprofil</h2>
                <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Vorname</label><input value={editingUser.firstName} onChange={e => setEditingUser({...editingUser, firstName: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none" /></div>
-                 <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Nachname</label><input value={editingUser.lastName} onChange={e => setEditingUser({...editingUser, lastName: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none" /></div>
+                 <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Vorname</label><input value={editingUser.firstName || ''} onChange={e => setEditingUser({...editingUser, firstName: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none" /></div>
+                 <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Nachname</label><input value={editingUser.lastName || ''} onChange={e => setEditingUser({...editingUser, lastName: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none" /></div>
                  <div className="space-y-2">
                     <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Dienstgrad</label>
-                    <select value={editingUser.rank} onChange={e => setEditingUser({...editingUser, rank: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none">
+                    <select value={editingUser.rank || ''} onChange={e => setEditingUser({...editingUser, rank: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none">
                        <option value="" disabled>Auswählen...</option>
                        {['Höherer Dienst', 'Gehobener Dienst', 'Mittlerer Dienst'].map(group => (
                          <optgroup key={group} label={group} className="bg-slate-950 text-blue-500 font-black">
@@ -483,15 +517,34 @@ const AdminPanel: React.FC = () => {
                        ))}
                     </select>
                  </div>
-                 <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Dienstnummer</label><input value={editingUser.badgeNumber} onChange={e => setEditingUser({...editingUser, badgeNumber: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-blue-400 font-black uppercase outline-none" /></div>
-                 <div className="col-span-2 space-y-2">
+                 <div className="space-y-2"><label className="text-[9px] font-black text-slate-500 uppercase ml-2">Dienstnummer</label><input value={editingUser.badgeNumber || ''} onChange={e => setEditingUser({...editingUser, badgeNumber: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-blue-400 font-black uppercase outline-none" /></div>
+                  <div className="col-span-2 space-y-2">
                     <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Hauptrolle</label>
-                    <select value={editingUser.role} onChange={e => setEditingUser({...editingUser, role: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none">
+                    <select value={editingUser.role || ''} onChange={e => setEditingUser({...editingUser, role: e.target.value})} className="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-white outline-none">
                        {allRoles.filter(r => !r.isSpecial).map(r => <option key={r.id} value={r.id} className="bg-slate-900">{r.name}</option>)}
                     </select>
                  </div>
                  <div className="col-span-2 space-y-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Zusätzliche Berechtigungen</label>
+                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Sonderrollen</label>
+                    <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto custom-scrollbar bg-black/20 p-4 rounded-xl">
+                       {allRoles.filter(r => r.isSpecial).map(r => {
+                         const isChecked = (editingUser.specialRoles || []).includes(r.id);
+                         return (
+                           <label key={r.id} className="flex items-center gap-2 cursor-pointer group">
+                              <input type="checkbox" checked={isChecked} onChange={e => {
+                                 const sRoles = new Set(editingUser.specialRoles || []);
+                                 if (e.target.checked) sRoles.add(r.id); else sRoles.delete(r.id);
+                                 setEditingUser({...editingUser, specialRoles: Array.from(sRoles)});
+                              }} className="w-4 h-4 rounded border-white/10 bg-slate-800 text-indigo-600" />
+                              <span className={`text-[9px] font-bold uppercase transition-colors ${isChecked ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`}>{r.name}</span>
+                           </label>
+                         );
+                       })}
+                       {allRoles.filter(r => r.isSpecial).length === 0 && <div className="col-span-2 text-[8px] text-slate-600 uppercase italic">Keine Sonderrollen konfiguriert</div>}
+                    </div>
+                 </div>
+                 <div className="col-span-2 space-y-2">
+                    <label className="text-[9px] font-black text-slate-500 uppercase ml-2">Zusätzliche Berechtigungen (Manuell)</label>
                     <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar bg-black/20 p-4 rounded-xl">
                        {Object.values(Permission).map(p => {
                          const isChecked = (editingUser.permissions || []).includes(p);

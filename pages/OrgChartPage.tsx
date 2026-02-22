@@ -182,7 +182,15 @@ const OrgChartPage: React.FC = () => {
           </div>
           {canManage && (
             <button 
-              onClick={() => { setEditingNode({ rankGroup: 'Top' }); setIsModalOpen(true); }}
+              onClick={() => { 
+                setEditingNode({ 
+                  fullName: '',
+                  rankGroup: 'Top',
+                  assignedUserId: null,
+                  specialFunction: ''
+                }); 
+                setIsModalOpen(true); 
+              }}
               className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20"
             >
               Dienstgrad hinzufügen
@@ -203,7 +211,16 @@ const OrgChartPage: React.FC = () => {
                           node={node} 
                           canManage={canManage} 
                           users={users} 
-                          onEdit={(node) => { setEditingNode(node); setIsModalOpen(true); }}
+                          onEdit={(node) => { 
+                            setEditingNode({
+                              ...node,
+                              fullName: node.fullName || '',
+                              rankGroup: node.rankGroup || '',
+                              assignedUserId: node.assignedUserId || null,
+                              specialFunction: node.specialFunction || ''
+                            }); 
+                            setIsModalOpen(true); 
+                          }}
                         />
                       </div>
                     ))}

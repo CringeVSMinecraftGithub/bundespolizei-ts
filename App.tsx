@@ -16,6 +16,7 @@ import TipsPage from './pages/TipsPage';
 import CalendarPage from './pages/CalendarPage';
 import PressPage from './pages/PressPage';
 import OrgChartPage from './pages/OrgChartPage';
+import JobsPage from './pages/JobsPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import SettingsModal from './components/SettingsModal';
@@ -60,7 +61,8 @@ const LEGACY_MAP: Record<string, string> = {
   'view_calendar': Permission.VIEW_CALENDAR,
   'manage_calendar': Permission.MANAGE_CALENDAR,
   'manage_news': Permission.MANAGE_NEWS,
-  'manage_org': Permission.MANAGE_ORG
+  'manage_org': Permission.MANAGE_ORG,
+  'manage_jobs': Permission.MANAGE_JOBS
 };
 
 const INITIAL_LAWS: Partial<Law>[] = [
@@ -281,10 +283,11 @@ const App: React.FC = () => {
               <Route path="/cases" element={user && hasPermission(Permission.VIEW_REPORTS) ? <CaseSearchPage /> : <Navigate to="/dashboard" />} />
               <Route path="/calendar" element={user && hasPermission(Permission.VIEW_CALENDAR) ? <CalendarPage /> : <Navigate to="/dashboard" />} />
               <Route path="/press" element={user && hasPermission(Permission.MANAGE_NEWS) ? <PressPage /> : <Navigate to="/dashboard" />} />
-              <Route path="/applications" element={user && hasPermission(Permission.VIEW_APPLICATIONS) ? <ApplicationsPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/applications" element={user && (hasPermission(Permission.VIEW_APPLICATIONS) || hasPermission(Permission.MANAGE_JOBS)) ? <ApplicationsPage /> : <Navigate to="/dashboard" />} />
               <Route path="/tips" element={user && hasPermission(Permission.VIEW_TIPS) ? <TipsPage /> : <Navigate to="/dashboard" />} />
               <Route path="/org-chart" element={user ? <OrgChartPage /> : <Navigate to="/" />} />
-              <Route path="/admin" element={user?.isAdmin ? <AdminPanel /> : <Navigate to="/" />} />
+              <Route path="/jobs" element={user ? <JobsPage /> : <Navigate to="/" />} />
+              <Route path="/admin" element={user && (user.isAdmin || hasPermission(Permission.MANAGE_USERS)) ? <AdminPanel /> : <Navigate to="/" />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
         </AppLayout>

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Permission, CitizenSubmission, IncidentReport, Reminder, User } from '../types';
 import { DASHBOARD_BG } from '../constants';
-import { dbCollections, onSnapshot, query, orderBy, limit, doc, updateDoc, db, deleteDoc } from '../firebase';
+import { dbCollections, onSnapshot, query, orderBy, limit, doc, updateDoc, db, deleteDoc, where } from '../firebase';
 
 interface SystemNotification {
   id: string;
@@ -85,8 +85,15 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (!user) return;
 
-    const unsubNotifications = onSnapshot(query(dbCollections.notifications, orderBy("timestamp", "desc"), limit(10)), (snap) => {
-      setSystemNotifications(snap.docs.map(d => ({ id: d.id, ...d.data() } as SystemNotification)));
+    const unsubNotifications = onSnapshot(query(
+      dbCollections.notifications, 
+      where("userId", "==", user.id),
+      limit(50)
+    ), (snap) => {
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as SystemNotification));
+      // Client-side sorting to avoid composite index requirement
+      docs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setSystemNotifications(docs.slice(0, 10));
     });
 
     return () => unsubNotifications();
@@ -138,6 +145,7 @@ const Dashboard: React.FC = () => {
     { id: 'mail', label: 'Bürgerhinweise', icon: '💡', color: 'bg-amber-600', permission: Permission.VIEW_TIPS, path: '/tips', group: 'Ermittlungen' },
     { id: 'fleet', label: 'Fuhrpark', icon: '🚓', color: 'bg-blue-500', path: '/fleet', permission: Permission.MANAGE_FLEET, group: 'Verwaltung' },
     { id: 'org', label: 'Organigramm', icon: '📊', color: 'bg-indigo-700', path: '/org-chart', group: 'Verwaltung' },
+    { id: 'jobs', label: 'Stellenausschreibungen', icon: '💼', color: 'bg-blue-600', path: '/jobs', group: 'Dienstbetrieb' },
     { id: 'apps', label: 'Bewerbungen', icon: '📂', color: 'bg-emerald-600', permission: Permission.VIEW_APPLICATIONS, path: '/applications', group: 'Verwaltung' },
     { id: 'personnel', label: 'Administration', icon: '⚙️', color: 'bg-indigo-600', permission: Permission.ADMIN_ACCESS, path: '/admin', group: 'Verwaltung' },
   ];

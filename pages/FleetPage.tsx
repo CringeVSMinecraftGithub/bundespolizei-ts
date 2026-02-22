@@ -84,7 +84,7 @@ const FleetPage: React.FC = () => {
                   <span className="text-slate-300">{v.fuel}%</span>
                 </div>
                 <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
-                  <div className="bg-blue-500 h-full" style={{ width: `${v.fuel}%` }}></div>
+                  <div className="bg-blue-500 h-full" style={{ width: `${isNaN(Number(v.fuel)) ? 0 : v.fuel}%` }}></div>
                 </div>
                 <div className="text-[9px] text-slate-600 pt-2 italic">Zuletzt geführt von: {v.lastDriver || 'N/A'}</div>
               </div>

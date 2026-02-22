@@ -281,7 +281,7 @@ export default function CalendarPage() {
                       autoFocus 
                       placeholder="z.B. Besprechung GE" 
                       className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none focus:border-blue-600 transition-all" 
-                      value={newEvent.title} 
+                      value={newEvent.title || ''} 
                       onChange={e => setNewEvent({...newEvent, title: e.target.value})} 
                     />
                   </div>
@@ -289,11 +289,11 @@ export default function CalendarPage() {
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-slate-500 uppercase ml-2 tracking-widest">Uhrzeit</label>
-                      <input type="time" className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none [color-scheme:dark]" value={newEvent.startTime} onChange={e => setNewEvent({...newEvent, startTime: e.target.value})} />
+                      <input type="time" className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none [color-scheme:dark]" value={newEvent.startTime || ''} onChange={e => setNewEvent({...newEvent, startTime: e.target.value})} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-slate-500 uppercase ml-2 tracking-widest">Kategorie</label>
-                      <select className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none" value={newEvent.type} onChange={e => setNewEvent({...newEvent, type: e.target.value as any})}>
+                      <select className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none" value={newEvent.type || ''} onChange={e => setNewEvent({...newEvent, type: e.target.value as any})}>
                         <option className="bg-slate-900" value="Personal">Persönlich</option>
                         <option className="bg-slate-900" value="Besprechung">Besprechung</option>
                         <option className="bg-slate-900" value="Ausbildung">Ausbildung</option>
@@ -304,7 +304,7 @@ export default function CalendarPage() {
 
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-slate-500 uppercase ml-2 tracking-widest">Details (Optional)</label>
-                    <textarea placeholder="Zusatzinformationen..." className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none resize-none h-24" value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} />
+                    <textarea placeholder="Zusatzinformationen..." className="w-full bg-black/40 border border-white/10 p-6 rounded-2xl text-sm text-white outline-none resize-none h-24" value={newEvent.description || ''} onChange={e => setNewEvent({...newEvent, description: e.target.value})} />
                   </div>
 
                   {hasPermission(Permission.MANAGE_CALENDAR) && (

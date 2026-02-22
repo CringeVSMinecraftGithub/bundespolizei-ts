@@ -18,7 +18,8 @@ export enum Permission {
   VIEW_CALENDAR = 'Kalender einsehen',
   MANAGE_CALENDAR = 'Kalender verwalten',
   MANAGE_NEWS = 'Presse verwalten',
-  MANAGE_ORG = 'Organigramm verwalten'
+  MANAGE_ORG = 'Organigramm verwalten',
+  MANAGE_JOBS = 'Stellenausschreibungen verwalten'
 }
 
 export interface UserRole {
@@ -167,12 +168,32 @@ export interface CitizenSubmission {
   contactEmail?: string;
 }
 
+export interface JobPosting {
+  id: string;
+  title: string;
+  description: string;
+  minRank: string;
+  additionalRequirements?: string;
+  applicationScope: string;
+  slots: number;
+  deadline?: string;
+  status: 'Offen' | 'Geschlossen';
+  createdBy: string;
+  createdAt: string;
+}
+
 export interface JobApplication {
   id: string;
+  userId: string;
+  userName?: string;
+  userRank?: string;
+  type: 'Standard' | 'Stellenausschreibung';
+  jobPostingId?: string;
+  jobTitle?: string;
   name: string;
-  careerPath: 'Mittlerer Dienst' | 'Gehobener Dienst';
-  position: string;
-  status: 'Eingegangen' | 'Prüfung' | 'Eingeladen' | 'Abgelehnt';
+  careerPath?: 'Mittlerer Dienst' | 'Gehobener Dienst';
+  position?: string;
+  status: 'Eingegangen' | 'In Prüfung' | 'Eingeladen' | 'Abgelehnt' | 'Angenommen';
   timestamp: string;
   motivation: string;
   cv: string;
@@ -183,6 +204,14 @@ export interface JobApplication {
   gender?: string;
   education?: string;
   experience?: string;
+  additionalInfo?: string;
+  statusLog?: {
+    timestamp: string;
+    editorId: string;
+    editorName: string;
+    status: string;
+    notes?: string;
+  }[];
 }
 
 export interface OrgNode {

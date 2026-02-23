@@ -29,7 +29,8 @@ export const dbCollections = {
   roles: collection(db, "roles"),
   orgNodes: collection(db, "orgNodes"),
   jobPostings: collection(db, "jobPostings"),
-  notifications: collection(db, "notifications")
+  notifications: collection(db, "notifications"),
+  messages: collection(db, "messages")
 };
 
 export { collection, addDoc, getDocs, getDoc, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where };

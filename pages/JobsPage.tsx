@@ -5,6 +5,7 @@ import { Permission, JobPosting, JobApplication } from '../types';
 import { POLICE_RANKS } from '../constants';
 import { dbCollections, onSnapshot, query, addDoc, updateDoc, doc, db, deleteDoc, where, getDocs } from '../firebase';
 import PoliceOSWindow from '../components/PoliceOSWindow';
+import DataModal from '../components/DataModal';
 
 const JobsPage: React.FC = () => {
   const { user, hasPermission } = useAuth();
@@ -12,6 +13,7 @@ const JobsPage: React.FC = () => {
   const [userApplications, setUserApplications] = useState<JobApplication[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingPosting, setEditingPosting] = useState<Partial<JobPosting> | null>(null);
   const [selectedPosting, setSelectedPosting] = useState<JobPosting | null>(null);
   const [applicationText, setApplicationText] = useState('');
@@ -82,11 +84,12 @@ const JobsPage: React.FC = () => {
     }
   };
 
-  const deletePosting = async (id: string) => {
-    if (!confirm("Ausschreibung wirklich löschen?")) return;
+  const deletePosting = async () => {
+    if (!deleteId) return;
     try {
-      await deleteDoc(doc(db, "jobPostings", id));
+      await deleteDoc(doc(db, "jobPostings", deleteId));
       showStatus("Ausschreibung gelöscht.", "success");
+      setDeleteId(null);
     } catch (e) {
       showStatus("Fehler beim Löschen.");
     }
@@ -265,7 +268,7 @@ const JobsPage: React.FC = () => {
                         Edit
                       </button>
                       <button 
-                        onClick={() => deletePosting(post.id)}
+                        onClick={() => setDeleteId(post.id)}
                         className="flex-1 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-2 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border border-red-500/20"
                       >
                         Löschen
@@ -277,6 +280,37 @@ const JobsPage: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Modal: Delete Confirmation */}
+        <DataModal
+          isOpen={!!deleteId}
+          onClose={() => setDeleteId(null)}
+          title="Ausschreibung löschen"
+          subtitle="Sicherheitsabfrage"
+          icon="⚠️"
+          maxWidth="max-w-md"
+        >
+          <div className="space-y-6">
+            <p className="text-slate-400 text-xs text-center leading-relaxed">
+              Möchten Sie diese Stellenausschreibung wirklich unwiderruflich aus dem System löschen?
+              Alle damit verbundenen Daten gehen verloren.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setDeleteId(null)}
+                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-white/5"
+              >
+                Abbrechen
+              </button>
+              <button 
+                onClick={deletePosting}
+                className="flex-1 bg-red-600 hover:bg-red-500 text-white py-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-xl shadow-red-900/20"
+              >
+                Löschen bestätigen
+              </button>
+            </div>
+          </div>
+        </DataModal>
 
         {/* Modal: Create/Edit Posting */}
         {isModalOpen && editingPosting && (

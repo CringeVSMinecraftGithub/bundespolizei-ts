@@ -157,7 +157,13 @@ const AdminPanel: React.FC = () => {
       return;
     }
     try {
-      const dataToSave = { ...editingLaw, paragraph: p, title: t, category: c };
+      const dataToSave = { 
+        ...editingLaw, 
+        paragraph: p, 
+        title: t, 
+        category: c,
+        updatedAt: new Date().toISOString()
+      };
       if (dataToSave.id) {
         await setDoc(doc(db, "laws", dataToSave.id), dataToSave);
       } else {
@@ -378,7 +384,9 @@ const AdminPanel: React.FC = () => {
                                       paragraph: l.paragraph || '',
                                       title: l.title || '',
                                       category: l.category || '',
-                                      description: l.description || ''
+                                      description: l.description || '',
+                                      punishment: l.punishment || '',
+                                      status: l.status || 'Aktiv'
                                     }); 
                                     setIsLawModalOpen(true); 
                                   }} className="text-blue-500 font-black uppercase text-[9px] hover:text-white transition-colors">Edit</button>
@@ -442,6 +450,26 @@ const AdminPanel: React.FC = () => {
                       className={`w-full bg-black border p-4 rounded-xl text-white outline-none focus:border-blue-600 uppercase font-black transition-all ${valErrors.includes('title') ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-white/10'}`} 
                       placeholder="Diebstahl" 
                     />
+                 </div>
+                 <div className="col-span-2 space-y-1">
+                    <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Strafmaß</label>
+                    <input 
+                      value={editingLaw.punishment || ''} 
+                      onChange={e => setEditingLaw({...editingLaw, punishment: e.target.value})} 
+                      className="w-full bg-black border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-600 uppercase font-black transition-all" 
+                      placeholder="Geldstrafe oder Freiheitsstrafe..." 
+                    />
+                 </div>
+                 <div className="col-span-2 space-y-1">
+                    <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Status</label>
+                    <select 
+                      value={editingLaw.status || 'Aktiv'} 
+                      onChange={e => setEditingLaw({...editingLaw, status: e.target.value as any})} 
+                      className="w-full bg-black border border-white/10 p-4 rounded-xl text-white outline-none focus:border-blue-600 uppercase font-black appearance-none cursor-pointer transition-all"
+                    >
+                      <option value="Aktiv">Aktiv</option>
+                      <option value="Inaktiv">Inaktiv</option>
+                    </select>
                  </div>
                  <div className="col-span-2 space-y-1">
                     <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Beschreibung</label>

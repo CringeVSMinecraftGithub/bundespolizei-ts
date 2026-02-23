@@ -107,6 +107,9 @@ export interface Law {
   title: string;
   category: string;
   description?: string;
+  punishment?: string;
+  status?: 'Aktiv' | 'Inaktiv';
+  updatedAt?: string;
 }
 
 export interface Reminder {
@@ -222,4 +225,22 @@ export interface OrgNode {
   rankGroup: 'Top' | 'Middle' | 'Operational';
   assignedUserId: string | null;
   specialFunction?: string;
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRank: string;
+  receiverId: string;
+  receiverName: string;
+  receiverRank: string;
+  subject: string;
+  content: string;
+  timestamp: string;
+  read: boolean;
+  archivedBySender: boolean;
+  archivedByReceiver: boolean;
+  attachmentUrl?: string;
+  attachmentName?: string;
 }

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Permission } from '../types';
@@ -13,6 +13,37 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPermission } = useAuth();
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem('police_os_sidebar_width');
+    return saved ? parseInt(saved, 10) : 224;
+  });
+  const isResizing = useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current) return;
+      const newWidth = Math.max(64, Math.min(450, e.clientX));
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      isResizing.current = false;
+      document.body.style.cursor = 'default';
+      localStorage.setItem('police_os_sidebar_width', sidebarWidth.toString());
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [sidebarWidth]);
+
+  const startResizing = () => {
+    isResizing.current = true;
+    document.body.style.cursor = 'col-resize';
+  };
 
   const sidebarItems = [
     // Dienstbetrieb
@@ -21,6 +52,8 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
     { label: 'Einsatzberichte', icon: '📝', path: '/incident-report', group: 'Dienstbetrieb', perm: Permission.VIEW_REPORTS },
     { label: 'Strafanzeigen', icon: '⚖️', path: '/criminal-complaint', group: 'Dienstbetrieb', perm: Permission.CREATE_REPORTS },
     { label: 'Stellenausschreibungen', icon: '💼', path: '/jobs', group: 'Dienstbetrieb' },
+    { label: 'Gesetze', icon: '⚖️', path: '/laws', group: 'Dienstbetrieb' },
+    { label: 'Kommunikation', icon: '✉️', path: '/communication', group: 'Dienstbetrieb' },
     
     // Ermittlungen
     { label: 'Vorgangssuche', icon: '🔍', path: '/cases', group: 'Ermittlungen', perm: Permission.VIEW_REPORTS },
@@ -50,14 +83,17 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-16 md:w-56 bg-[#1a1c23] border-r border-white/5 flex flex-col shrink-0 overflow-y-auto custom-scrollbar py-4">
+        <aside 
+          style={{ width: `${sidebarWidth}px` }}
+          className="bg-[#1a1c23] border-r border-white/5 flex flex-col shrink-0 overflow-y-auto custom-scrollbar py-4 relative group/sidebar"
+        >
           {['Dienstbetrieb', 'Ermittlungen', 'Verwaltung'].map((group) => {
             // Filter items: allow if no permission is required OR if user has the permission
             const items = sidebarItems.filter(i => i.group === group && (!i.perm || hasPermission(i.perm)));
             if (items.length === 0) return null;
             return (
               <div key={group} className="mb-6">
-                <div className="px-6 py-2 text-[8px] font-black text-slate-600 uppercase tracking-widest hidden md:block border-b border-white/5 mb-2 mx-4">
+                <div className={`px-6 py-2 text-[8px] font-black text-slate-600 uppercase tracking-widest border-b border-white/5 mb-2 mx-4 ${sidebarWidth < 120 ? 'hidden' : 'block'}`}>
                   {group}
                 </div>
                 {items.map((item, idx) => (
@@ -66,13 +102,19 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
                     onClick={() => navigate(item.path)}
                     className={`w-full flex items-center gap-4 px-6 py-3 hover:bg-white/5 transition-all text-left ${location.pathname === item.path ? 'bg-blue-600/10 border-r-4 border-blue-500 text-blue-400' : 'text-slate-500'}`}
                   >
-                    <span className="text-xl">{item.icon}</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest hidden md:block">{item.label}</span>
+                    <span className="text-xl shrink-0">{item.icon}</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest truncate ${sidebarWidth < 120 ? 'hidden' : 'block'}`}>{item.label}</span>
                   </button>
                 ))}
               </div>
             );
           })}
+
+          {/* Resize Handle */}
+          <div 
+            onMouseDown={startResizing}
+            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500/50 transition-colors z-[60]"
+          />
         </aside>
 
         {/* Main Content Area */}

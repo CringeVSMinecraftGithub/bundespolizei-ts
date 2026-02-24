@@ -10,9 +10,10 @@ const CommunicationPage: React.FC = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [currentFolder, setCurrentFolder] = useState<'Inbox' | 'Sent' | 'Archive'>('Inbox');
+  const [currentFolder, setCurrentFolder] = useState<'Inbox' | 'Sent' | 'Archive' | 'Important' | 'Spam'>('Inbox');
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isNewMessageModalOpen, setIsNewMessageModalOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'archive' | 'spam', msg: Message } | null>(null);
   const [loading, setLoading] = useState(true);
 
   // New message form state
@@ -58,14 +59,18 @@ const CommunicationPage: React.FC = () => {
     if (!user) return [];
     switch (currentFolder) {
       case 'Inbox':
-        return messages.filter(m => m.receiverId === user.id && !m.archivedByReceiver);
+        return messages.filter(m => m.receiverId === user.id && !m.archivedByReceiver && !m.isImportant && !m.isSpam);
       case 'Sent':
         return messages.filter(m => m.senderId === user.id && !m.archivedBySender);
       case 'Archive':
         return messages.filter(m => 
-          (m.receiverId === user.id && m.archivedByReceiver) || 
-          (m.senderId === user.id && m.archivedBySender)
+          ((m.receiverId === user.id && m.archivedByReceiver) || 
+          (m.senderId === user.id && m.archivedBySender)) && !m.isSpam
         );
+      case 'Important':
+        return messages.filter(m => m.receiverId === user.id && m.isImportant && !m.archivedByReceiver && !m.isSpam);
+      case 'Spam':
+        return messages.filter(m => m.receiverId === user.id && m.isSpam && !m.archivedByReceiver);
       default:
         return [];
     }
@@ -73,7 +78,7 @@ const CommunicationPage: React.FC = () => {
 
   const unreadCount = useMemo(() => {
     if (!user) return 0;
-    return messages.filter(m => m.receiverId === user.id && !m.read && !m.archivedByReceiver).length;
+    return messages.filter(m => m.receiverId === user.id && !m.read && !m.archivedByReceiver && !m.isImportant && !m.isSpam).length;
   }, [messages, user]);
 
   const sendMessage = async () => {
@@ -132,9 +137,34 @@ const CommunicationPage: React.FC = () => {
       
       await updateDoc(doc(db, "messages", msg.id), update);
       if (selectedMessage?.id === msg.id) setSelectedMessage(null);
+      setConfirmAction(null);
       showStatus("Nachricht archiviert.", "success");
     } catch (e) {
       showStatus("Fehler beim Archivieren.");
+    }
+  };
+
+  const toggleImportant = async (msg: Message) => {
+    if (!user) return;
+    try {
+      const newStatus = !msg.isImportant;
+      await updateDoc(doc(db, "messages", msg.id), { isImportant: newStatus });
+      showStatus(newStatus ? "Als wichtig markiert." : "Markierung entfernt.", "success");
+    } catch (e) {
+      showStatus("Fehler.");
+    }
+  };
+
+  const toggleSpam = async (msg: Message) => {
+    if (!user) return;
+    try {
+      const newStatus = !msg.isSpam;
+      await updateDoc(doc(db, "messages", msg.id), { isSpam: newStatus });
+      if (newStatus && selectedMessage?.id === msg.id) setSelectedMessage(null);
+      setConfirmAction(null);
+      showStatus(newStatus ? "Als Spam markiert." : "Kein Spam mehr.", "success");
+    } catch (e) {
+      showStatus("Fehler.");
     }
   };
 
@@ -201,6 +231,22 @@ const CommunicationPage: React.FC = () => {
                 <span className="text-xl">📦</span>
                 <span className="text-[10px] font-black uppercase tracking-widest">Archiviert</span>
               </button>
+
+              <button 
+                onClick={() => setCurrentFolder('Important')}
+                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${currentFolder === 'Important' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:bg-white/5'}`}
+              >
+                <span className="text-xl">⭐</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Wichtig</span>
+              </button>
+
+              <button 
+                onClick={() => setCurrentFolder('Spam')}
+                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${currentFolder === 'Spam' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:bg-white/5'}`}
+              >
+                <span className="text-xl">🚫</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Spam</span>
+              </button>
             </div>
           </div>
 
@@ -233,9 +279,12 @@ const CommunicationPage: React.FC = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest truncate">
-                              {msg.senderId === user?.id ? `An: ${msg.receiverName}` : `Von: ${msg.senderName}`}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest truncate">
+                                {msg.senderId === user?.id ? `An: ${msg.receiverName}` : `Von: ${msg.senderName}`}
+                              </span>
+                              {msg.isImportant && <span className="text-amber-500 text-[10px]">⭐</span>}
+                            </div>
                             <span className="text-[8px] font-mono text-slate-600 shrink-0">
                               {new Date(msg.timestamp).toLocaleString('de-DE')}
                             </span>
@@ -278,13 +327,29 @@ const CommunicationPage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => archiveMessage(selectedMessage)}
-                      className="p-3 bg-white/5 hover:bg-red-600/20 text-slate-500 hover:text-red-500 rounded-xl transition-all border border-white/5"
-                      title="Archivieren"
-                    >
-                      📦
-                    </button>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => toggleImportant(selectedMessage)}
+                        className={`p-3 rounded-xl transition-all border border-white/5 ${selectedMessage.isImportant ? 'bg-amber-500/20 text-amber-500' : 'bg-white/5 text-slate-500 hover:text-amber-500'}`}
+                        title="Als wichtig markieren"
+                      >
+                        ⭐
+                      </button>
+                      <button 
+                        onClick={() => setConfirmAction({ type: 'spam', msg: selectedMessage })}
+                        className={`p-3 rounded-xl transition-all border border-white/5 ${selectedMessage.isSpam ? 'bg-red-500/20 text-red-500' : 'bg-white/5 text-slate-500 hover:text-red-500'}`}
+                        title="Als Spam markieren"
+                      >
+                        🚫
+                      </button>
+                      <button 
+                        onClick={() => setConfirmAction({ type: 'archive', msg: selectedMessage })}
+                        className="p-3 bg-white/5 hover:bg-red-600/20 text-slate-500 hover:text-red-500 rounded-xl transition-all border border-white/5"
+                        title="Archivieren"
+                      >
+                        📦
+                      </button>
+                    </div>
                   </div>
                   <h2 className="text-xl font-black text-white uppercase tracking-tighter leading-tight mb-2">{selectedMessage.subject}</h2>
                   <div className="text-[9px] font-mono text-slate-600 uppercase tracking-widest">
@@ -331,6 +396,41 @@ const CommunicationPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Action Confirmation Modal */}
+        <DataModal
+          isOpen={!!confirmAction}
+          onClose={() => setConfirmAction(null)}
+          title="Aktion bestätigen"
+          subtitle="Sicherheitsabfrage"
+          icon="⚠️"
+          maxWidth="max-w-md"
+        >
+          <div className="space-y-6">
+            <p className="text-slate-400 text-xs text-center leading-relaxed">
+              {confirmAction?.type === 'archive' 
+                ? "Möchten Sie diese Nachricht wirklich archivieren? Sie wird aus Ihrem Posteingang entfernt."
+                : "Möchten Sie diese Nachricht als Spam markieren? Sie wird in den Spam-Ordner verschoben."}
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setConfirmAction(null)}
+                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-white/5"
+              >
+                Abbrechen
+              </button>
+              <button 
+                onClick={() => {
+                  if (confirmAction?.type === 'archive') archiveMessage(confirmAction.msg);
+                  else if (confirmAction?.type === 'spam') toggleSpam(confirmAction.msg);
+                }}
+                className={`flex-1 py-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-xl ${confirmAction?.type === 'archive' ? 'bg-red-600 hover:bg-red-500 shadow-red-900/20' : 'bg-orange-600 hover:bg-orange-500 shadow-orange-900/20'} text-white`}
+              >
+                Bestätigen
+              </button>
+            </div>
+          </div>
+        </DataModal>
 
         {/* New Message Modal */}
         <DataModal

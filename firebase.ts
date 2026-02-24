@@ -1,6 +1,6 @@
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, getDoc, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, addDoc, getDocs, getDoc, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDo3HTvuE3ONkJnowtrJTwjv6Us3CLPVxk",
@@ -30,7 +30,10 @@ export const dbCollections = {
   orgNodes: collection(db, "orgNodes"),
   jobPostings: collection(db, "jobPostings"),
   notifications: collection(db, "notifications"),
-  messages: collection(db, "messages")
+  messages: collection(db, "messages"),
+  careerProfiles: collection(db, "careerProfiles"),
+  careerComponents: collection(db, "careerComponents"),
+  fleetLogs: collection(db, "fleetLogs")
 };
 
 export { collection, addDoc, getDocs, getDoc, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where };

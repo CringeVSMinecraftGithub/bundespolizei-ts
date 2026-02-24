@@ -19,7 +19,8 @@ export enum Permission {
   MANAGE_CALENDAR = 'Kalender verwalten',
   MANAGE_NEWS = 'Presse verwalten',
   MANAGE_ORG = 'Organigramm verwalten',
-  MANAGE_JOBS = 'Stellenausschreibungen verwalten'
+  MANAGE_JOBS = 'Stellenausschreibungen verwalten',
+  MANAGE_CAREER = 'Karriere verwalten'
 }
 
 export interface UserRole {
@@ -69,9 +70,26 @@ export interface Vehicle {
   id: string;
   plate: string;
   model: string;
-  status: 'Einsatzbereit' | 'Im Einsatz' | 'Defekt';
+  status: 'Einsatzbereit' | 'Im Einsatz' | 'Defekt' | 'Wartung';
   lastDriver?: string;
   fuel: number;
+  vin?: string;
+  mileage?: number;
+  nextService?: string;
+  type?: string;
+  assignedUnit?: string;
+  notes?: string;
+  updatedAt?: string;
+}
+
+export interface VehicleLog {
+  id: string;
+  vehicleId: string;
+  timestamp: string;
+  userId: string;
+  userName: string;
+  action: string;
+  details?: string;
 }
 
 export interface Evidence {
@@ -239,8 +257,34 @@ export interface Message {
   content: string;
   timestamp: string;
   read: boolean;
+  isImportant?: boolean;
+  isSpam?: boolean;
   archivedBySender: boolean;
   archivedByReceiver: boolean;
   attachmentUrl?: string;
   attachmentName?: string;
+}
+
+export interface CareerProfile {
+  id: string;
+  userId: string;
+  userName: string;
+  userRank: string;
+  goal: string;
+  type: string;
+  startDate: string;
+  endDate?: string;
+  status: 'Aktiv' | 'Abgeschlossen';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CareerComponent {
+  id: string;
+  profileId: string;
+  title: string;
+  description?: string;
+  order: number;
+  status: 'Offen' | 'In Bearbeitung' | 'Abgeschlossen';
+  completionDate?: string;
 }

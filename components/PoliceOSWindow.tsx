@@ -63,6 +63,7 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
     
     // Verwaltung
     { label: 'Fuhrpark', icon: '🚓', path: '/fleet', group: 'Verwaltung', perm: Permission.MANAGE_FLEET },
+    { label: 'Karriere', icon: '🎓', path: '/career', group: 'Verwaltung' },
     { label: 'Organigramm', icon: '📊', path: '/org-chart', group: 'Verwaltung' },
     { label: 'Bewerbungen', icon: '📂', path: '/applications', group: 'Verwaltung', perm: Permission.VIEW_APPLICATIONS },
     { label: 'Administration', icon: '⚙️', path: '/admin', group: 'Verwaltung', perm: Permission.ADMIN_ACCESS },

@@ -148,14 +148,16 @@ const OrgChartPage: React.FC = () => {
       const node = nodes.find(n => n.id === nodeToDelete);
       await deleteDoc(doc(db, "orgNodes", nodeToDelete));
       
-      await addDoc(dbCollections.notifications, {
-        type: 'SYSTEM',
-        title: 'Organigramm aktualisiert',
-        message: `Dienstgrad "${node?.fullName}" wurde gelöscht.`,
-        timestamp: new Date().toISOString(),
-        userId: user?.id,
-        read: false
-      });
+      if (user?.id) {
+        await addDoc(dbCollections.notifications, {
+          type: 'SYSTEM',
+          title: 'Organigramm aktualisiert',
+          message: `Dienstgrad "${node?.fullName}" wurde gelöscht.`,
+          timestamp: new Date().toISOString(),
+          userId: user.id,
+          read: false
+        });
+      }
 
       setIsConfirmDeleteOpen(false);
       setNodeToDelete(null);

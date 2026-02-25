@@ -20,7 +20,8 @@ export enum Permission {
   MANAGE_NEWS = 'Presse verwalten',
   MANAGE_ORG = 'Organigramm verwalten',
   MANAGE_JOBS = 'Stellenausschreibungen verwalten',
-  MANAGE_CAREER = 'Karriere verwalten'
+  MANAGE_CAREER = 'Karriere verwalten',
+  MANAGE_REPORTS = 'Berichte verwalten'
 }
 
 export interface UserRole {
@@ -169,6 +170,8 @@ export interface IncidentReport {
   result?: string;
   evidenceList?: string;
   propertyValue?: string;
+  followUpDate?: string;
+  officialNotes?: string;
 }
 
 export interface CitizenSubmission {
@@ -226,6 +229,9 @@ export interface JobApplication {
   education?: string;
   experience?: string;
   additionalInfo?: string;
+  trackingCode?: string;
+  rejectionReason?: string;
+  acceptanceInfo?: string;
   statusLog?: {
     timestamp: string;
     editorId: string;

@@ -3,17 +3,22 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { POLICE_LOGO_RAW } from '../constants';
-import { dbCollections, addDoc, onSnapshot, query, orderBy, limit, getDocs } from '../firebase';
+import { dbCollections, addDoc, onSnapshot, query, orderBy, limit, getDocs, where } from '../firebase';
 import { PressRelease, User } from '../types';
 
 const PublicHome: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [modalType, setModalType] = useState<'Internetwache' | 'Bewerbung' | 'News' | 'Login' | null>(null);
-  const [appStep, setAppStep] = useState<'Selection' | 'Info' | 'Form'>('Selection');
+  const [modalType, setModalType] = useState<'Internetwache' | 'Bewerbung' | 'News' | 'Login' | 'StatusCheck' | null>(null);
+  const [appStep, setAppStep] = useState<'Selection' | 'Info' | 'Form' | 'Success'>('Selection');
   const [iwStep, setIwStep] = useState<'Selection' | 'Anzeige' | 'Hinweis'>('Selection');
   const [careerPath, setCareerPath] = useState<'Mittlerer Dienst' | 'Gehobener Dienst'>('Mittlerer Dienst');
   const [submitted, setSubmitted] = useState(false);
+  const [trackingCode, setTrackingCode] = useState('');
+  const [checkCode, setCheckCode] = useState('');
+  const [checkResult, setCheckResult] = useState<any>(null);
+  const [checkError, setCheckError] = useState<string | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [news, setNews] = useState<PressRelease[]>([]);
@@ -68,13 +73,17 @@ const PublicHome: React.FC = () => {
 
     try {
       if (type === 'Bewerbung') {
+        const code = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10)).join('');
+        setTrackingCode(code);
         await addDoc(dbCollections.applications, {
           ...data,
           name: `${data.firstname} ${data.lastname}`,
           careerPath: careerPath,
           status: 'Eingegangen',
+          trackingCode: code,
           timestamp: new Date().toISOString()
         });
+        setAppStep('Success');
       } else if (type === 'Anzeige') {
         await addDoc(dbCollections.reports, {
           type: 'Strafanzeige',
@@ -110,15 +119,40 @@ const PublicHome: React.FC = () => {
           status: 'Neu'
         });
       }
-      setSubmitted(true);
-      setTimeout(() => { 
-        setModalType(null); 
-        setSubmitted(false); 
-        setAppStep('Selection'); 
-        setIwStep('Selection');
-        setIsAnonymous(true);
-      }, 2000);
+      if (type !== 'Bewerbung') {
+        setSubmitted(true);
+        setTimeout(() => { 
+          setModalType(null); 
+          setSubmitted(false); 
+          setAppStep('Selection'); 
+          setIwStep('Selection');
+          setIsAnonymous(true);
+        }, 2000);
+      }
     } catch (e) { alert("Fehler beim Senden."); }
+  };
+
+  const checkStatus = async () => {
+    if (!checkCode || checkCode.length !== 12) {
+      setCheckError("Bitte geben Sie einen gültigen 12-stelligen Code ein.");
+      return;
+    }
+    setIsChecking(true);
+    setCheckError(null);
+    setCheckResult(null);
+    try {
+      const q = query(dbCollections.applications, where("trackingCode", "==", checkCode));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        setCheckError("Keine Bewerbung mit diesem Code gefunden.");
+      } else {
+        setCheckResult(snap.docs[0].data());
+      }
+    } catch (e) {
+      setCheckError("Fehler beim Abrufen des Status.");
+    } finally {
+      setIsChecking(false);
+    }
   };
 
   return (
@@ -130,7 +164,7 @@ const PublicHome: React.FC = () => {
           <div className={`w-full ${(modalType === 'Bewerbung') || (modalType === 'Internetwache') ? 'max-w-6xl' : 'max-w-xl'} bg-[#1e293b] border border-white/10 rounded-[40px] p-0 shadow-2xl max-h-[95vh] flex flex-col relative overflow-hidden transition-all duration-500`}>
             
             <button 
-              onClick={() => { setModalType(null); setAppStep('Selection'); setIwStep('Selection'); setIsAnonymous(true); }} 
+              onClick={() => { setModalType(null); setAppStep('Selection'); setIwStep('Selection'); setIsAnonymous(true); setCheckCode(''); setCheckResult(null); setCheckError(null); }} 
               className="absolute top-8 right-8 w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-full text-slate-400 hover:text-white z-50 transition-colors"
             >
               ✕
@@ -145,6 +179,78 @@ const PublicHome: React.FC = () => {
             ) : (
               <div className="flex flex-col h-full overflow-hidden">
                 
+                {modalType === 'StatusCheck' && (
+                  <div className="p-12 animate-in zoom-in duration-300">
+                    <div className="flex flex-col items-center mb-10 text-center">
+                      <div className="w-20 h-20 bg-blue-600/10 text-blue-500 rounded-3xl flex items-center justify-center text-4xl mb-6 border border-blue-600/20">🔍</div>
+                      <h2 className="text-3xl font-black text-white uppercase tracking-tight">Bewerbungsstatus prüfen</h2>
+                      <p className="text-slate-400 text-[10px] uppercase tracking-widest font-black mt-2">Geben Sie Ihren 12-stelligen Tracking-Code ein</p>
+                    </div>
+                    
+                    {!checkResult ? (
+                      <div className="space-y-6">
+                        <input 
+                          type="text" 
+                          maxLength={12}
+                          value={checkCode} 
+                          onChange={(e) => setCheckCode(e.target.value.replace(/\D/g, ''))} 
+                          className="w-full bg-black/40 border border-white/10 rounded-2xl p-6 text-white text-center text-2xl font-black tracking-[0.5em] outline-none focus:border-blue-500 transition-all placeholder:tracking-normal placeholder:text-sm" 
+                          placeholder="000000000000" 
+                        />
+                        {checkError && <div className="text-red-400 text-[10px] font-black uppercase text-center bg-red-400/10 border border-red-400/20 p-4 rounded-xl">{checkError}</div>}
+                        <button 
+                          onClick={checkStatus}
+                          disabled={isChecking || checkCode.length !== 12}
+                          className="w-full bg-blue-600 hover:bg-blue-500 text-white py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {isChecking ? 'Wird geprüft...' : 'Status abrufen'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="bg-black/20 border border-white/5 p-8 rounded-[32px] space-y-6">
+                          <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aktueller Status</span>
+                            <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                              checkResult.status === 'Angenommen' ? 'bg-emerald-600/20 text-emerald-500 border border-emerald-500/30' :
+                              checkResult.status === 'Abgelehnt' ? 'bg-red-600/20 text-red-500 border border-red-500/30' :
+                              'bg-blue-600/20 text-blue-500 border border-blue-500/30'
+                            }`}>
+                              {checkResult.status}
+                            </span>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div className="text-center">
+                              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Bewerber</h4>
+                              <div className="text-xl font-black text-white uppercase">{checkResult.name}</div>
+                              <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-1">{checkResult.careerPath}</div>
+                            </div>
+                            
+                            <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
+                              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Informationen der Bundespolizei</h4>
+                              <p className="text-sm text-slate-300 leading-relaxed font-medium">
+                                {checkResult.status === 'Eingegangen' && "Ihre Bewerbung ist erfolgreich bei uns eingegangen und wird in Kürze gesichtet."}
+                                {checkResult.status === 'In Prüfung' && "Ihre Unterlagen werden aktuell von unserer Personalabteilung geprüft. Bitte haben Sie etwas Geduld."}
+                                {checkResult.status === 'Eingeladen' && "Herzlichen Glückwunsch! Sie wurden zu einem persönlichen Gespräch eingeladen. Details folgen per E-Mail."}
+                                {checkResult.status === 'Angenommen' && (checkResult.acceptanceInfo || "Herzlichen Glückwunsch! Ihre Bewerbung war erfolgreich. Wir freuen uns auf die Zusammenarbeit.")}
+                                {checkResult.status === 'Abgelehnt' && (checkResult.rejectionReason || "Leider müssen wir Ihnen mitteilen, dass wir Ihre Bewerbung im aktuellen Auswahlverfahren nicht berücksichtigen können.")}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <button 
+                          onClick={() => { setCheckResult(null); setCheckCode(''); }}
+                          className="w-full bg-white/5 hover:bg-white/10 text-slate-400 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/5"
+                        >
+                          Andere Bewerbung prüfen
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {modalType === 'Login' && (
                   <div className="p-12 animate-in zoom-in duration-300">
                     <div className="flex flex-col items-center mb-10 text-center">
@@ -323,6 +429,16 @@ const PublicHome: React.FC = () => {
                               <h3 className="text-3xl font-black text-white uppercase mb-4 tracking-tighter">Gehobener <span className="text-indigo-500">Dienst</span></h3>
                               <p className="text-slate-400 text-[11px] leading-relaxed uppercase font-bold tracking-widest mb-6">Führungsverantwortung übernehmen. Duales Studium mit Bachelor-Abschluss.</p>
                               <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest pt-6 border-t border-white/5">Details ansehen ➔</div>
+                           </button>
+                        </div>
+                        <div className="pt-12 border-t border-white/5 flex justify-center">
+                           <button 
+                             type="button"
+                             onClick={() => setModalType('StatusCheck')}
+                             className="bg-white/5 hover:bg-white/10 text-slate-300 px-12 py-5 rounded-3xl text-[11px] font-black uppercase tracking-[0.2em] transition-all border border-white/10 flex items-center gap-4 group"
+                           >
+                             <span className="text-xl group-hover:rotate-12 transition-transform">🔍</span>
+                             Bewerbungsstatus prüfen
                            </button>
                         </div>
                       </div>
@@ -519,12 +635,50 @@ const PublicHome: React.FC = () => {
                               Bewerbung jetzt einreichen
                            </button>
                         </div>
-                      </form>
-                    )}
-                  </div>
-                )}
+                     </form>
+                  )}
 
-                {modalType === 'News' && (
+                  {appStep === 'Success' && (
+                     <div className="flex-1 flex flex-col items-center justify-center p-20 text-center space-y-8 animate-in zoom-in duration-500">
+                        <div className="w-32 h-32 bg-emerald-500/10 text-emerald-500 rounded-[40px] flex items-center justify-center text-6xl mx-auto border border-emerald-500/20 shadow-2xl shadow-emerald-900/20">✓</div>
+                        <div className="space-y-2">
+                           <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Bewerbung übermittelt</h2>
+                           <p className="text-slate-400 uppercase text-[10px] font-black tracking-[0.3em]">Vielen Dank für Ihr Interesse an der Bundespolizei.</p>
+                        </div>
+                        
+                        <div className="bg-black/40 border border-white/10 p-10 rounded-[40px] w-full max-w-md space-y-6 shadow-2xl">
+                           <div className="space-y-1">
+                              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ihr Tracking-Code</h4>
+                              <div className="text-4xl font-black text-emerald-500 tracking-[0.3em] font-mono">{trackingCode}</div>
+                           </div>
+                           <p className="text-[10px] text-slate-400 font-bold uppercase leading-relaxed">
+                              Speichern Sie diesen Code sorgfältig ab. Sie benötigen ihn, um den Status Ihrer Bewerbung jederzeit online abzufragen.
+                           </p>
+                           <button 
+                              type="button"
+                              onClick={() => {
+                                 navigator.clipboard.writeText(trackingCode);
+                                 alert("Code in die Zwischenablage kopiert!");
+                              }}
+                              className="w-full bg-white/5 hover:bg-white/10 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/10"
+                           >
+                              Code kopieren
+                           </button>
+                        </div>
+                        
+                        <button 
+                           type="button"
+                           onClick={() => { setModalType(null); setAppStep('Selection'); }}
+                           className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors"
+                        >
+                           Zurück zur Startseite
+                        </button>
+                     </div>
+                  )}
+                </div>
+              )}
+
+              {modalType === 'News' && (
                   <div className="space-y-8 overflow-y-auto p-12 custom-scrollbar">
                     <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-8 text-center underline decoration-blue-600 underline-offset-8">Pressemitteilungen</h2>
                     {news.map(n => (

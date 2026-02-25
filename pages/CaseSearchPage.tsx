@@ -4,10 +4,12 @@ import { useLocation } from 'react-router-dom';
 import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 import { dbCollections, onSnapshot, query, orderBy, updateDoc, doc, db } from '../firebase';
-import { IncidentReport, Reminder } from '../types';
+import { IncidentReport, Reminder, Permission } from '../types';
+import { useAuth } from '../App';
 
 const CaseSearchPage: React.FC = () => {
   const location = useLocation();
+  const { user } = useAuth();
   const [allCases, setAllCases] = useState<IncidentReport[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -19,8 +21,15 @@ const CaseSearchPage: React.FC = () => {
 
   const [selectedCase, setSelectedCase] = useState<IncidentReport | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // New States for Management
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState<Partial<IncidentReport>>({});
   const [newReminderText, setNewReminderText] = useState('');
   const [newReminderDate, setNewReminderDate] = useState('');
+  const [newNote, setNewNote] = useState('');
+
+  const canManage = user?.permissions.includes(Permission.MANAGE_REPORTS);
 
   useEffect(() => {
     const unsub = onSnapshot(query(dbCollections.reports, orderBy("timestamp", "desc")), (snap) => {
@@ -64,7 +73,64 @@ const CaseSearchPage: React.FC = () => {
 
   const handleOpenCase = (c: IncidentReport) => {
     setSelectedCase(c);
+    setEditData(c);
+    setNewNote(c.notes || '');
+    setIsEditing(false);
     setIsModalOpen(true);
+  };
+
+  const handleUpdateStatus = async (status: string) => {
+    if (!selectedCase) return;
+    await updateDoc(doc(db, "reports", selectedCase.id), { status });
+    setSelectedCase({ ...selectedCase, status });
+  };
+
+  const handleAddReminder = async () => {
+    if (!selectedCase || !newReminderText || !newReminderDate) return;
+    const newRem: Reminder = {
+      id: Math.random().toString(36).substr(2, 9),
+      text: newReminderText,
+      dueDate: newReminderDate,
+      completed: false
+    };
+    const updated = [...(selectedCase.reminders || []), newRem];
+    await updateDoc(doc(db, "reports", selectedCase.id), { reminders: updated });
+    setSelectedCase({ ...selectedCase, reminders: updated });
+    setNewReminderText('');
+    setNewReminderDate('');
+  };
+
+  const handleSaveNotes = async () => {
+    if (!selectedCase) return;
+    await updateDoc(doc(db, "reports", selectedCase.id), { notes: newNote });
+    setSelectedCase({ ...selectedCase, notes: newNote });
+    alert("Notizen gespeichert!");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedCase) return;
+    await updateDoc(doc(db, "reports", selectedCase.id), editData);
+    setSelectedCase({ ...selectedCase, ...editData });
+    setIsEditing(false);
+    alert("Bericht aktualisiert!");
+  };
+
+  const handleDeleteReport = async () => {
+    if (!selectedCase) return;
+    if (confirm("Möchten Sie diesen Bericht wirklich unwiderruflich löschen?")) {
+      // In a real app we'd use deleteDoc, but for safety we might just mark as deleted
+      await updateDoc(doc(db, "reports", selectedCase.id), { status: 'Gelöscht', deleted: true });
+      setIsModalOpen(false);
+      alert("Bericht wurde gelöscht.");
+    }
+  };
+
+  const handleRedactReport = async () => {
+    if (!selectedCase) return;
+    const redactedContent = (selectedCase.content || selectedCase.incidentDetails || '').replace(/[A-Z][a-z]+/g, '█████');
+    await updateDoc(doc(db, "reports", selectedCase.id), { content: redactedContent, incidentDetails: redactedContent });
+    setSelectedCase({ ...selectedCase, content: redactedContent, incidentDetails: redactedContent });
+    alert("Bericht wurde geschwärzt (Namen unkenntlich gemacht).");
   };
 
   return (
@@ -156,6 +222,19 @@ const CaseSearchPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Datenbank-Synchronisiert am {new Date().toLocaleTimeString()} • AES-256 Active</div>
               <div className="flex gap-4">
+                {canManage && (
+                  <>
+                    <button onClick={handleRedactReport} className="px-6 py-3 bg-amber-600/20 hover:bg-amber-600 text-amber-500 hover:text-white border border-amber-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95">
+                      Schwärzen
+                    </button>
+                    <button onClick={handleDeleteReport} className="px-6 py-3 bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95">
+                      Löschen
+                    </button>
+                    <button onClick={() => setIsEditing(!isEditing)} className="px-6 py-3 bg-blue-600/20 hover:bg-blue-600 text-blue-500 hover:text-white border border-blue-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95">
+                      {isEditing ? 'Abbrechen' : 'Bearbeiten'}
+                    </button>
+                  </>
+                )}
                 <button onClick={() => window.print()} className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-300 transition-all active:scale-95 flex items-center gap-2">
                   <span>🖨️</span> Dossier Exportieren
                 </button>
@@ -188,10 +267,19 @@ const CaseSearchPage: React.FC = () => {
                   </div>
                   <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
                     <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Status / Priorität</div>
-                    <div className="flex items-center gap-2">
-                       <div className="text-[11px] font-black text-blue-500 uppercase">{selectedCase.status}</div>
-                       <div className="w-1 h-1 rounded-full bg-slate-600"></div>
-                       <div className="text-[11px] font-black text-slate-400 uppercase">LVL {selectedCase.securityLevel || '0'}</div>
+                    <div className="flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                          <div className="text-[11px] font-black text-blue-500 uppercase">{selectedCase.status}</div>
+                          <div className="w-1 h-1 rounded-full bg-slate-600"></div>
+                          <div className="text-[11px] font-black text-slate-400 uppercase">LVL {selectedCase.securityLevel || '0'}</div>
+                       </div>
+                       {canManage && (
+                         <div className="flex gap-1">
+                            <button onClick={() => handleUpdateStatus('Offen')} className="text-[7px] font-black bg-blue-600/20 text-blue-500 px-2 py-1 rounded border border-blue-500/20 uppercase">Offen</button>
+                            <button onClick={() => handleUpdateStatus('In Bearbeitung')} className="text-[7px] font-black bg-amber-600/20 text-amber-500 px-2 py-1 rounded border border-amber-500/20 uppercase">In Bearbeitung</button>
+                            <button onClick={() => handleUpdateStatus('Abgeschlossen')} className="text-[7px] font-black bg-emerald-600/20 text-emerald-500 px-2 py-1 rounded border border-emerald-500/20 uppercase">Abgeschlossen</button>
+                         </div>
+                       )}
                     </div>
                   </div>
                   <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
@@ -241,9 +329,22 @@ const CaseSearchPage: React.FC = () => {
                   Dokumentierter Sachverhalt
                 </h4>
                 <div className="bg-[#1a1c23]/40 border border-white/5 p-8 rounded-2xl shadow-inner">
-                  <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                    {selectedCase.content || selectedCase.incidentDetails || 'Kein Text hinterlegt.'}
-                  </div>
+                  {isEditing ? (
+                    <textarea 
+                      value={editData.content || editData.incidentDetails || ''} 
+                      onChange={e => setEditData({...editData, content: e.target.value, incidentDetails: e.target.value})}
+                      className="w-full bg-black/40 border border-white/10 p-6 rounded-xl text-slate-200 text-sm leading-relaxed outline-none focus:border-blue-500 transition-all min-h-[300px]"
+                    />
+                  ) : (
+                    <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                      {selectedCase.content || selectedCase.incidentDetails || 'Kein Text hinterlegt.'}
+                    </div>
+                  )}
+                  {isEditing && (
+                    <div className="mt-6 flex justify-end">
+                      <button onClick={handleSaveEdit} className="px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-900/20">Änderungen Speichern</button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -266,15 +367,38 @@ const CaseSearchPage: React.FC = () => {
                         <div className="text-[9px] font-bold text-slate-600 uppercase text-center py-4 italic">Keine Aufgaben</div>
                       )}
                     </div>
+                    
+                    <div className="pt-4 border-t border-white/5 space-y-3">
+                       <input 
+                         type="text" 
+                         placeholder="Aufgabe..." 
+                         value={newReminderText}
+                         onChange={e => setNewReminderText(e.target.value)}
+                         className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-[10px] text-white outline-none focus:border-blue-500"
+                       />
+                       <div className="flex gap-2">
+                          <input 
+                            type="date" 
+                            value={newReminderDate}
+                            onChange={e => setNewReminderDate(e.target.value)}
+                            className="flex-1 bg-black/40 border border-white/10 p-3 rounded-xl text-[10px] text-white outline-none focus:border-blue-500 [color-scheme:dark]"
+                          />
+                          <button onClick={handleAddReminder} className="px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Hinzufügen</button>
+                       </div>
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-2">Dienstliche Notizen</h4>
-                  <div className="bg-black/30 border border-white/5 p-6 rounded-2xl shadow-inner h-full">
-                    <div className="text-[10px] text-slate-400 italic leading-relaxed whitespace-pre-wrap">
-                      {selectedCase.notes || 'Keine internen Notizen vorhanden.'}
-                    </div>
+                  <div className="bg-black/30 border border-white/5 p-6 rounded-2xl shadow-inner h-full flex flex-col gap-4">
+                    <textarea 
+                      value={newNote}
+                      onChange={e => setNewNote(e.target.value)}
+                      placeholder="Interne Notizen hinzufügen..."
+                      className="flex-1 bg-black/40 border border-white/10 p-4 rounded-xl text-[10px] text-slate-300 outline-none focus:border-blue-500 resize-none min-h-[150px]"
+                    />
+                    <button onClick={handleSaveNotes} className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-400 transition-all">Notizen Speichern</button>
                   </div>
                 </div>
               </div>

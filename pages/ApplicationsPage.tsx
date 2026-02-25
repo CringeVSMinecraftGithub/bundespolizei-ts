@@ -50,23 +50,27 @@ const ApplicationsPage: React.FC = () => {
         statusLog: updatedLog
       };
 
-      if (pendingStatus === 'Angenommen' || pendingStatus === 'Abgelehnt') {
-        updateData.additionalInfo = statusNotes;
+      if (pendingStatus === 'Angenommen') {
+        updateData.acceptanceInfo = statusNotes;
+      } else if (pendingStatus === 'Abgelehnt') {
+        updateData.rejectionReason = statusNotes;
       }
 
       await updateDoc(doc(db, "applications", selectedApp.id), updateData);
-
-      // Create Notification
-      await addDoc(dbCollections.notifications, {
-        userId: selectedApp.userId,
-        title: `Bewerbung: ${selectedApp.jobTitle || 'Polizeidienst'}`,
-        message: pendingStatus === 'Angenommen' 
-          ? `Ihre Bewerbung für "${selectedApp.jobTitle}" wurde ANGENOMMEN. ${statusNotes ? `\n\nHinweise: ${statusNotes}` : '\n\nWeitere Schritte folgen in Kürze.'}`
-          : `Ihre Bewerbung für "${selectedApp.jobTitle || 'den Polizeidienst'}" wurde ABGELEHNT. ${statusNotes ? `\n\nFeedback: ${statusNotes}` : ''}`,
-        timestamp: new Date().toISOString(),
-        read: false,
-        type: 'Application'
-      });
+      
+      // Create Notification only if userId exists (public applications don't have one)
+      if (selectedApp.userId) {
+        await addDoc(dbCollections.notifications, {
+          userId: selectedApp.userId,
+          title: `Bewerbung: ${selectedApp.jobTitle || 'Polizeidienst'}`,
+          message: pendingStatus === 'Angenommen' 
+            ? `Ihre Bewerbung für "${selectedApp.jobTitle}" wurde ANGENOMMEN. ${statusNotes ? `\n\nHinweise: ${statusNotes}` : '\n\nWeitere Schritte folgen in Kürze.'}`
+            : `Ihre Bewerbung für "${selectedApp.jobTitle || 'den Polizeidienst'}" wurde ABGELEHNT. ${statusNotes ? `\n\nFeedback: ${statusNotes}` : ''}`,
+          timestamp: new Date().toISOString(),
+          read: false,
+          type: 'Application'
+        });
+      }
       
       // If status is 'Angenommen' and it's a job posting application, check if we should close the posting
       if (pendingStatus === 'Angenommen' && selectedApp.type === 'Stellenausschreibung' && selectedApp.jobPostingId) {
@@ -172,7 +176,10 @@ const ApplicationsPage: React.FC = () => {
                     <h3 className="text-sm font-black text-white uppercase tracking-tight">
                       {a.type === 'Stellenausschreibung' ? `${a.userName || a.name} (${a.userRank || 'N/A'})` : a.name}
                     </h3>
-                    {a.jobTitle && <p className="text-[9px] font-black text-blue-400 uppercase mt-1">Stelle: {a.jobTitle}</p>}
+                    <div className="flex items-center gap-3 mt-1">
+                      {a.jobTitle && <p className="text-[9px] font-black text-blue-400 uppercase">Stelle: {a.jobTitle}</p>}
+                      {a.trackingCode && <p className="text-[9px] font-black text-emerald-500 uppercase">Code: {a.trackingCode}</p>}
+                    </div>
                     <p className="text-[9px] font-bold text-slate-600 uppercase mt-1">Status: {a.status}</p>
                   </div>
                 </div>
@@ -269,6 +276,12 @@ const ApplicationsPage: React.FC = () => {
                     <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Status</div>
                     <div className="text-[11px] font-black text-blue-500 uppercase">{selectedApp.status}</div>
                   </div>
+                  {selectedApp.trackingCode && (
+                    <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                      <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Tracking-Code</div>
+                      <div className="text-[11px] font-black text-emerald-500 uppercase font-mono">{selectedApp.trackingCode}</div>
+                    </div>
+                  )}
                 </div>
               </div>
 

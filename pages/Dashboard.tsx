@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Permission, CitizenSubmission, IncidentReport, Reminder, User } from '../types';
 import { DASHBOARD_BG } from '../constants';
-import { dbCollections, onSnapshot, query, orderBy, limit, doc, updateDoc, db, deleteDoc, where } from '../firebase';
+import { dbCollections, onSnapshot, query, orderBy, limit, doc, updateDoc, db, deleteDoc, where, getDoc } from '../firebase';
 
 interface SystemNotification {
   id: string;
@@ -108,21 +108,20 @@ const Dashboard: React.FC = () => {
   };
 
   const toggleReminder = async (caseId: string, reminderId: string) => {
-    const reportRef = doc(db, "reports", caseId);
-    // Find the report in current state to update
-    const report = upcomingReminders.find(r => r.caseId === caseId);
-    if (!report) return;
-
-    // We fetch the full doc once to update the array correctly
-    onSnapshot(reportRef, (s) => {
-        if (s.exists()) {
-            const data = s.data() as IncidentReport;
-            const updatedReminders = data.reminders?.map(r => 
-                r.id === reminderId ? { ...r, completed: !r.completed } : r
-            );
-            updateDoc(reportRef, { reminders: updatedReminders });
-        }
-    }, { onlyOnce: true } as any);
+    try {
+      const reportRef = doc(db, "reports", caseId);
+      const snap = await getDoc(reportRef);
+      
+      if (snap.exists()) {
+        const data = snap.data() as IncidentReport;
+        const updatedReminders = data.reminders?.map(r => 
+          r.id === reminderId ? { ...r, completed: !r.completed } : r
+        );
+        await updateDoc(reportRef, { reminders: updatedReminders });
+      }
+    } catch (e) {
+      console.error("Error toggling reminder:", e);
+    }
   };
 
   const updateTipStatus = async (tipId: string, newStatus: CitizenSubmission['status']) => {

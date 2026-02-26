@@ -159,7 +159,7 @@ const Dashboard: React.FC = () => {
       <div 
         className="absolute inset-0 z-0 bg-center bg-cover transition-opacity duration-1000"
         style={{ 
-          backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.4), rgba(2, 6, 23, 0.85)), url('${DASHBOARD_BG}')`,
+          backgroundImage: `linear-gradient(rgba(2, 6, 23, ${user?.theme === 'dark' ? '0.8' : '0.4'}), rgba(2, 6, 23, ${user?.theme === 'dark' ? '0.95' : '0.85'})), url('${DASHBOARD_BG}')`,
           backgroundPosition: '50% 30%'
         }}
       ></div>

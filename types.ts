@@ -45,6 +45,7 @@ export interface User {
   permissions: Permission[];
   password?: string;
   isLocked?: boolean;
+  theme?: 'blue' | 'dark';
 }
 
 export interface PressRelease {

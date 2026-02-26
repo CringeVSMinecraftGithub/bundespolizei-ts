@@ -159,8 +159,10 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   
   if (isPublicHome) return <>{children}</>;
 
+  const themeClass = user?.theme === 'dark' ? 'theme-dark' : 'theme-blue';
+
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#0f172a] overflow-hidden">
+    <div className={`h-screen w-screen flex flex-col overflow-hidden transition-colors duration-500 ${themeClass} ${themeClass === 'theme-dark' ? 'bg-black' : 'bg-[#0f172a]'}`}>
       {user && <Header />}
       <main className="flex-1 relative overflow-hidden">
         {children}
@@ -232,6 +234,20 @@ const App: React.FC = () => {
     if (user) sessionStorage.setItem('bpol_active_user', JSON.stringify(user));
     else sessionStorage.removeItem('bpol_active_user');
   }, [user]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const unsubUser = onSnapshot(doc(db, "users", user.id), (snap) => {
+      if (snap.exists()) {
+        const userData = snap.data() as User;
+        // Only update if data actually changed to avoid loops
+        if (JSON.stringify(userData) !== JSON.stringify(user)) {
+          setUser(userData);
+        }
+      }
+    });
+    return () => unsubUser();
+  }, [user?.id]);
 
   const login = async (badgeNumber: string, password?: string) => {
     try {

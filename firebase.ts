@@ -34,7 +34,8 @@ export const dbCollections = {
   careerProfiles: collection(db, "careerProfiles"),
   careerComponents: collection(db, "careerComponents"),
   fleetLogs: collection(db, "fleetLogs"),
-  trainings: collection(db, "trainings")
+  trainings: collection(db, "trainings"),
+  appointments: collection(db, "appointments")
 };
 
 export { collection, addDoc, getDocs, getDoc, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where };

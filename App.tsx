@@ -20,6 +20,7 @@ import JobsPage from './pages/JobsPage';
 import LawsPage from './pages/LawsPage';
 import CommunicationPage from './pages/CommunicationPage';
 import CareerPage from './pages/CareerPage';
+import AppointmentsPage from './pages/AppointmentsPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import SettingsModal from './components/SettingsModal';
@@ -309,6 +310,7 @@ const App: React.FC = () => {
               <Route path="/laws" element={user ? <LawsPage /> : <Navigate to="/" />} />
               <Route path="/communication" element={user ? <CommunicationPage /> : <Navigate to="/" />} />
               <Route path="/career" element={user ? <CareerPage /> : <Navigate to="/" />} />
+              <Route path="/appointments" element={user ? <AppointmentsPage /> : <Navigate to="/" />} />
               <Route path="/admin" element={user && (user.isAdmin || hasPermission(Permission.MANAGE_USERS)) ? <AdminPanel /> : <Navigate to="/" />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>

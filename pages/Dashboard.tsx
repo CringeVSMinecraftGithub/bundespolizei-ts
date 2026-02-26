@@ -148,6 +148,7 @@ const Dashboard: React.FC = () => {
     { id: 'laws_public', label: 'Gesetze', icon: '⚖️', color: 'bg-slate-800', path: '/laws', group: 'Dienstbetrieb' },
     { id: 'communication', label: 'Kommunikation', icon: '✉️', color: 'bg-indigo-700', path: '/communication', group: 'Dienstbetrieb' },
     { id: 'career', label: 'Karriere', icon: '🎓', color: 'bg-blue-600', path: '/career', group: 'Verwaltung' },
+    { id: 'appointments', label: 'Termine', icon: '📅', color: 'bg-indigo-600', path: '/appointments', group: 'Verwaltung' },
     { id: 'apps', label: 'Bewerbungen', icon: '📂', color: 'bg-emerald-600', permission: Permission.VIEW_APPLICATIONS, path: '/applications', group: 'Verwaltung' },
     { id: 'personnel', label: 'Administration', icon: '⚙️', color: 'bg-indigo-600', permission: Permission.ADMIN_ACCESS, path: '/admin', group: 'Verwaltung' },
   ];

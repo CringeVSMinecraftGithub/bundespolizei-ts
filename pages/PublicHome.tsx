@@ -3,25 +3,28 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { POLICE_LOGO_RAW } from '../constants';
-import { dbCollections, addDoc, onSnapshot, query, orderBy, limit, getDocs, where } from '../firebase';
-import { PressRelease, User } from '../types';
+import { dbCollections, addDoc, onSnapshot, query, orderBy, limit, getDocs, where, updateDoc, doc } from '../firebase';
+import { PressRelease, User, Appointment, AppointmentStatus } from '../types';
 
 const PublicHome: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [modalType, setModalType] = useState<'Internetwache' | 'Bewerbung' | 'News' | 'Login' | 'StatusCheck' | null>(null);
+  const [modalType, setModalType] = useState<'Internetwache' | 'Bewerbung' | 'News' | 'Login' | 'StatusCheck' | 'TerminBuchung' | 'TerminStatus' | null>(null);
   const [appStep, setAppStep] = useState<'Selection' | 'Info' | 'Form' | 'Success'>('Selection');
   const [iwStep, setIwStep] = useState<'Selection' | 'Anzeige' | 'Hinweis'>('Selection');
   const [careerPath, setCareerPath] = useState<'Mittlerer Dienst' | 'Gehobener Dienst'>('Mittlerer Dienst');
   const [submitted, setSubmitted] = useState(false);
   const [trackingCode, setTrackingCode] = useState('');
   const [checkCode, setCheckCode] = useState('');
-  const [checkResult, setCheckResult] = useState<any>(null);
+  const [checkResult, setCheckResult] = useState<Appointment | null>(null);
   const [checkError, setCheckError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [news, setNews] = useState<PressRelease[]>([]);
+  const [officers, setOfficers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>('');
 
   const [badge, setBadge] = useState('');
   const [password, setPassword] = useState('');
@@ -31,6 +34,18 @@ const PublicHome: React.FC = () => {
     const unsub = onSnapshot(query(dbCollections.news, orderBy("timestamp", "desc"), limit(6)), (snap) => {
       setNews(snap.docs.map(d => ({ id: d.id, ...d.data() } as PressRelease)));
     });
+
+    const fetchOfficers = async () => {
+      const snap = await getDocs(dbCollections.users);
+      setOfficers(snap.docs.map(d => ({ id: d.id, ...d.data() } as User)));
+    };
+    const fetchRoles = async () => {
+      const snap = await getDocs(dbCollections.roles);
+      setRoles(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    };
+    fetchOfficers();
+    fetchRoles();
+
     return unsub;
   }, []);
 
@@ -155,6 +170,97 @@ const PublicHome: React.FC = () => {
     }
   };
 
+  const handleAppointmentBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data: any = {};
+    formData.forEach((value, key) => { data[key] = value; });
+
+    let partnerName = '';
+    if (data.partnerRole === 'Sonstiges') {
+      partnerName = data.customPartner || 'Sonstiges';
+    } else {
+      partnerName = data.partnerRole;
+    }
+
+    try {
+      const code = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10)).join('');
+      setTrackingCode(code);
+      await addDoc(dbCollections.appointments, {
+        type: 'Extern',
+        citizenCode: code,
+        citizenEmail: data.email || '',
+        partnerUserId: 'ROLE_OR_CUSTOM',
+        partnerName: partnerName,
+        requestedDate: data.date,
+        requestedTime: data.time,
+        reason: data.reason,
+        status: 'Eingegangen',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        statusLog: [{
+          status: 'Eingegangen',
+          timestamp: new Date().toISOString(),
+          notes: 'Terminanfrage über das Bürgerportal eingegangen.'
+        }]
+      });
+      setAppStep('Success');
+    } catch (e) {
+      alert("Fehler bei der Terminbuchung.");
+    }
+  };
+
+  const checkAppointmentStatus = async () => {
+    if (!checkCode || checkCode.length !== 12) {
+      setCheckError("Bitte geben Sie einen gültigen 12-stelligen Code ein.");
+      return;
+    }
+    setIsChecking(true);
+    setCheckError(null);
+    setCheckResult(null);
+    try {
+      const q = query(dbCollections.appointments, where("citizenCode", "==", checkCode));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        setCheckError("Kein Termin mit diesem Code gefunden.");
+      } else {
+        setCheckResult({ id: snap.docs[0].id, ...snap.docs[0].data() } as Appointment);
+      }
+    } catch (e) {
+      setCheckError("Fehler beim Abrufen des Status.");
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
+  const handleCitizenAppointmentResponse = async (accept: boolean) => {
+    if (!checkResult) return;
+    
+    const newStatus: AppointmentStatus = accept ? 'Bestätigt' : 'In Bearbeitung';
+    const note = accept ? "Bürger hat den neuen Termin bestätigt." : "Bürger hat den neuen Termin abgelehnt.";
+    
+    const updateData: any = {
+      status: newStatus,
+      updatedAt: new Date().toISOString(),
+      statusLog: [
+        ...(checkResult.statusLog || []),
+        {
+          status: newStatus,
+          timestamp: new Date().toISOString(),
+          editorName: "Bürger",
+          notes: note
+        }
+      ]
+    };
+
+    try {
+      await updateDoc(doc(dbCollections.appointments, checkResult.id), updateData);
+      setCheckResult({ ...checkResult, ...updateData });
+    } catch (e) {
+      alert("Fehler beim Speichern Ihrer Antwort.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-100 overflow-x-hidden selection:bg-blue-500/30">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#334155,transparent)] pointer-events-none"></div>
@@ -245,6 +351,226 @@ const PublicHome: React.FC = () => {
                           className="w-full bg-white/5 hover:bg-white/10 text-slate-400 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/5"
                         >
                           Andere Bewerbung prüfen
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {modalType === 'TerminBuchung' && (
+                  <div className="flex flex-col h-full overflow-hidden">
+                    {appStep === 'Success' ? (
+                      <div className="flex-1 flex flex-col items-center justify-center p-20 text-center space-y-8 animate-in zoom-in duration-500">
+                        <div className="w-32 h-32 bg-emerald-500/10 text-emerald-500 rounded-[40px] flex items-center justify-center text-6xl mx-auto border border-emerald-500/20 shadow-2xl shadow-emerald-900/20">📅</div>
+                        <div className="space-y-2">
+                          <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Terminanfrage gesendet</h2>
+                          <p className="text-slate-400 uppercase text-[10px] font-black tracking-[0.3em]">Ihre Anfrage wird nun von der Behörde geprüft.</p>
+                        </div>
+                        
+                        <div className="bg-black/40 border border-white/10 p-10 rounded-[40px] w-full max-w-md space-y-6 shadow-2xl">
+                          <div className="space-y-1">
+                            <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ihr Termin-Code</h4>
+                            <div className="text-4xl font-black text-emerald-500 tracking-[0.3em] font-mono">{trackingCode}</div>
+                          </div>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase leading-relaxed">
+                            Speichern Sie diesen Code sorgfältig ab. Sie benötigen ihn, um den Status Ihres Termins jederzeit online abzufragen.
+                          </p>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(trackingCode);
+                              alert("Code in die Zwischenablage kopiert!");
+                            }}
+                            className="w-full bg-white/5 hover:bg-white/10 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/10"
+                          >
+                            Code kopieren
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleAppointmentBooking} className="flex flex-col h-full overflow-hidden animate-in slide-in-from-right-8 duration-500">
+                        <div className="p-10 bg-slate-800/60 border-b border-white/10 flex justify-between items-center shrink-0">
+                          <div className="space-y-1">
+                            <h3 className="text-4xl font-black text-white uppercase tracking-tighter">Termin <span className="text-blue-500">buchen</span></h3>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Offizielle Terminanfrage an die Bundespolizei</p>
+                          </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Wunschdatum</label>
+                              <input name="date" type="date" required className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-blue-500 [color-scheme:dark]" />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Wunschuhrzeit</label>
+                              <input name="time" type="time" required className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-blue-500 [color-scheme:dark]" />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Ansprechpartner / Abteilung</label>
+                              <select 
+                                name="partnerRole" 
+                                required 
+                                value={selectedRole}
+                                onChange={(e) => setSelectedRole(e.target.value)}
+                                className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-blue-500 outline-none transition-all cursor-pointer"
+                              >
+                                <option value="" className="bg-slate-900">Bitte wählen</option>
+                                {roles.map(r => (
+                                  <option key={r.id} value={r.name} className="bg-slate-900">{r.name}</option>
+                                ))}
+                                <option value="Sonstiges" className="bg-slate-900">Sonstiges</option>
+                              </select>
+                            </div>
+                            {selectedRole === 'Sonstiges' && (
+                              <div className="space-y-2 md:col-span-2 animate-in slide-in-from-top-2">
+                                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Manueller Ansprechpartner</label>
+                                <input name="customPartner" required placeholder="Bitte Abteilung oder Person angeben" className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-blue-500 outline-none transition-all" />
+                              </div>
+                            )}
+                            <div className="space-y-2 md:col-span-2">
+                              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Anliegen / Grund</label>
+                              <textarea name="reason" required rows={4} className="w-full bg-slate-900/50 border border-white/10 p-8 rounded-[32px] text-slate-200 text-base leading-relaxed outline-none resize-none focus:border-blue-500 transition-all custom-scrollbar" placeholder="Beschreiben Sie kurz Ihr Anliegen..."></textarea>
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">E-Mail Adresse (Optional)</label>
+                              <input name="email" type="email" placeholder="name@beispiel.de" className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-blue-500 outline-none transition-all" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-10 bg-slate-900/80 backdrop-blur-md border-t border-white/10 flex items-center justify-center shrink-0">
+                          <button className="px-32 py-6 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase text-xs tracking-[0.3em] transition-all active:scale-95 shadow-2xl shadow-blue-900/30">
+                            Termin jetzt anfragen
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                )}
+
+                {modalType === 'TerminStatus' && (
+                  <div className="p-12 animate-in zoom-in duration-300">
+                    <div className="flex flex-col items-center mb-10 text-center">
+                      <div className="w-20 h-20 bg-indigo-600/10 text-indigo-500 rounded-3xl flex items-center justify-center text-4xl mb-6 border border-indigo-600/20">📅</div>
+                      <h2 className="text-3xl font-black text-white uppercase tracking-tight">Terminstatus prüfen</h2>
+                      <p className="text-slate-400 text-[10px] uppercase tracking-widest font-black mt-2">Geben Sie Ihren 12-stelligen Termin-Code ein</p>
+                    </div>
+                    
+                    {!checkResult ? (
+                      <div className="space-y-6">
+                        <input 
+                          type="text" 
+                          maxLength={12}
+                          value={checkCode} 
+                          onChange={(e) => setCheckCode(e.target.value.replace(/\D/g, ''))} 
+                          className="w-full bg-black/40 border border-white/10 rounded-2xl p-6 text-white text-center text-2xl font-black tracking-[0.5em] outline-none focus:border-blue-500 transition-all placeholder:tracking-normal placeholder:text-sm" 
+                          placeholder="000000000000" 
+                        />
+                        {checkError && <div className="text-red-400 text-[10px] font-black uppercase text-center bg-red-400/10 border border-red-400/20 p-4 rounded-xl">{checkError}</div>}
+                        <button 
+                          onClick={checkAppointmentStatus}
+                          disabled={isChecking || checkCode.length !== 12}
+                          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {isChecking ? 'Wird geprüft...' : 'Status abrufen'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="bg-black/20 border border-white/5 p-8 rounded-[32px] space-y-6">
+                          <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aktueller Status</span>
+                            <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                              checkResult.status === 'Bestätigt' ? 'bg-emerald-600/20 text-emerald-500 border border-emerald-500/30' :
+                              checkResult.status === 'Abgelehnt' ? 'bg-red-600/20 text-red-500 border border-red-500/30' :
+                              checkResult.status === 'Verschoben' ? 'bg-amber-600/20 text-amber-500 border border-amber-500/30' :
+                              'bg-blue-600/20 text-blue-500 border border-blue-500/30'
+                            }`}>
+                              {checkResult.status}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <h4 className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Datum</h4>
+                              <div className="text-sm font-bold text-white uppercase">{checkResult.finalDate || checkResult.requestedDate}</div>
+                            </div>
+                            <div className="space-y-1 text-right">
+                              <h4 className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Uhrzeit</h4>
+                              <div className="text-sm font-bold text-white uppercase">{checkResult.finalTime || checkResult.requestedTime}</div>
+                            </div>
+                            <div className="space-y-1">
+                              <h4 className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Ort</h4>
+                              <div className="text-sm font-bold text-white uppercase">{checkResult.location || 'Noch nicht festgelegt'}</div>
+                            </div>
+                            <div className="space-y-1 text-right">
+                              <h4 className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Partner</h4>
+                              <div className="text-sm font-bold text-white uppercase">{checkResult.partnerName}</div>
+                            </div>
+                          </div>
+
+                          {checkResult.status === 'Abgelehnt' && checkResult.statusLog?.find(l => l.status === 'Abgelehnt')?.notes && (
+                            <div className="bg-red-900/20 p-6 rounded-2xl border border-red-500/20">
+                              <h4 className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-3">Grund der Ablehnung</h4>
+                              <p className="text-sm text-red-200 leading-relaxed font-medium">
+                                {checkResult.statusLog.filter(l => l.status === 'Abgelehnt').pop()?.notes}
+                              </p>
+                            </div>
+                          )}
+
+                          {checkResult.status === 'Verschoben' && (
+                            <div className="bg-indigo-600/10 p-8 rounded-[32px] border border-indigo-600/20 space-y-6 animate-in slide-in-from-top-4">
+                              <div className="text-center space-y-2">
+                                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.2em]">Terminvorschlag der Behörde</h4>
+                                <p className="text-xs text-slate-400 font-medium">Bitte bestätigen Sie den neuen Termin oder lehnen Sie ihn ab.</p>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4 bg-black/40 p-6 rounded-2xl border border-white/5">
+                                <div className="text-center">
+                                  <div className="text-[8px] font-black text-slate-500 uppercase mb-1">Neues Datum</div>
+                                  <div className="text-sm font-bold text-white">{checkResult.finalDate}</div>
+                                </div>
+                                <div className="text-center border-l border-white/10">
+                                  <div className="text-[8px] font-black text-slate-500 uppercase mb-1">Neue Uhrzeit</div>
+                                  <div className="text-sm font-bold text-white">{checkResult.finalTime}</div>
+                                </div>
+                              </div>
+
+                              {checkResult.statusLog?.filter(l => l.status === 'Verschoben').pop()?.notes && (
+                                <div className="text-center px-4">
+                                  <p className="text-[10px] text-slate-400 italic">"{checkResult.statusLog.filter(l => l.status === 'Verschoben').pop()?.notes}"</p>
+                                </div>
+                              )}
+
+                              <div className="flex gap-4">
+                                <button 
+                                  onClick={() => handleCitizenAppointmentResponse(false)}
+                                  className="flex-1 bg-white/5 hover:bg-white/10 text-slate-400 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/10"
+                                >
+                                  Ablehnen
+                                </button>
+                                <button 
+                                  onClick={() => handleCitizenAppointmentResponse(true)}
+                                  className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl transition-all active:scale-95"
+                                >
+                                  Annehmen
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
+                            <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Ihr Anliegen</h4>
+                            <p className="text-sm text-slate-300 leading-relaxed font-medium">{checkResult.reason}</p>
+                          </div>
+                        </div>
+                        
+                        <button 
+                          onClick={() => { setCheckResult(null); setCheckCode(''); }}
+                          className="w-full bg-white/5 hover:bg-white/10 text-slate-400 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/5"
+                        >
+                          Anderen Termin prüfen
                         </button>
                       </div>
                     )}
@@ -732,6 +1058,23 @@ const PublicHome: React.FC = () => {
               <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Karriere</h3>
               <p className="text-slate-400 text-xs leading-relaxed uppercase font-bold tracking-widest">Bewerbungsportal</p>
            </div>
+        </div>
+
+        <div className="mt-12 flex flex-wrap justify-center gap-6">
+           <button 
+             onClick={() => { setModalType('TerminBuchung'); setAppStep('Selection'); }}
+             className="bg-blue-600 hover:bg-blue-500 text-white px-12 py-6 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/40 transition-all active:scale-95 flex items-center gap-4"
+           >
+             <span className="text-2xl">📅</span>
+             Termin buchen
+           </button>
+           <button 
+             onClick={() => { setModalType('TerminStatus'); setCheckCode(''); setCheckResult(null); }}
+             className="bg-white/5 hover:bg-white/10 text-slate-300 px-12 py-6 rounded-3xl font-black text-xs uppercase tracking-[0.2em] border border-white/10 transition-all active:scale-95 flex items-center gap-4"
+           >
+             <span className="text-2xl">🔍</span>
+             Terminstatus prüfen
+           </button>
         </div>
       </section>
 

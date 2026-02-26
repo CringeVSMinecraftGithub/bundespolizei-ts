@@ -23,7 +23,8 @@ export enum Permission {
   MANAGE_CAREER = 'Karriere verwalten',
   MANAGE_REPORTS = 'Berichte verwalten',
   MANAGE_TRAININGS = 'Ausbildungen verwalten',
-  MANAGE_COURSES = 'Fortbildungen verwalten'
+  MANAGE_COURSES = 'Fortbildungen verwalten',
+  MANAGE_APPOINTMENTS = 'Terminanfragen verwalten'
 }
 
 export interface UserRole {
@@ -312,4 +313,37 @@ export interface Training {
   instructorId: string;
   instructorName: string;
   createdAt: string;
+}
+
+export type AppointmentStatus = 'Eingegangen' | 'In Bearbeitung' | 'Bestätigt' | 'Abgelehnt' | 'Verschoben';
+
+export interface Appointment {
+  id: string;
+  type: 'Intern' | 'Extern';
+  applicantUserId?: string; // For internal
+  applicantName?: string; // For display
+  citizenCode?: string; // For external (12 chars)
+  citizenEmail?: string; // Optional for external
+  partnerUserId: string; // The officer/leader to meet
+  partnerName: string;
+  requestedDate: string;
+  requestedTime: string;
+  finalDate?: string;
+  finalTime?: string;
+  location?: string;
+  reason: string;
+  status: AppointmentStatus;
+  editorId?: string;
+  editorName?: string;
+  rejectionReason?: string;
+  internalNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+  statusLog?: {
+    status: AppointmentStatus;
+    timestamp: string;
+    editorId?: string;
+    editorName?: string;
+    notes?: string;
+  }[];
 }

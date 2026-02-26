@@ -21,7 +21,9 @@ export enum Permission {
   MANAGE_ORG = 'Organigramm verwalten',
   MANAGE_JOBS = 'Stellenausschreibungen verwalten',
   MANAGE_CAREER = 'Karriere verwalten',
-  MANAGE_REPORTS = 'Berichte verwalten'
+  MANAGE_REPORTS = 'Berichte verwalten',
+  MANAGE_TRAININGS = 'Ausbildungen verwalten',
+  MANAGE_COURSES = 'Fortbildungen verwalten'
 }
 
 export interface UserRole {
@@ -293,4 +295,20 @@ export interface CareerComponent {
   order: number;
   status: 'Offen' | 'In Bearbeitung' | 'Abgeschlossen';
   completionDate?: string;
+}
+
+export interface Training {
+  id: string;
+  title: string;
+  description: string;
+  type: 'Ausbildung' | 'Fortbildung';
+  date: string;
+  time: string;
+  location: string;
+  maxParticipants: number;
+  participants: string[]; // array of userIds
+  status: 'Geplant' | 'Laufend' | 'Beendet' | 'Abgesagt';
+  instructorId: string;
+  instructorName: string;
+  createdAt: string;
 }

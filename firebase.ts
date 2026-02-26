@@ -33,7 +33,8 @@ export const dbCollections = {
   messages: collection(db, "messages"),
   careerProfiles: collection(db, "careerProfiles"),
   careerComponents: collection(db, "careerComponents"),
-  fleetLogs: collection(db, "fleetLogs")
+  fleetLogs: collection(db, "fleetLogs"),
+  trainings: collection(db, "trainings")
 };
 
 export { collection, addDoc, getDocs, getDoc, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where };

@@ -347,3 +347,14 @@ export interface Appointment {
     notes?: string;
   }[];
 }
+
+export interface Note {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  isImportant: boolean;
+  color?: string;
+  createdAt: string;
+  updatedAt: string;
+}

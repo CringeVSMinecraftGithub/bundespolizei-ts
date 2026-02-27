@@ -23,7 +23,7 @@ interface DesktopApp {
   path: string;
   permission?: Permission;
   color: string;
-  group: 'Dienstbetrieb' | 'Ermittlungen' | 'Verwaltung';
+  group: 'Dienstbetrieb' | 'Ermittlungen' | 'Verwaltung' | 'Persönlich';
 }
 
 const Dashboard: React.FC = () => {
@@ -32,6 +32,7 @@ const Dashboard: React.FC = () => {
   const [newTips, setNewTips] = useState<CitizenSubmission[]>([]);
   const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>([]);
   const [showNotification, setShowNotification] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [upcomingReminders, setUpcomingReminders] = useState<{caseId: string, caseTitle: string, reminder: Reminder}[]>([]);
 
   useEffect(() => {
@@ -102,6 +103,7 @@ const Dashboard: React.FC = () => {
   const deleteNotification = async (id: string) => {
     try {
       await deleteDoc(doc(db, "notifications", id));
+      setConfirmDeleteId(null);
     } catch (e) {
       console.error("Error deleting notification:", e);
     }
@@ -151,6 +153,7 @@ const Dashboard: React.FC = () => {
     { id: 'appointments', label: 'Termine', icon: '📅', color: 'bg-indigo-600', path: '/appointments', group: 'Verwaltung' },
     { id: 'apps', label: 'Bewerbungen', icon: '📂', color: 'bg-emerald-600', permission: Permission.VIEW_APPLICATIONS, path: '/applications', group: 'Verwaltung' },
     { id: 'personnel', label: 'Administration', icon: '⚙️', color: 'bg-indigo-600', permission: Permission.ADMIN_ACCESS, path: '/admin', group: 'Verwaltung' },
+    { id: 'notes', label: 'Notizen', icon: '📝', color: 'bg-[#fef3c7]', path: '/notes', group: 'Persönlich' },
   ];
 
   if (!user) return null;
@@ -185,21 +188,26 @@ const Dashboard: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10 p-10 lg:p-14 flex flex-col xl:flex-row gap-12">
         <div className="flex-1 space-y-16 animate-in fade-in slide-in-from-top-4 duration-700 pb-20">
-          {['Dienstbetrieb', 'Ermittlungen', 'Verwaltung'].map((groupName) => {
-            const groupApps = apps.filter(a => a.group === groupName && hasPermission(a.permission || Permission.VIEW_REPORTS));
+          {['Dienstbetrieb', 'Ermittlungen', 'Verwaltung', 'Persönlich'].map((groupName) => {
+            const groupApps = apps.filter(a => a.group === groupName && (a.id === 'notes' || hasPermission(a.permission || Permission.VIEW_REPORTS)));
             if (groupApps.length === 0) return null;
             
             return (
               <div key={groupName}>
                 <div className="flex items-center gap-4 mb-10 border-b border-white/5 pb-6">
-                  <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                  <div className={`w-1 h-5 ${groupName === 'Persönlich' ? 'bg-amber-500' : 'bg-blue-600'} rounded-full`}></div>
                   <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40">{groupName}</h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-x-8 gap-y-12">
                   {groupApps.map((app) => (
                     <button key={app.id} onClick={() => navigate(app.path)} className="group flex flex-col items-center gap-4 w-24 transition-all active:scale-95">
-                      <div className={`w-16 h-16 ${app.color} rounded-2xl flex items-center justify-center text-3xl shadow-[0_15px_40px_rgba(0,0,0,0.5)] group-hover:scale-110 group-hover:-translate-y-2 transition-all border border-white/20 backdrop-blur-md group-hover:border-white/40 group-hover:shadow-blue-900/40`}>
-                        {app.icon}
+                      <div className={`w-16 h-16 ${app.color} rounded-2xl flex items-center justify-center text-3xl shadow-[0_15px_40px_rgba(0,0,0,0.5)] group-hover:scale-110 group-hover:-translate-y-2 transition-all border border-white/20 backdrop-blur-md group-hover:border-white/40 group-hover:shadow-blue-900/40 relative overflow-hidden ${app.id === 'notes' ? 'ring-1 ring-amber-900/20' : ''}`}>
+                        {app.id === 'notes' && (
+                          <div className="absolute inset-0 opacity-20 pointer-events-none">
+                            <div className="h-full w-full" style={{ backgroundImage: 'repeating-linear-gradient(transparent, transparent 7px, #78350f 7px, #78350f 8px)' }}></div>
+                          </div>
+                        )}
+                        <span className={app.id === 'notes' ? 'text-amber-900' : ''}>{app.icon}</span>
                       </div>
                       <span className="text-[9px] font-black text-white/80 text-center uppercase tracking-widest group-hover:text-white transition-colors drop-shadow-lg leading-relaxed">
                         {app.label}
@@ -279,13 +287,33 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="space-y-4">
                 {systemNotifications.map(notif => (
-                  <div key={notif.id} className="bg-blue-600/5 border border-blue-500/10 p-5 rounded-2xl relative group">
-                    <button 
-                      onClick={() => deleteNotification(notif.id)}
-                      className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all text-xs"
-                    >
-                      ✕
-                    </button>
+                  <div key={notif.id} className="bg-blue-600/5 border border-blue-500/10 p-5 rounded-2xl relative group overflow-hidden">
+                    {confirmDeleteId === notif.id ? (
+                      <div className="absolute inset-0 bg-red-600/95 backdrop-blur-md flex items-center justify-center gap-4 z-20 animate-in fade-in duration-300">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white">Löschen?</span>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => setConfirmDeleteId(null)} 
+                            className="text-[8px] font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-all"
+                          >
+                            Nein
+                          </button>
+                          <button 
+                            onClick={() => deleteNotification(notif.id)} 
+                            className="text-[8px] font-black uppercase tracking-widest bg-white text-red-600 px-3 py-1.5 rounded-lg shadow-xl hover:scale-105 active:scale-95 transition-all"
+                          >
+                            Ja
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => setConfirmDeleteId(notif.id)}
+                        className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white transition-all text-xs z-10"
+                      >
+                        ✕
+                      </button>
+                    )}
                     <div className="text-[8px] font-black text-blue-500 uppercase tracking-widest mb-1">{notif.title}</div>
                     <div className="text-[11px] font-bold text-white uppercase tracking-tight mb-2">{notif.message}</div>
                     <div className="text-[7px] font-mono text-slate-600 uppercase tracking-widest">

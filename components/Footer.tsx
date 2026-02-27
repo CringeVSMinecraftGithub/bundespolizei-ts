@@ -2,13 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
+import { useDesktops } from '../contexts/DesktopContext';
 import { POLICE_LOGO_RAW } from '../constants';
 
 const Footer: React.FC = () => {
   const { user, logout, setSettingsOpen, roles } = useAuth();
+  const { desktops, activeDesktopId, setActiveDesktopId, addDesktop, removeDesktop } = useDesktops();
   const navigate = useNavigate();
   const [time, setTime] = useState(new Date());
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
+  const [hoveredDesktopId, setHoveredDesktopId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -32,12 +35,48 @@ const Footer: React.FC = () => {
           </button>
           
           <div className="flex items-center gap-1 px-3 h-full ml-2">
-             <button 
-                onClick={() => navigate('/dashboard')}
-                className="h-10 px-4 flex items-center gap-2 bg-white/5 border-b-2 border-blue-500 rounded-t-lg text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all"
-             >
-                <span className="text-blue-500">🏠</span> Desktop
-             </button>
+            {desktops.map((desktop) => (
+              <div 
+                key={desktop.id}
+                onMouseEnter={() => setHoveredDesktopId(desktop.id)}
+                onMouseLeave={() => setHoveredDesktopId(null)}
+                className="relative group"
+              >
+                <button 
+                  onClick={() => setActiveDesktopId(desktop.id)}
+                  className={`h-10 px-4 flex items-center gap-2 rounded-t-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                    activeDesktopId === desktop.id 
+                      ? 'bg-white/10 border-b-2 border-blue-500 text-white' 
+                      : 'text-white/40 hover:bg-white/5 hover:text-white/60'
+                  }`}
+                >
+                  <span className={activeDesktopId === desktop.id ? 'text-blue-500' : 'text-white/20'}>🏠</span> 
+                  {desktop.name}
+                </button>
+                
+                {desktop.id !== 'desktop-1' && hoveredDesktopId === desktop.id && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeDesktop(desktop.id);
+                    }}
+                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white rounded-full flex items-center justify-center text-[8px] font-bold shadow-lg hover:bg-red-500 transition-colors z-10"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {desktops.length < 5 && (
+              <button 
+                onClick={addDesktop}
+                className="h-8 w-8 ml-2 flex items-center justify-center rounded-lg bg-white/5 text-white/40 hover:bg-white/10 hover:text-white transition-all border border-white/5"
+                title="Neuen Desktop öffnen"
+              >
+                <span className="text-lg">+</span>
+              </button>
+            )}
           </div>
         </div>
 

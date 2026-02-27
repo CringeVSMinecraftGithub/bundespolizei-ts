@@ -9,8 +9,11 @@ const AppointmentsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'Meine' | 'Interne' | 'Externe'>('Meine');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [officers, setOfficers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [partnerType, setPartnerType] = useState<'Beamter' | 'Abteilung'>('Beamter');
+  const [selectedRoleId, setSelectedRoleId] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('Alle');
   const [filterPartner, setFilterPartner] = useState<string>('Alle');
 
@@ -33,7 +36,12 @@ const AppointmentsPage: React.FC = () => {
       const snap = await getDocs(dbCollections.users);
       setOfficers(snap.docs.map(d => ({ id: d.id, ...d.data() } as User)));
     };
+    const fetchRoles = async () => {
+      const snap = await getDocs(dbCollections.roles);
+      setRoles(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    };
     fetchOfficers();
+    fetchRoles();
 
     return unsub;
   }, []);
@@ -45,16 +53,26 @@ const AppointmentsPage: React.FC = () => {
     const data: any = {};
     formData.forEach((value, key) => { data[key] = value; });
 
-    const partner = officers.find(u => u.id === data.partnerUserId);
-    if (!partner) return;
+    let partnerName = '';
+    let partnerUserId = data.partnerUserId || 'DEPARTMENT';
+
+    if (partnerType === 'Beamter') {
+      const partner = officers.find(u => u.id === data.partnerUserId);
+      if (!partner) return;
+      partnerName = `${partner.rank} ${partner.lastName}`;
+    } else {
+      const role = roles.find(r => r.id === data.roleId);
+      partnerName = role ? role.name : (data.customRole || 'Abteilung');
+      partnerUserId = data.roleId || 'CUSTOM_DEPT';
+    }
 
     try {
       await addDoc(dbCollections.appointments, {
         type: 'Intern',
         applicantUserId: user.id,
         applicantName: `${user.rank} ${user.lastName}`,
-        partnerUserId: data.partnerUserId,
-        partnerName: `${partner.rank} ${partner.lastName}`,
+        partnerUserId: partnerUserId,
+        partnerName: partnerName,
         requestedDate: data.date,
         requestedTime: data.time,
         reason: data.reason,
@@ -178,7 +196,7 @@ const AppointmentsPage: React.FC = () => {
 
         <div className="p-6 border-t border-white/5">
           <button 
-            onClick={() => setIsCreating(true)}
+            onClick={() => { setIsCreating(true); setSelectedRoleId(''); }}
             className="w-full bg-white/5 hover:bg-white/10 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/10"
           >
             + Interner Termin
@@ -506,6 +524,23 @@ const AppointmentsPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleCreateInternal} className="space-y-6">
+              <div className="flex bg-black/20 p-1 rounded-2xl border border-white/5">
+                <button 
+                  type="button"
+                  onClick={() => setPartnerType('Beamter')}
+                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${partnerType === 'Beamter' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                >
+                  Einzelner Beamter
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setPartnerType('Abteilung')}
+                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${partnerType === 'Abteilung' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                >
+                  Abteilung / Bereich
+                </button>
+              </div>
+
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Wunschdatum</label>
@@ -517,15 +552,48 @@ const AppointmentsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Terminpartner</label>
-                <select name="partnerUserId" required className="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white font-bold focus:border-blue-500 outline-none transition-all cursor-pointer">
-                  <option value="" className="bg-slate-900">Bitte wählen</option>
-                  {officers.map(u => (
-                    <option key={u.id} value={u.id} className="bg-slate-900">{u.rank} {u.lastName}</option>
-                  ))}
-                </select>
-              </div>
+              {partnerType === 'Beamter' ? (
+                <div className="space-y-2 animate-in fade-in duration-300">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Terminpartner (Beamter)</label>
+                  <select name="partnerUserId" required className="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white font-bold focus:border-blue-500 outline-none transition-all cursor-pointer">
+                    <option value="" className="bg-slate-900">Bitte wählen</option>
+                    {officers.map(u => (
+                      <option key={u.id} value={u.id} className="bg-slate-900">{u.rank} {u.lastName}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Abteilung / Bereich</label>
+                    <select 
+                      name="roleId" 
+                      required 
+                      value={selectedRoleId}
+                      onChange={e => setSelectedRoleId(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white font-bold focus:border-blue-500 outline-none transition-all cursor-pointer"
+                    >
+                      <option value="" className="bg-slate-900">Bitte wählen</option>
+                      {roles.map(r => (
+                        <option key={r.id} value={r.id} className="bg-slate-900">{r.name}</option>
+                      ))}
+                      <option value="Sonstiges" className="bg-slate-900">Sonstiges / Manuelle Eingabe</option>
+                    </select>
+                  </div>
+                  {selectedRoleId === 'Sonstiges' && (
+                    <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Bezeichnung angeben</label>
+                      <input 
+                        name="customRole" 
+                        type="text" 
+                        required 
+                        placeholder="z.B. IT-Abteilung"
+                        className="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white outline-none focus:border-blue-500" 
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Begründung / Anliegen</label>

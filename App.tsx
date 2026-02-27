@@ -21,9 +21,12 @@ import LawsPage from './pages/LawsPage';
 import CommunicationPage from './pages/CommunicationPage';
 import CareerPage from './pages/CareerPage';
 import AppointmentsPage from './pages/AppointmentsPage';
+import NotesPage from './pages/NotesPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import SettingsModal from './components/SettingsModal';
+import DesktopManager from './components/DesktopManager';
+import { DesktopProvider } from './contexts/DesktopContext';
 import { User, Permission, UserRole, Law } from './types';
 import { DEFAULT_ADMIN } from './constants';
 import { db, dbCollections, getDocs, setDoc, doc, updateDoc, onSnapshot, addDoc } from './firebase';
@@ -155,21 +158,16 @@ const INITIAL_LAWS: Partial<Law>[] = [
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const location = useLocation();
-  const isPublicHome = location.pathname === '/';
   
-  if (isPublicHome) return <>{children}</>;
+  if (!user) return <>{children}</>;
 
   const themeClass = user?.theme === 'dark' ? 'theme-dark' : 'theme-blue';
 
   return (
     <div className={`h-screen w-screen flex flex-col overflow-hidden transition-colors duration-500 ${themeClass} ${themeClass === 'theme-dark' ? 'bg-black' : 'bg-[#0f172a]'}`}>
-      {user && <Header />}
       <main className="flex-1 relative overflow-hidden">
         {children}
       </main>
-      {user && <Footer />}
-      <SettingsModal />
     </div>
   );
 };
@@ -290,32 +288,22 @@ const App: React.FC = () => {
 
   return (
     <AuthContext.Provider value={{ user, login, logout: () => setUser(null), hasPermission, isSettingsOpen, setSettingsOpen, roles }}>
-      <Router>
-        <AppLayout>
-            <Routes>
-              <Route path="/" element={<PublicHome />} />
-              <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/" />} />
-              <Route path="/incident-report" element={user && hasPermission(Permission.VIEW_REPORTS) ? <IncidentReportPage /> : <Navigate to="/dashboard" />} />
-              <Route path="/criminal-complaint" element={user && hasPermission(Permission.CREATE_REPORTS) ? <CriminalComplaintPage /> : <Navigate to="/dashboard" />} />
-              <Route path="/fleet" element={user && hasPermission(Permission.MANAGE_FLEET) ? <FleetPage /> : <Navigate to="/dashboard" />} />
-              <Route path="/evidence" element={user && hasPermission(Permission.MANAGE_EVIDENCE) ? <EvidencePage /> : <Navigate to="/dashboard" />} />
-              <Route path="/warrants" element={user && hasPermission(Permission.VIEW_WARRANTS) ? <WarrantPage /> : <Navigate to="/dashboard" />} />
-              <Route path="/cases" element={user && hasPermission(Permission.VIEW_REPORTS) ? <CaseSearchPage /> : <Navigate to="/dashboard" />} />
-              <Route path="/calendar" element={user && hasPermission(Permission.VIEW_CALENDAR) ? <CalendarPage /> : <Navigate to="/dashboard" />} />
-              <Route path="/press" element={user && hasPermission(Permission.MANAGE_NEWS) ? <PressPage /> : <Navigate to="/dashboard" />} />
-              <Route path="/applications" element={user && (hasPermission(Permission.VIEW_APPLICATIONS) || hasPermission(Permission.MANAGE_JOBS)) ? <ApplicationsPage /> : <Navigate to="/dashboard" />} />
-              <Route path="/tips" element={user && hasPermission(Permission.VIEW_TIPS) ? <TipsPage /> : <Navigate to="/dashboard" />} />
-              <Route path="/org-chart" element={user ? <OrgChartPage /> : <Navigate to="/" />} />
-              <Route path="/jobs" element={user ? <JobsPage /> : <Navigate to="/" />} />
-              <Route path="/laws" element={user ? <LawsPage /> : <Navigate to="/" />} />
-              <Route path="/communication" element={user ? <CommunicationPage /> : <Navigate to="/" />} />
-              <Route path="/career" element={user ? <CareerPage /> : <Navigate to="/" />} />
-              <Route path="/appointments" element={user ? <AppointmentsPage /> : <Navigate to="/" />} />
-              <Route path="/admin" element={user && (user.isAdmin || hasPermission(Permission.MANAGE_USERS)) ? <AdminPanel /> : <Navigate to="/" />} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-        </AppLayout>
-      </Router>
+      <DesktopProvider>
+        {user ? (
+          <AppLayout>
+            <DesktopManager />
+          </AppLayout>
+        ) : (
+          <Router>
+            <AppLayout>
+              <Routes>
+                <Route path="/" element={<PublicHome />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </AppLayout>
+          </Router>
+        )}
+      </DesktopProvider>
     </AuthContext.Provider>
   );
 };

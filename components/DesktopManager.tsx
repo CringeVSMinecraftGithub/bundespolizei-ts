@@ -25,6 +25,7 @@ import CommunicationPage from '../pages/CommunicationPage';
 import CareerPage from '../pages/CareerPage';
 import AppointmentsPage from '../pages/AppointmentsPage';
 import NotesPage from '../pages/NotesPage';
+import InpasPage from '../pages/InpasPage';
 
 import Header from './Header';
 import Footer from './Footer';
@@ -58,6 +59,7 @@ const DesktopView: React.FC<{ desktopId: string; isActive: boolean }> = ({ deskt
               <Route path="/career" element={user ? <CareerPage /> : <Navigate to="/dashboard" />} />
               <Route path="/appointments" element={user ? <AppointmentsPage /> : <Navigate to="/dashboard" />} />
               <Route path="/notes" element={user ? <NotesPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/inpas" element={user ? <InpasPage /> : <Navigate to="/dashboard" />} />
               <Route path="/admin" element={user && (user.isAdmin || hasPermission(Permission.MANAGE_USERS)) ? <AdminPanel /> : <Navigate to="/dashboard" />} />
               <Route path="*" element={<Navigate to="/dashboard" />} />
             </Routes>

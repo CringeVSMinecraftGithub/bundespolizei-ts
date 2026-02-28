@@ -7,16 +7,25 @@ import { POLICE_LOGO_RAW } from '../constants';
 
 const Footer: React.FC = () => {
   const { user, logout, setSettingsOpen, roles } = useAuth();
-  const { desktops, activeDesktopId, setActiveDesktopId, addDesktop, removeDesktop } = useDesktops();
+  const { desktops, activeDesktopId, setActiveDesktopId, addDesktop, removeDesktop, renameDesktop } = useDesktops();
   const navigate = useNavigate();
   const [time, setTime] = useState(new Date());
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
   const [hoveredDesktopId, setHoveredDesktopId] = useState<string | null>(null);
+  const [editingDesktopId, setEditingDesktopId] = useState<string | null>(null);
+  const [tempName, setTempName] = useState('');
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleRenameSubmit = (id: string) => {
+    if (tempName.trim()) {
+      renameDesktop(id, tempName.trim());
+    }
+    setEditingDesktopId(null);
+  };
 
   if (!user) return null;
 
@@ -42,19 +51,39 @@ const Footer: React.FC = () => {
                 onMouseLeave={() => setHoveredDesktopId(null)}
                 className="relative group"
               >
-                <button 
-                  onClick={() => setActiveDesktopId(desktop.id)}
-                  className={`h-10 px-4 flex items-center gap-2 rounded-t-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                    activeDesktopId === desktop.id 
-                      ? 'bg-white/10 border-b-2 border-blue-500 text-white' 
-                      : 'text-white/40 hover:bg-white/5 hover:text-white/60'
-                  }`}
-                >
-                  <span className={activeDesktopId === desktop.id ? 'text-blue-500' : 'text-white/20'}>🏠</span> 
-                  {desktop.name}
-                </button>
+                {editingDesktopId === desktop.id ? (
+                  <input
+                    autoFocus
+                    type="text"
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    onBlur={() => handleRenameSubmit(desktop.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleRenameSubmit(desktop.id);
+                      if (e.key === 'Escape') setEditingDesktopId(null);
+                    }}
+                    className="h-10 px-4 bg-white/20 border-b-2 border-blue-500 rounded-t-lg text-[10px] font-black uppercase tracking-widest text-white outline-none w-32"
+                  />
+                ) : (
+                  <button 
+                    onClick={() => setActiveDesktopId(desktop.id)}
+                    onDoubleClick={() => {
+                      setEditingDesktopId(desktop.id);
+                      setTempName(desktop.name);
+                    }}
+                    className={`h-10 px-4 flex items-center gap-2 rounded-t-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                      activeDesktopId === desktop.id 
+                        ? 'bg-white/10 border-b-2 border-blue-500 text-white' 
+                        : 'text-white/40 hover:bg-white/5 hover:text-white/60'
+                    }`}
+                    title="Doppelklick zum Umbenennen"
+                  >
+                    <span className={activeDesktopId === desktop.id ? 'text-blue-500' : 'text-white/20'}>🏠</span> 
+                    {desktop.name}
+                  </button>
+                )}
                 
-                {desktop.id !== 'desktop-1' && hoveredDesktopId === desktop.id && (
+                {desktop.id !== 'desktop-1' && hoveredDesktopId === desktop.id && editingDesktopId !== desktop.id && (
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
@@ -112,6 +141,10 @@ const Footer: React.FC = () => {
           )}
 
           <div className="space-y-1">
+             <button onClick={() => { setIsStartMenuOpen(false); navigate('/inpas'); }} className="w-full flex items-center gap-4 p-4 hover:bg-white/5 text-slate-300 rounded-2xl transition-all group">
+                <span className="text-lg group-hover:scale-110 transition-transform">🔍</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">INPAS</span>
+             </button>
              <button onClick={() => { setIsStartMenuOpen(false); setSettingsOpen(true); }} className="w-full flex items-center gap-4 p-4 hover:bg-white/5 text-slate-300 rounded-2xl transition-all group">
                 <span className="text-lg group-hover:scale-110 transition-transform">⚙️</span>
                 <span className="text-[10px] font-black uppercase tracking-widest">Einstellungen</span>

@@ -11,6 +11,7 @@ interface DesktopContextType {
   activeDesktopId: string;
   addDesktop: () => void;
   removeDesktop: (id: string) => void;
+  renameDesktop: (id: string, newName: string) => void;
   setActiveDesktopId: (id: string) => void;
 }
 
@@ -62,8 +63,12 @@ export const DesktopProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const renameDesktop = (id: string, newName: string) => {
+    setDesktops(desktops.map(d => d.id === id ? { ...d, name: newName } : d));
+  };
+
   return (
-    <DesktopContext.Provider value={{ desktops, activeDesktopId, addDesktop, removeDesktop, setActiveDesktopId }}>
+    <DesktopContext.Provider value={{ desktops, activeDesktopId, addDesktop, removeDesktop, renameDesktop, setActiveDesktopId }}>
       {children}
     </DesktopContext.Provider>
   );

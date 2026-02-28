@@ -140,6 +140,7 @@ const Dashboard: React.FC = () => {
     { id: 'complaints', label: 'Strafanzeigen', icon: '⚖️', color: 'bg-slate-700', permission: Permission.CREATE_REPORTS, path: '/criminal-complaint', group: 'Dienstbetrieb' },
     { id: 'calendar', label: 'Kalender', icon: '📅', color: 'bg-blue-800', path: '/calendar', permission: Permission.VIEW_CALENDAR, group: 'Dienstbetrieb' },
     { id: 'press', label: 'Presse-Portal', icon: '📰', color: 'bg-indigo-600', permission: Permission.MANAGE_NEWS, path: '/press', group: 'Dienstbetrieb' },
+    { id: 'inpas', label: 'INPAS', icon: '🔍', color: 'bg-blue-900', path: '/inpas', group: 'Dienstbetrieb' },
     { id: 'cases', label: 'Vorgangssuche', icon: '📁', color: 'bg-blue-700', path: '/cases', permission: Permission.VIEW_REPORTS, group: 'Ermittlungen' },
     { id: 'warrants', label: 'Fahndung', icon: '🔍', color: 'bg-red-600', path: '/warrants', permission: Permission.VIEW_WARRANTS, group: 'Ermittlungen' },
     { id: 'evidence', label: 'Asservatenkammer', icon: '📦', color: 'bg-orange-500', path: '/evidence', permission: Permission.MANAGE_EVIDENCE, group: 'Ermittlungen' },

@@ -203,6 +203,37 @@ const App: React.FC = () => {
           }
         }
 
+        const inpasCitizensSnap = await getDocs(dbCollections.inpas_citizens);
+        console.log(`INPAS: Found ${inpasCitizensSnap.size} citizens in database`);
+        if (inpasCitizensSnap.size < 10) {
+          console.log("INPAS: Seeding citizens...");
+          const { MOCK_CITIZENS } = await import('./src/services/inpasMockData');
+          for (const c of MOCK_CITIZENS) {
+            await setDoc(doc(db, "inpas_citizens", c.id), c);
+          }
+          console.log(`INPAS: Seeded ${MOCK_CITIZENS.length} citizens`);
+        }
+
+        const inpasVehiclesSnap = await getDocs(dbCollections.inpas_vehicles);
+        if (inpasVehiclesSnap.size < 10) {
+          console.log("INPAS: Seeding vehicles...");
+          const { MOCK_VEHICLES } = await import('./src/services/inpasMockData');
+          for (const v of MOCK_VEHICLES) {
+            await setDoc(doc(db, "inpas_vehicles", v.id), v);
+          }
+          console.log(`INPAS: Seeded ${MOCK_VEHICLES.length} vehicles`);
+        }
+
+        const inpasWeaponsSnap = await getDocs(dbCollections.inpas_weapons);
+        if (inpasWeaponsSnap.size < 5) {
+          console.log("INPAS: Seeding weapons...");
+          const { MOCK_WEAPONS } = await import('./src/services/inpasMockData');
+          for (const w of MOCK_WEAPONS) {
+            await setDoc(doc(db, "inpas_weapons", w.id), w);
+          }
+          console.log(`INPAS: Seeded ${MOCK_WEAPONS.length} weapons`);
+        }
+
         const lawsSnap = await getDocs(dbCollections.laws);
         if (lawsSnap.empty) {
           for (const law of INITIAL_LAWS) {

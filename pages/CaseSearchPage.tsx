@@ -220,13 +220,10 @@ const CaseSearchPage: React.FC = () => {
           maxWidth="max-w-4xl"
           footer={
             <div className="flex items-center justify-between">
-              <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Datenbank-Synchronisiert am {new Date().toLocaleTimeString()} • AES-256 Active</div>
+              <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Vorgangsverwaltung • BPOL Teamstadt</div>
               <div className="flex gap-4">
                 {canManage && (
                   <>
-                    <button onClick={handleRedactReport} className="px-6 py-3 bg-amber-600/20 hover:bg-amber-600 text-amber-500 hover:text-white border border-amber-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95">
-                      Schwärzen
-                    </button>
                     <button onClick={handleDeleteReport} className="px-6 py-3 bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95">
                       Löschen
                     </button>
@@ -256,13 +253,13 @@ const CaseSearchPage: React.FC = () => {
                   <span className="w-5 h-0.5 bg-blue-600"></span> 
                   Stammdaten & Einsatzdetails
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
                     <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Ereignisort</div>
                     <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedCase.location || 'N/A'}</div>
                   </div>
                   <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Einsatzzeit</div>
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Tatzeit / Zeitraum</div>
                     <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedCase.incidentTime || '--:--'} {selectedCase.incidentEnd ? `bis ${selectedCase.incidentEnd}` : ''}</div>
                   </div>
                   <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
@@ -283,9 +280,19 @@ const CaseSearchPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
-                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Kräfte / Einheiten</div>
-                    <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedCase.involvedUnits || 'N/A'}</div>
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Sachbearbeiter</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedCase.officerName} ({selectedCase.officerBadge})</div>
                   </div>
+                  <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Erstellt am</div>
+                    <div className="text-[11px] font-bold text-slate-200 uppercase">{new Date(selectedCase.timestamp).toLocaleString('de-DE')}</div>
+                  </div>
+                  {selectedCase.involvedUnits && (
+                    <div className="bg-[#1a1c23]/60 p-4 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                      <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Kräfte / Einheiten</div>
+                      <div className="text-[11px] font-bold text-slate-200 uppercase">{selectedCase.involvedUnits}</div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -293,13 +300,46 @@ const CaseSearchPage: React.FC = () => {
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
                   <span className="w-5 h-0.5 bg-blue-600"></span> 
-                  Involvierte Personen
+                  Beteiligte Personen
                 </h4>
-                <div className="bg-[#1a1c23]/60 p-5 rounded-xl border border-white/5 space-y-1 shadow-inner">
-                  <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Zeugen / Antragsteller / Geschädigte</div>
-                  <div className="text-[11px] font-medium text-slate-300 whitespace-pre-wrap">{selectedCase.witnesses || selectedCase.applicant || 'Keine Angaben'}</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-[#1a1c23]/60 p-5 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Anzeigenerstatter / Geschädigter</div>
+                    <div className="text-[11px] font-medium text-slate-300 whitespace-pre-wrap">{selectedCase.applicant || 'Keine Angaben'}</div>
+                  </div>
+                  <div className="bg-[#1a1c23]/60 p-5 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-red-500 uppercase tracking-widest">Beschuldigter / Tatverdächtiger</div>
+                    <div className="text-[11px] font-black text-white uppercase">{selectedCase.suspect || 'Unbekannt'}</div>
+                    {selectedCase.suspectDescription && (
+                      <div className="text-[9px] text-slate-500 mt-1 italic">{selectedCase.suspectDescription}</div>
+                    )}
+                    {selectedCase.linkedCitizenId && (
+                      <div className="text-[8px] font-black text-blue-500 uppercase mt-2">Verknüpft mit INPAS-ID: {selectedCase.linkedCitizenId}</div>
+                    )}
+                  </div>
+                  <div className="md:col-span-2 bg-[#1a1c23]/60 p-5 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                    <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Zeugen / Auskunftspersonen</div>
+                    <div className="text-[11px] font-medium text-slate-300 whitespace-pre-wrap">{selectedCase.witnesses || 'Keine Angaben'}</div>
+                  </div>
                 </div>
               </div>
+
+              {/* Section: Violations */}
+              {selectedCase.violation && (
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] px-2 flex items-center gap-3">
+                    <span className="w-5 h-0.5 bg-red-600"></span> 
+                    Rechtliche Würdigung / Delikte
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCase.violation.split(',').map((v, i) => (
+                      <div key={i} className="bg-red-600/10 border border-red-500/20 px-3 py-1.5 rounded-xl text-[9px] font-black text-red-500 uppercase tracking-tight">
+                        {v.trim()}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Section: Evidence/Measures */}
               <div className="space-y-4">
@@ -307,17 +347,23 @@ const CaseSearchPage: React.FC = () => {
                   <span className="w-5 h-0.5 bg-blue-600"></span> 
                   {selectedCase.type === 'Strafanzeige' ? 'Beweismittel & Werte' : 'Maßnahmen & Ergebnis'}
                 </h4>
-                <div className="bg-[#1a1c23]/60 p-5 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {selectedCase.type === 'Strafanzeige' ? (
                     <>
-                      <div className="text-[8px] font-black text-orange-500 uppercase tracking-widest">Beweismittel / Schadenswert</div>
-                      <div className="text-[11px] font-medium text-slate-300">{selectedCase.evidenceList || 'Keine'} {selectedCase.propertyValue ? `| Wert: ${selectedCase.propertyValue}` : ''}</div>
+                      <div className="bg-[#1a1c23]/60 p-5 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                        <div className="text-[8px] font-black text-orange-500 uppercase tracking-widest">Sichergestellte Beweismittel</div>
+                        <div className="text-[11px] font-medium text-slate-300 whitespace-pre-wrap">{selectedCase.evidenceList || 'Keine'}</div>
+                      </div>
+                      <div className="bg-[#1a1c23]/60 p-5 rounded-xl border border-white/5 space-y-1 shadow-inner">
+                        <div className="text-[8px] font-black text-orange-500 uppercase tracking-widest">Schadenswert / Beutewert</div>
+                        <div className="text-[11px] font-medium text-slate-300">{selectedCase.propertyValue || 'Nicht angegeben'}</div>
+                      </div>
                     </>
                   ) : (
-                    <>
+                    <div className="md:col-span-2 bg-[#1a1c23]/60 p-5 rounded-xl border border-white/5 space-y-1 shadow-inner">
                       <div className="text-[8px] font-black text-blue-500 uppercase tracking-widest">Maßnahmen & Ergebnis</div>
                       <div className="text-[11px] font-medium text-slate-300">{selectedCase.measures || 'N/A'} ➔ {selectedCase.result || 'Offen'}</div>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>

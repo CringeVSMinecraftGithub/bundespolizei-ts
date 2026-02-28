@@ -36,7 +36,10 @@ export const dbCollections = {
   fleetLogs: collection(db, "fleetLogs"),
   trainings: collection(db, "trainings"),
   appointments: collection(db, "appointments"),
-  notes: collection(db, "notes")
+  notes: collection(db, "notes"),
+  inpas_citizens: collection(db, "inpas_citizens"),
+  inpas_vehicles: collection(db, "inpas_vehicles"),
+  inpas_weapons: collection(db, "inpas_weapons")
 };
 
 export { collection, addDoc, getDocs, getDoc, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where };

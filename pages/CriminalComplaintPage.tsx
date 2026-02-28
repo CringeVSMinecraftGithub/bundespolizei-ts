@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import PoliceOSWindow from '../components/PoliceOSWindow';
 import { dbCollections, addDoc, onSnapshot, query, orderBy } from '../firebase';
 import { useAuth } from '../App';
-import { Law } from '../types';
+import { Law, InpasCitizen } from '../types';
+import { inpasService } from '../src/services/inpasService';
 
 const TEMPLATES: Record<string, { title: string, content: string, laws: string[] }> = {
   "Diebstahl": { title: "Einfacher Diebstahl", content: "GEGENSTAND:\n...\n\nSACHVERHALT:\nDer Beschuldigte entwendete am Tatort den oben genannten Gegenstand...", laws: ["§ 242 StGB"] },
@@ -21,7 +22,14 @@ const CriminalComplaintPage: React.FC = () => {
   const [lawSearch, setLawSearch] = useState('');
   const [showLawDropdown, setShowLawDropdown] = useState(false);
   const [selectedLawStrings, setSelectedLawStrings] = useState<string[]>([]);
+  
+  const [suspectSearch, setSuspectSearch] = useState('');
+  const [suspectResults, setSuspectResults] = useState<InpasCitizen[]>([]);
+  const [showSuspectDropdown, setShowSuspectDropdown] = useState(false);
+  const [selectedSuspect, setSelectedSuspect] = useState<InpasCitizen | null>(null);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const suspectDropdownRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     applicant: '', 
@@ -48,6 +56,9 @@ const CriminalComplaintPage: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowLawDropdown(false);
+      }
+      if (suspectDropdownRef.current && !suspectDropdownRef.current.contains(event.target as Node)) {
+        setShowSuspectDropdown(false);
       }
     };
 
@@ -84,6 +95,26 @@ const CriminalComplaintPage: React.FC = () => {
     }));
   };
 
+  const handleSuspectSearch = async (val: string) => {
+    setSuspectSearch(val);
+    setFormData(p => ({ ...p, suspect: val }));
+    if (val.length > 1) {
+      const results = await inpasService.searchCitizens(val);
+      setSuspectResults(results);
+      setShowSuspectDropdown(true);
+    } else {
+      setSuspectResults([]);
+      setShowSuspectDropdown(false);
+    }
+  };
+
+  const selectSuspect = (citizen: InpasCitizen) => {
+    setSelectedSuspect(citizen);
+    setFormData(p => ({ ...p, suspect: `${citizen.firstName} ${citizen.lastName}` }));
+    setSuspectSearch(`${citizen.firstName} ${citizen.lastName}`);
+    setShowSuspectDropdown(false);
+  };
+
   const handleSave = async () => {
     if (!user) return;
     if (!formData.applicant || selectedLawStrings.length === 0 || !formData.incidentDetails) { 
@@ -92,15 +123,25 @@ const CriminalComplaintPage: React.FC = () => {
     }
     setIsSaving(true);
     try {
-      await addDoc(dbCollections.reports, {
+      const reportData = {
         reportNumber: reportId,
         type: 'Strafanzeige',
         officerName: `${user.rank} ${user.lastName}`,
         officerBadge: user.badgeNumber,
         ...formData,
         violation: selectedLawStrings.join(', '),
-        timestamp: new Date().toISOString()
-      });
+        timestamp: new Date().toISOString(),
+        linkedCitizenId: selectedSuspect?.id || null
+      };
+
+      await addDoc(dbCollections.reports, reportData);
+
+      // If a suspect was selected from INPAS, add to their record
+      if (selectedSuspect) {
+        const recordEntry = `${reportId}: ${selectedLawStrings.join(', ')} (${new Date().toLocaleDateString()})`;
+        await inpasService.addCriminalRecord(selectedSuspect.id, recordEntry, 'openCases');
+      }
+
       navigate('/cases');
     } catch (e) { 
       alert("Fehler beim Speichern."); 
@@ -175,14 +216,44 @@ const CriminalComplaintPage: React.FC = () => {
                   required
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 relative" ref={suspectDropdownRef}>
                 <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Beschuldigter / Tatverdächtiger</label>
-                <input 
-                  className="w-full bg-black/40 border border-white/10 p-3 rounded-xl text-[11px] text-white outline-none focus:border-red-500 transition-all" 
-                  placeholder="Name, Beschreibung, Alias..."
-                  value={formData.suspect}
-                  onChange={e => setFormData({...formData, suspect: e.target.value})}
-                />
+                <div className="relative">
+                  <input 
+                    className={`w-full bg-black/40 border ${selectedSuspect ? 'border-blue-500/50' : 'border-white/10'} p-3 rounded-xl text-[11px] text-white outline-none focus:border-red-500 transition-all`} 
+                    placeholder="Name, Beschreibung, Alias..."
+                    value={formData.suspect}
+                    onChange={e => handleSuspectSearch(e.target.value)}
+                    onFocus={() => formData.suspect.length > 1 && setShowSuspectDropdown(true)}
+                  />
+                  {selectedSuspect && (
+                    <button 
+                      type="button"
+                      onClick={() => setSelectedSuspect(null)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[8px] font-black text-blue-500 uppercase hover:text-blue-400"
+                    >
+                      Verbunden ✓
+                    </button>
+                  )}
+                </div>
+                {showSuspectDropdown && suspectResults.length > 0 && (
+                  <div className="absolute top-full left-0 w-full mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-[110] max-h-48 overflow-y-auto custom-scrollbar">
+                    {suspectResults.map(c => (
+                      <button 
+                        key={c.id} 
+                        type="button"
+                        onClick={() => selectSuspect(c)} 
+                        className="w-full text-left p-4 hover:bg-white/5 border-b border-white/5 flex items-center gap-4 transition-colors"
+                      >
+                        <div className="w-8 h-8 bg-blue-600/10 text-blue-500 rounded-lg flex items-center justify-center text-xs">👤</div>
+                        <div>
+                          <div className="text-[10px] font-black text-white uppercase">{c.firstName} {c.lastName}</div>
+                          <div className="text-[8px] text-slate-500 font-bold uppercase">{c.birthDate} • {c.id}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="md:col-span-2 space-y-1">
                 <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Zeugen / Auskunftspersonen</label>

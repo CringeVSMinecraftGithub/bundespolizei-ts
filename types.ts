@@ -176,6 +176,7 @@ export interface IncidentReport {
   propertyValue?: string;
   followUpDate?: string;
   officialNotes?: string;
+  linkedCitizenId?: string | null;
 }
 
 export interface CitizenSubmission {
@@ -357,4 +358,52 @@ export interface Note {
   color?: string;
   createdAt: string;
   updatedAt: string;
+  statusLog?: {
+    status: string;
+    timestamp: string;
+    editorId?: string;
+    editorName?: string;
+    notes?: string;
+  }[];
+}
+
+export interface InpasCitizen {
+  id: string;
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  nationality: string;
+  residence: string;
+  gender: string;
+  address: string;
+  criminalRecord: string[];
+  openCases: string[];
+  licenseStatus: string;
+  notes: string;
+}
+
+export interface InpasVehicle {
+  id: string;
+  plate: string;
+  ownerId: string;
+  ownerName: string;
+  type: string;
+  brand: string;
+  model: string;
+  color: string;
+  firstRegistration: string;
+  insuranceStatus: string;
+  wantedStatus: string;
+}
+
+export interface InpasWeapon {
+  id: string;
+  serialNumber: string;
+  type: string;
+  caliber: string;
+  ownerId: string;
+  ownerName: string;
+  registrationDate: string;
+  status: 'Legal' | 'Sichergestellt' | 'Gestohlen';
+  notes: string;
 }

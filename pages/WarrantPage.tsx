@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 import { dbCollections, onSnapshot, query, orderBy, addDoc, updateDoc, doc, db } from '../firebase';
 import { Warrant, IncidentReport } from '../types';
@@ -102,8 +101,7 @@ const WarrantPage: React.FC = () => {
   };
 
   return (
-    <PoliceOSWindow title="Fahndungsliste / Zugriffsberechtigungen">
-      <div className="h-full flex flex-col gap-4 overflow-hidden">
+    <div className="h-full flex flex-col gap-4 overflow-hidden">
         
         {/* Header & Controls */}
         <div className="shrink-0 flex items-center justify-between bg-[#1a1c23]/60 backdrop-blur-md p-4 rounded-[24px] border border-white/5 shadow-2xl">
@@ -328,7 +326,6 @@ const WarrantPage: React.FC = () => {
         </DataModal>
 
       </div>
-    </PoliceOSWindow>
   );
 };
 

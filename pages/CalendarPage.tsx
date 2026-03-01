@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import { dbCollections, onSnapshot, query, orderBy, addDoc, deleteDoc, doc, db } from '../firebase';
 import { CalendarEvent, Permission } from '../types';
 import { useAuth } from '../App';
@@ -141,8 +140,7 @@ export default function CalendarPage() {
     : [];
 
   return (
-    <PoliceOSWindow title="Dienstkalender">
-      <div className="h-full flex flex-col gap-6 animate-in fade-in duration-500 overflow-hidden">
+    <div className="h-full flex flex-col gap-6 animate-in fade-in duration-500 overflow-hidden">
         
         {/* Header Section */}
         <div className="flex justify-between items-center shrink-0 border-b border-white/5 pb-4">
@@ -366,6 +364,5 @@ export default function CalendarPage() {
         )}
 
       </div>
-    </PoliceOSWindow>
   );
 }

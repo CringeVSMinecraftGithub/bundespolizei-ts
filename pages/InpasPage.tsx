@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { inpasService } from '../src/services/inpasService';
 import { InpasCitizen, InpasVehicle, InpasWeapon } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -7,6 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 type InpasMode = 'START' | 'CITIZEN' | 'VEHICLE' | 'WEAPON';
 
 const InpasPage: React.FC = () => {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<InpasMode>('START');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -110,6 +112,35 @@ const InpasPage: React.FC = () => {
       </button>
     </div>
   );
+
+  const handleCaseClick = (record: string) => {
+    // Extract case number like ANZ-123456-2026
+    const match = record.match(/ANZ-\d+-\d+/);
+    if (match) {
+      const reportNumber = match[0];
+      navigate('/cases', { state: { selectedReportNumber: reportNumber } });
+    }
+  };
+
+  const handleOwnerClick = async (ownerName: string) => {
+    setMode('CITIZEN');
+    setSearchQuery(ownerName);
+    setIsLoading(true);
+    setHasSearched(true);
+    setSelectedVehicle(null);
+    try {
+      const results = await inpasService.searchCitizens(ownerName);
+      setCitizenResults(results);
+      // If exactly one result, select it automatically
+      if (results.length === 1) {
+        setSelectedCitizen(results[0]);
+      }
+    } catch (error) {
+      console.error("Owner search error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const renderSearchView = () => {
     const placeholders = {
@@ -239,11 +270,24 @@ const InpasPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-2 space-y-8">
               <div className="bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 rounded-[40px] p-8 shadow-2xl">
-                <div className="flex items-center gap-6 mb-8 pb-6 border-b border-white/5">
-                  <div className="w-20 h-20 bg-blue-600/20 text-blue-500 rounded-3xl flex items-center justify-center text-4xl">👤</div>
-                  <div>
-                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">{selectedCitizen.firstName} {selectedCitizen.lastName}</h3>
-                    <p className="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-1">ID: {selectedCitizen.id}</p>
+                <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/5">
+                  <div className="flex items-center gap-6">
+                    <div className="w-20 h-20 bg-blue-600/20 text-blue-500 rounded-3xl flex items-center justify-center text-4xl">👤</div>
+                    <div>
+                      <h3 className="text-2xl font-black text-white uppercase tracking-tight">{selectedCitizen.firstName} {selectedCitizen.lastName}</h3>
+                      <p className="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-1">ID: {selectedCitizen.id}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    {selectedCitizen.criminalRecord.length > 0 && (
+                      <div className="bg-red-600 text-white text-[8px] font-black uppercase px-3 py-1 rounded-full shadow-lg shadow-red-900/20 animate-pulse">Vorbestraft</div>
+                    )}
+                    {selectedCitizen.openCases.length > 0 && (
+                      <div className="bg-amber-500 text-black text-[8px] font-black uppercase px-3 py-1 rounded-full shadow-lg shadow-amber-900/20">Offene Verfahren</div>
+                    )}
+                    {selectedCitizen.criminalRecord.length === 0 && selectedCitizen.openCases.length === 0 && (
+                      <div className="bg-emerald-600 text-white text-[8px] font-black uppercase px-3 py-1 rounded-full shadow-lg shadow-emerald-900/20">Keine Einträge</div>
+                    )}
                   </div>
                 </div>
 
@@ -271,23 +315,69 @@ const InpasPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 rounded-[40px] p-8 shadow-2xl">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-red-500 mb-6">Strafregister & Verfahren</h3>
-                <div className="space-y-6">
-                  <div>
-                    <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-3">Vorstrafen</div>
-                    <div className="space-y-2">
+              <div className="bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 rounded-[40px] p-8 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-red-500 mb-8 flex items-center gap-3">
+                  <span className="w-8 h-8 bg-red-600/10 rounded-lg flex items-center justify-center text-xs">⚖️</span>
+                  Strafregister & Verfahren
+                </h3>
+                <div className="grid grid-cols-1 gap-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                      <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Vorstrafen</div>
+                      <div className="text-[8px] font-black text-red-500 uppercase bg-red-500/10 px-2 py-0.5 rounded">{selectedCitizen.criminalRecord.length} Einträge</div>
+                    </div>
+                    <div className="space-y-3">
                       {selectedCitizen.criminalRecord.length > 0 ? selectedCitizen.criminalRecord.map((r, i) => (
-                        <div key={i} className="bg-red-500/10 border border-red-500/20 p-3 rounded-xl text-[10px] font-bold text-red-400 uppercase tracking-tight">{r}</div>
-                      )) : <div className="text-[10px] text-slate-600 uppercase font-black italic">Keine Einträge</div>}
+                        <div 
+                          key={i} 
+                          onClick={() => handleCaseClick(r)}
+                          className="group bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 p-4 rounded-2xl transition-all cursor-pointer"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="w-6 h-6 bg-red-500/20 text-red-500 rounded-lg flex items-center justify-center text-[10px] shrink-0 mt-0.5">📜</div>
+                            <div className="flex-1">
+                              <div className="text-[11px] font-bold text-red-400 uppercase tracking-tight leading-relaxed">{r}</div>
+                              {r.includes('ANZ-') && (
+                                <div className="text-[8px] text-red-500/60 font-black uppercase tracking-widest mt-1">Akte öffnen ➔</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )) : (
+                        <div className="text-center py-8 bg-white/5 rounded-2xl border border-dashed border-white/5">
+                          <div className="text-[10px] text-slate-600 uppercase font-black italic">Keine Vorstrafen bekannt</div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-3">Offene Verfahren</div>
-                    <div className="space-y-2">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                      <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Offene Verfahren</div>
+                      <div className="text-[8px] font-black text-amber-500 uppercase bg-amber-500/10 px-2 py-0.5 rounded">{selectedCitizen.openCases.length} Aktiv</div>
+                    </div>
+                    <div className="space-y-3">
                       {selectedCitizen.openCases.length > 0 ? selectedCitizen.openCases.map((r, i) => (
-                        <div key={i} className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl text-[10px] font-bold text-amber-400 uppercase tracking-tight">{r}</div>
-                      )) : <div className="text-[10px] text-slate-600 uppercase font-black italic">Keine Einträge</div>}
+                        <div 
+                          key={i} 
+                          onClick={() => handleCaseClick(r)}
+                          className="group bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/10 p-4 rounded-2xl transition-all cursor-pointer"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="w-6 h-6 bg-amber-500/20 text-amber-500 rounded-lg flex items-center justify-center text-[10px] shrink-0 mt-0.5">⏳</div>
+                            <div className="flex-1">
+                              <div className="text-[11px] font-bold text-amber-400 uppercase tracking-tight leading-relaxed">{r}</div>
+                              {r.includes('ANZ-') && (
+                                <div className="text-[8px] text-amber-500/60 font-black uppercase tracking-widest mt-1">Akte öffnen ➔</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )) : (
+                        <div className="text-center py-8 bg-white/5 rounded-2xl border border-dashed border-white/5">
+                          <div className="text-[10px] text-slate-600 uppercase font-black italic">Keine laufenden Verfahren</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -332,17 +422,24 @@ const InpasPage: React.FC = () => {
             <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Fahrzeug-Details</h2>
           </div>
 
-          <div className="bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 rounded-[40px] p-8 shadow-2xl">
-            <div className="flex items-center gap-6 mb-8 pb-6 border-b border-white/5">
-              <div className="w-20 h-20 bg-amber-600/20 text-amber-500 rounded-3xl flex items-center justify-center text-4xl">🚓</div>
-              <div>
-                <h3 className="text-2xl font-black text-white uppercase tracking-tight">{selectedVehicle.plate}</h3>
-                <p className="text-[10px] text-amber-500 font-black uppercase tracking-widest mt-1">{selectedVehicle.brand} {selectedVehicle.model}</p>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-2 space-y-8">
+              <div className="bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 rounded-[40px] p-8 shadow-2xl">
+                <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/5">
+                  <div className="flex items-center gap-6">
+                    <div className="w-20 h-20 bg-amber-600/20 text-amber-500 rounded-3xl flex items-center justify-center text-4xl">🚓</div>
+                    <div>
+                      <h3 className="text-2xl font-black text-white uppercase tracking-tight">{selectedVehicle.plate}</h3>
+                      <p className="text-[10px] text-amber-500 font-black uppercase tracking-widest mt-1">{selectedVehicle.brand} {selectedVehicle.model}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <div className={`text-[8px] font-black uppercase px-3 py-1 rounded-full shadow-lg ${selectedVehicle.wantedStatus === 'Keine Fahndung' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white animate-pulse'}`}>
+                      {selectedVehicle.wantedStatus}
+                    </div>
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-8">
                 <div className="grid grid-cols-2 gap-y-8">
                   <div>
                     <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Marke</div>
@@ -360,33 +457,69 @@ const InpasPage: React.FC = () => {
                     <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Erstzulassung</div>
                     <div className="text-sm font-bold text-white uppercase">{selectedVehicle.firstRegistration}</div>
                   </div>
-                </div>
-
-                <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
-                  <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-3">Eingetragener Halter</div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-blue-600/10 text-blue-500 rounded-xl flex items-center justify-center text-lg">👤</div>
-                    <div>
-                      <div className="text-sm font-black text-white uppercase tracking-tight">{selectedVehicle.ownerName}</div>
-                      <div className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">ID: {selectedVehicle.ownerId}</div>
+                  <div className="col-span-2">
+                    <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Letzter bekannter Standort</div>
+                    <div className="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/5">
+                      <span className="text-lg">📍</span>
+                      <div className="text-sm font-bold text-white uppercase">{selectedVehicle.lastLocation || 'Keine Standortdaten verfügbar'}</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-8">
-                <div>
-                  <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-3">Versicherungsstatus</div>
-                  <div className={`text-xs font-black uppercase tracking-widest px-6 py-4 rounded-2xl border ${selectedVehicle.insuranceStatus === 'Versichert' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
-                    {selectedVehicle.insuranceStatus}
+              <div className="bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 rounded-[40px] p-8 shadow-2xl">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-emerald-500 mb-8 flex items-center gap-3">
+                  <span className="w-8 h-8 bg-emerald-600/10 rounded-lg flex items-center justify-center text-xs">🛡️</span>
+                  Versicherungsinformationen
+                </h3>
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="col-span-2">
+                    <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2">Status</div>
+                    <div className={`text-xs font-black uppercase tracking-widest px-6 py-4 rounded-2xl border ${selectedVehicle.insuranceStatus === 'Versichert' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
+                      {selectedVehicle.insuranceStatus}
+                    </div>
                   </div>
+                  {selectedVehicle.insuranceStatus === 'Versichert' && (
+                    <>
+                      <div>
+                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Versicherer</div>
+                        <div className="text-sm font-bold text-white uppercase">{selectedVehicle.insuranceCompany || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Gültig bis</div>
+                        <div className="text-sm font-bold text-white uppercase">{selectedVehicle.insuranceExpiry || 'N/A'}</div>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div>
-                  <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-3">Fahndungsstatus</div>
-                  <div className={`text-xs font-black uppercase tracking-widest px-6 py-4 rounded-2xl border ${selectedVehicle.wantedStatus === 'Keine Fahndung' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-red-600/20 border-red-500/40 text-red-500 animate-pulse'}`}>
-                    {selectedVehicle.wantedStatus}
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 rounded-[40px] p-8 shadow-2xl">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-blue-500 mb-6">Halter</h3>
+                <button 
+                  onClick={() => handleOwnerClick(selectedVehicle.ownerName)}
+                  className="w-full text-left p-4 bg-blue-600/5 hover:bg-blue-600/10 rounded-2xl border border-blue-500/10 transition-all group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-blue-600/10 text-blue-500 rounded-xl flex items-center justify-center text-lg group-hover:bg-blue-600 group-hover:text-white transition-all">👤</div>
+                      <div>
+                        <div className="text-sm font-black text-white uppercase tracking-tight">{selectedVehicle.ownerName}</div>
+                        <div className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">ID: {selectedVehicle.ownerId}</div>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-blue-500 font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">Profil ➔</div>
                   </div>
-                </div>
+                </button>
+              </div>
+
+              <div className="bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 rounded-[40px] p-8 shadow-2xl">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6">Hinweise</h3>
+                <p className="text-[11px] text-slate-400 leading-relaxed italic">
+                  {selectedVehicle.notes || 'Keine zusätzlichen Hinweise im System hinterlegt.'}
+                </p>
               </div>
             </div>
           </div>

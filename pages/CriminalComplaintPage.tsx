@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import { dbCollections, addDoc, onSnapshot, query, orderBy } from '../firebase';
 import { useAuth } from '../App';
 import { Law, InpasCitizen } from '../types';
@@ -166,8 +165,7 @@ const CriminalComplaintPage: React.FC = () => {
   const sortedCategories = Object.keys(groupedLaws).sort();
 
   return (
-    <PoliceOSWindow title="Strafanzeige • Erfassung">
-      <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 pb-20">
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 pb-20">
         
         {/* Header Section */}
         <div className="flex justify-between items-end border-b border-white/10 pb-6">
@@ -386,7 +384,6 @@ const CriminalComplaintPage: React.FC = () => {
 
         </form>
       </div>
-    </PoliceOSWindow>
   );
 };
 

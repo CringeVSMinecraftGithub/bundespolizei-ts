@@ -336,7 +336,11 @@ export const MOCK_VEHICLES: InpasVehicle[] = [
     color: 'Silber',
     firstRegistration: '10.05.2016',
     insuranceStatus: 'Versichert',
-    wantedStatus: 'Keine Fahndung'
+    insuranceCompany: 'Allianz',
+    insuranceExpiry: '01.01.2027',
+    wantedStatus: 'Keine Fahndung',
+    lastLocation: 'Hauptstraße 12, Teamstadt',
+    notes: 'Keine Besonderheiten.'
   },
   {
     id: 'v2',
@@ -349,7 +353,11 @@ export const MOCK_VEHICLES: InpasVehicle[] = [
     color: 'Schwarz',
     firstRegistration: '15.11.2018',
     insuranceStatus: 'Versichert',
-    wantedStatus: 'Keine Fahndung'
+    insuranceCompany: 'HUK-Coburg',
+    insuranceExpiry: '31.12.2026',
+    wantedStatus: 'Keine Fahndung',
+    lastLocation: 'Parkhaus Mitte, Ebene 2',
+    notes: 'Getönte Scheiben hinten.'
   },
   {
     id: 'v3',
@@ -362,7 +370,11 @@ export const MOCK_VEHICLES: InpasVehicle[] = [
     color: 'Blau',
     firstRegistration: '20.02.2015',
     insuranceStatus: 'Versichert',
-    wantedStatus: 'Keine Fahndung'
+    insuranceCompany: 'AXA',
+    insuranceExpiry: '15.06.2027',
+    wantedStatus: 'Keine Fahndung',
+    lastLocation: 'Industriegebiet Süd',
+    notes: 'Leichte Kratzer an der Fahrertür.'
   },
   {
     id: 'v4',
@@ -375,7 +387,11 @@ export const MOCK_VEHICLES: InpasVehicle[] = [
     color: 'Weiß',
     firstRegistration: '05.08.2020',
     insuranceStatus: 'Versichert',
-    wantedStatus: 'Keine Fahndung'
+    insuranceCompany: 'Generali',
+    insuranceExpiry: '01.01.2028',
+    wantedStatus: 'Keine Fahndung',
+    lastLocation: 'Wohngebiet West',
+    notes: ''
   },
   {
     id: 'v5',
@@ -388,7 +404,11 @@ export const MOCK_VEHICLES: InpasVehicle[] = [
     color: 'Rot',
     firstRegistration: '12.06.2017',
     insuranceStatus: 'Versichert',
-    wantedStatus: 'Fahndung (Diebstahl)'
+    insuranceCompany: 'Signal Iduna',
+    insuranceExpiry: '31.12.2026',
+    wantedStatus: 'Fahndung (Diebstahl)',
+    lastLocation: 'Bahnhofsvorplatz (Zuletzt gesehen)',
+    notes: 'Als gestohlen gemeldet am 20.02.2026.'
   },
   {
     id: 'v6',

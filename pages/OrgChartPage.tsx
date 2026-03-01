@@ -4,7 +4,6 @@ import { useAuth } from '../App';
 import { Permission, OrgNode, User } from '../types';
 import { POLICE_RANKS } from '../constants';
 import { dbCollections, onSnapshot, query, setDoc, doc, db, deleteDoc, addDoc } from '../firebase';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 
 const RANK_GROUPS = [
   { id: 'Top', label: 'Höchste Ebene', color: 'border-amber-500', glow: 'shadow-amber-500/20', accent: 'bg-amber-500' },
@@ -175,8 +174,7 @@ const OrgChartPage: React.FC = () => {
   );
 
   return (
-    <PoliceOSWindow title="Organigramm">
-      <div className="h-full w-full overflow-auto custom-scrollbar p-12 bg-[#0a0c10]">
+    <div className="h-full w-full overflow-auto custom-scrollbar p-12 bg-[#0a0c10]">
         <div className="max-w-7xl mx-auto mb-12 flex justify-between items-end border-b border-white/5 pb-8">
           <div>
             <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">Behörden <span className="text-blue-500">Struktur</span></h1>
@@ -430,7 +428,6 @@ const OrgChartPage: React.FC = () => {
           </div>
         )}
       </div>
-    </PoliceOSWindow>
   );
 };
 

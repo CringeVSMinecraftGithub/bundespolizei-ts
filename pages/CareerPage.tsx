@@ -3,7 +3,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../App';
 import { CareerProfile, CareerComponent, User, Permission, Training } from '../types';
 import { dbCollections, onSnapshot, query, orderBy, addDoc, updateDoc, doc, db, where, getDocs, setDoc, deleteDoc } from '../firebase';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 
 const CareerPage: React.FC = () => {
@@ -246,8 +245,7 @@ const CareerPage: React.FC = () => {
   );
 
   return (
-    <PoliceOSWindow title="Karriere & Ausbildung">
-      <div className="h-full flex flex-col gap-6 overflow-hidden">
+    <div className="h-full flex flex-col gap-6 overflow-hidden">
         
         {statusMsg && (
           <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[2000] animate-in slide-in-from-top-4 duration-300">
@@ -937,7 +935,6 @@ const CareerPage: React.FC = () => {
           </div>
         </DataModal>
       </div>
-    </PoliceOSWindow>
   );
 };
 

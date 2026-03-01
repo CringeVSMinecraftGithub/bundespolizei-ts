@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import { dbCollections, onSnapshot, updateDoc, doc, db, addDoc, deleteDoc, query, where, orderBy } from '../firebase';
 import { Vehicle, VehicleLog, Permission } from '../types';
 import { useAuth } from '../App';
@@ -133,8 +132,7 @@ const FleetPage: React.FC = () => {
   }, [logs, selectedVehicle]);
 
   return (
-    <PoliceOSWindow title="Fuhrpark-Verwaltung">
-      <div className="h-full flex flex-col gap-6 overflow-hidden">
+    <div className="h-full flex flex-col gap-6 overflow-hidden">
         
         {statusMsg && (
           <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[2000] animate-in slide-in-from-top-4 duration-300">
@@ -478,7 +476,6 @@ const FleetPage: React.FC = () => {
           </div>
         </DataModal>
       </div>
-    </PoliceOSWindow>
   );
 };
 

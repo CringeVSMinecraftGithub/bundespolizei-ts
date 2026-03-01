@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { dbCollections, onSnapshot, query, orderBy, where } from '../firebase';
 import { Law } from '../types';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 
 const LawsPage: React.FC = () => {
@@ -60,8 +59,7 @@ const LawsPage: React.FC = () => {
   };
 
   return (
-    <PoliceOSWindow title="Gesetzestexte & Strafmaß">
-      <div className="h-full flex flex-col gap-6 overflow-hidden">
+    <div className="h-full flex flex-col gap-6 overflow-hidden">
         
         {/* Header with Search & Filters */}
         <div className="shrink-0 space-y-4 bg-[#1a1c23]/50 p-6 rounded-[32px] border border-white/5 shadow-xl">
@@ -224,7 +222,6 @@ const LawsPage: React.FC = () => {
           )}
         </DataModal>
       </div>
-    </PoliceOSWindow>
   );
 };
 

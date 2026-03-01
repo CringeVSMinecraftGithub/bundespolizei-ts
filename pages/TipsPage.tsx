@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 import { dbCollections, onSnapshot, query, orderBy, updateDoc, doc, db, deleteDoc } from '../firebase';
 import { CitizenSubmission, Permission } from '../types';
@@ -51,8 +50,7 @@ const TipsPage: React.FC = () => {
   };
 
   return (
-    <PoliceOSWindow title="Bürgerhinweise • Posteingang">
-      <div className="h-full flex flex-col gap-4 overflow-hidden animate-in fade-in duration-500">
+    <div className="h-full flex flex-col gap-4 overflow-hidden animate-in fade-in duration-500">
         
         {/* Compact Search Header */}
         <div className="shrink-0 flex items-center justify-between bg-[#1a1c23]/80 p-4 rounded-2xl border border-white/5 shadow-lg">
@@ -230,7 +228,6 @@ const TipsPage: React.FC = () => {
           )}
         </DataModal>
       </div>
-    </PoliceOSWindow>
   );
 };
 

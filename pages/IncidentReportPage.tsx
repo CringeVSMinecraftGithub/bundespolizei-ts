@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import { dbCollections, addDoc } from '../firebase';
 import { useAuth } from '../App';
 
@@ -87,8 +86,7 @@ const IncidentReportPage: React.FC = () => {
   };
 
   return (
-    <PoliceOSWindow title="Einsatzdokumentation • Erfassung">
-      <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 pb-20">
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 pb-20">
         
         {/* Header Section */}
         <div className="flex justify-between items-end border-b border-white/10 pb-6">
@@ -248,7 +246,6 @@ const IncidentReportPage: React.FC = () => {
 
         </form>
       </div>
-    </PoliceOSWindow>
   );
 };
 

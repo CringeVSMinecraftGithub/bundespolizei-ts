@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 import { dbCollections, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, db } from '../firebase';
 import { useAuth } from '../App';
@@ -101,8 +100,7 @@ const PressPage: React.FC = () => {
   };
 
   return (
-    <PoliceOSWindow title="Pressestelle • Meldungsverwaltung">
-      <div className="h-full flex flex-col gap-6 overflow-hidden relative">
+    <div className="h-full flex flex-col gap-6 overflow-hidden relative">
         
         {/* Header Section */}
         <div className="shrink-0 flex items-center justify-between bg-[#1a1c23]/50 p-6 rounded-2xl border border-white/5 shadow-xl">
@@ -266,7 +264,6 @@ const PressPage: React.FC = () => {
         )}
 
       </div>
-    </PoliceOSWindow>
   );
 };
 

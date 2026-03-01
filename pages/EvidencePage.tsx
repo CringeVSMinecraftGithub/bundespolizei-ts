@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 import { dbCollections, onSnapshot, query, orderBy, addDoc, deleteDoc, doc, db } from '../firebase';
 import { Evidence } from '../types';
@@ -111,8 +110,7 @@ const EvidencePage: React.FC = () => {
   };
 
   return (
-    <PoliceOSWindow title="Asservatenkammer • Beweismittelverwaltung">
-      <div className="h-full flex flex-col gap-4 overflow-hidden">
+    <div className="h-full flex flex-col gap-4 overflow-hidden">
         
         {/* Header & Controls */}
         <div className="shrink-0 flex items-center justify-between bg-[#1a1c23]/60 backdrop-blur-md p-4 rounded-[24px] border border-white/5 shadow-2xl">
@@ -282,7 +280,6 @@ const EvidencePage: React.FC = () => {
         </DataModal>
 
       </div>
-    </PoliceOSWindow>
   );
 };
 

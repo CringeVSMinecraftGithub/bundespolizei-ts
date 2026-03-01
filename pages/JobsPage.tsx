@@ -4,7 +4,6 @@ import { useAuth } from '../App';
 import { Permission, JobPosting, JobApplication } from '../types';
 import { POLICE_RANKS } from '../constants';
 import { dbCollections, onSnapshot, query, addDoc, updateDoc, doc, db, deleteDoc, where, getDocs } from '../firebase';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 
 const JobsPage: React.FC = () => {
@@ -141,8 +140,7 @@ const JobsPage: React.FC = () => {
   const canManage = hasPermission(Permission.MANAGE_JOBS);
 
   return (
-    <PoliceOSWindow title="Stellenausschreibungen">
-      <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-24 relative">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-24 relative">
         
         {statusMsg && (
           <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[2000] animate-in slide-in-from-top-4 duration-300">
@@ -517,7 +515,6 @@ const JobsPage: React.FC = () => {
           </div>
         )}
       </div>
-    </PoliceOSWindow>
   );
 };
 

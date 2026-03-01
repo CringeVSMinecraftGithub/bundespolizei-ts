@@ -3,7 +3,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../App';
 import { Message, User } from '../types';
 import { dbCollections, onSnapshot, query, orderBy, addDoc, updateDoc, doc, db, where, getDocs } from '../firebase';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 
 const CommunicationPage: React.FC = () => {
@@ -178,8 +177,7 @@ const CommunicationPage: React.FC = () => {
   );
 
   return (
-    <PoliceOSWindow title="Interne Kommunikation">
-      <div className="h-full flex flex-col gap-6 overflow-hidden">
+    <div className="h-full flex flex-col gap-6 overflow-hidden">
         
         {statusMsg && (
           <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[2000] animate-in slide-in-from-top-4 duration-300">
@@ -513,7 +511,6 @@ const CommunicationPage: React.FC = () => {
           </div>
         </DataModal>
       </div>
-    </PoliceOSWindow>
   );
 };
 

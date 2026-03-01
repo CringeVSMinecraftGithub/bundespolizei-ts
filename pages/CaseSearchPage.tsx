@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 import { dbCollections, onSnapshot, query, orderBy, updateDoc, doc, db } from '../firebase';
 import { IncidentReport, Reminder, Permission } from '../types';
@@ -134,8 +133,7 @@ const CaseSearchPage: React.FC = () => {
   };
 
   return (
-    <PoliceOSWindow title="Vorgangsverwaltung / Archiv">
-      <div className="h-full flex flex-col gap-4 overflow-hidden">
+    <div className="h-full flex flex-col gap-4 overflow-hidden">
         
         {/* Compact Search & Filter Bar */}
         <div className="shrink-0 bg-[#1a1c23]/60 backdrop-blur-md p-4 rounded-[24px] border border-white/5 flex items-center justify-between shadow-2xl">
@@ -452,7 +450,6 @@ const CaseSearchPage: React.FC = () => {
           )}
         </DataModal>
       </div>
-    </PoliceOSWindow>
   );
 };
 

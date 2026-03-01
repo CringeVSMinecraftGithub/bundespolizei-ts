@@ -1,15 +1,42 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Permission } from '../types';
 
+export const sidebarItems = [
+  // Dienstbetrieb
+  { label: 'Kalender', icon: '📅', path: '/calendar', group: 'Dienstbetrieb', perm: Permission.VIEW_CALENDAR },
+  { label: 'Termine', icon: '⏰', path: '/appointments', group: 'Dienstbetrieb' },
+  { label: 'Notizen', icon: '📓', path: '/notes', group: 'Dienstbetrieb' },
+  { label: 'Presse-Portal', icon: '📰', path: '/press', group: 'Dienstbetrieb', perm: Permission.MANAGE_NEWS },
+  { label: 'Einsatzberichte', icon: '📝', path: '/incident-report', group: 'Dienstbetrieb', perm: Permission.VIEW_REPORTS },
+  { label: 'Strafanzeigen', icon: '⚖️', path: '/criminal-complaint', group: 'Dienstbetrieb', perm: Permission.CREATE_REPORTS },
+  { label: 'Stellenausschreibungen', icon: '💼', path: '/jobs', group: 'Dienstbetrieb' },
+  { label: 'Gesetze', icon: '⚖️', path: '/laws', group: 'Dienstbetrieb' },
+  { label: 'Kommunikation', icon: '✉️', path: '/communication', group: 'Dienstbetrieb' },
+  
+  // Ermittlungen
+  { label: 'INPAS', icon: '🗂️', path: '/inpas', group: 'Ermittlungen' },
+  { label: 'Vorgangssuche', icon: '🔍', path: '/cases', group: 'Ermittlungen', perm: Permission.VIEW_REPORTS },
+  { label: 'Fahndungen', icon: '👤', path: '/warrants', group: 'Ermittlungen', perm: Permission.VIEW_WARRANTS },
+  { label: 'Asservaten', icon: '📦', path: '/evidence', group: 'Ermittlungen', perm: Permission.MANAGE_EVIDENCE },
+  { label: 'Bürgerhinweise', icon: '💡', path: '/tips', group: 'Ermittlungen', perm: Permission.VIEW_TIPS },
+  
+  // Verwaltung
+  { label: 'Fuhrpark', icon: '🚓', path: '/fleet', group: 'Verwaltung', perm: Permission.MANAGE_FLEET },
+  { label: 'Karriere', icon: '🎓', path: '/career', group: 'Verwaltung' },
+  { label: 'Organigramm', icon: '📊', path: '/org-chart', group: 'Verwaltung' },
+  { label: 'Bewerbungen', icon: '📂', path: '/applications', group: 'Verwaltung', perm: Permission.VIEW_APPLICATIONS },
+  { label: 'Administration', icon: '⚙️', path: '/admin', group: 'Verwaltung', perm: Permission.ADMIN_ACCESS },
+];
+
 interface PoliceOSWindowProps {
-  title: string;
-  children: React.ReactNode;
+  title?: string;
+  children?: React.ReactNode;
 }
 
-const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
+const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title: propTitle, children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPermission } = useAuth();
@@ -44,30 +71,9 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
     isResizing.current = true;
     document.body.style.cursor = 'col-resize';
   };
-
-  const sidebarItems = [
-    // Dienstbetrieb
-    { label: 'Kalender', icon: '📅', path: '/calendar', group: 'Dienstbetrieb', perm: Permission.VIEW_CALENDAR },
-    { label: 'Presse-Portal', icon: '📰', path: '/press', group: 'Dienstbetrieb', perm: Permission.MANAGE_NEWS },
-    { label: 'Einsatzberichte', icon: '📝', path: '/incident-report', group: 'Dienstbetrieb', perm: Permission.VIEW_REPORTS },
-    { label: 'Strafanzeigen', icon: '⚖️', path: '/criminal-complaint', group: 'Dienstbetrieb', perm: Permission.CREATE_REPORTS },
-    { label: 'Stellenausschreibungen', icon: '💼', path: '/jobs', group: 'Dienstbetrieb' },
-    { label: 'Gesetze', icon: '⚖️', path: '/laws', group: 'Dienstbetrieb' },
-    { label: 'Kommunikation', icon: '✉️', path: '/communication', group: 'Dienstbetrieb' },
-    
-    // Ermittlungen
-    { label: 'Vorgangssuche', icon: '🔍', path: '/cases', group: 'Ermittlungen', perm: Permission.VIEW_REPORTS },
-    { label: 'Fahndungen', icon: '👤', path: '/warrants', group: 'Ermittlungen', perm: Permission.VIEW_WARRANTS },
-    { label: 'Asservaten', icon: '📦', path: '/evidence', group: 'Ermittlungen', perm: Permission.MANAGE_EVIDENCE },
-    { label: 'Bürgerhinweise', icon: '💡', path: '/tips', group: 'Ermittlungen', perm: Permission.VIEW_TIPS },
-    
-    // Verwaltung
-    { label: 'Fuhrpark', icon: '🚓', path: '/fleet', group: 'Verwaltung', perm: Permission.MANAGE_FLEET },
-    { label: 'Karriere', icon: '🎓', path: '/career', group: 'Verwaltung' },
-    { label: 'Organigramm', icon: '📊', path: '/org-chart', group: 'Verwaltung' },
-    { label: 'Bewerbungen', icon: '📂', path: '/applications', group: 'Verwaltung', perm: Permission.VIEW_APPLICATIONS },
-    { label: 'Administration', icon: '⚙️', path: '/admin', group: 'Verwaltung', perm: Permission.ADMIN_ACCESS },
-  ];
+  
+  const activeItem = sidebarItems.find(item => item.path === location.pathname);
+  const title = propTitle || activeItem?.label || 'Police OS';
 
   return (
     <div className="h-full w-full bg-[#111317] flex flex-col overflow-hidden text-slate-300 select-none animate-in fade-in duration-300">
@@ -120,7 +126,7 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title, children }) => {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto bg-[#0a0c10] p-10 custom-scrollbar relative">
-          {children}
+          {children || <Outlet />}
         </main>
       </div>
 

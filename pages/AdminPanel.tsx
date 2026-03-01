@@ -4,7 +4,6 @@ import { useAuth } from '../App';
 import { Permission, User, Law, UserRole } from '../types';
 import { POLICE_LOGO_RAW, POLICE_RANKS } from '../constants';
 import { dbCollections, onSnapshot, query, setDoc, doc, db, deleteDoc, addDoc, updateDoc } from '../firebase';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 
 const LEGACY_PERMISSION_MAP: Record<string, Permission> = {
   'view_reports': Permission.VIEW_REPORTS,
@@ -207,7 +206,7 @@ const AdminPanel: React.FC = () => {
   const sortedCategories = Object.keys(groupedLaws).sort();
 
   return (
-    <PoliceOSWindow title="Systemadministration">
+    <>
       <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-700 pb-24 relative">
         
         {statusMsg && (
@@ -597,7 +596,7 @@ const AdminPanel: React.FC = () => {
            </div>
         </div>
       )}
-    </PoliceOSWindow>
+    </>
   );
 };
 

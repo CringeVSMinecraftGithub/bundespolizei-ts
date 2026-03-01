@@ -393,7 +393,11 @@ export interface InpasVehicle {
   color: string;
   firstRegistration: string;
   insuranceStatus: string;
+  insuranceCompany?: string;
+  insuranceExpiry?: string;
   wantedStatus: string;
+  lastLocation?: string;
+  notes?: string;
 }
 
 export interface InpasWeapon {

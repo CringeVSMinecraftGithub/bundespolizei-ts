@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import PoliceOSWindow from '../components/PoliceOSWindow';
 import DataModal from '../components/DataModal';
 import { dbCollections, onSnapshot, query, orderBy, updateDoc, doc, db, where, getDoc, getDocs, addDoc } from '../firebase';
 import { JobApplication, Permission, JobPosting } from '../types';
@@ -118,8 +117,7 @@ const ApplicationsPage: React.FC = () => {
   };
 
   return (
-    <PoliceOSWindow title="Personalwesen / Bewerbermanagement">
-      <div className="h-full flex flex-col gap-6 overflow-hidden">
+    <div className="h-full flex flex-col gap-6 overflow-hidden">
         
         {/* Compact Header */}
         <div className="shrink-0 flex items-center justify-between bg-[#1a1c23]/50 p-4 rounded-2xl border border-white/5 shadow-lg">
@@ -455,7 +453,6 @@ const ApplicationsPage: React.FC = () => {
           </div>
         )}
       </div>
-    </PoliceOSWindow>
   );
 };
 

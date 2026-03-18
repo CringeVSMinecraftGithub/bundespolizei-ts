@@ -1,6 +1,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, getDocs, getDoc, updateDoc, doc, onSnapshot, query, orderBy, setDoc, deleteDoc, limit, where } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDo3HTvuE3ONkJnowtrJTwjv6Us3CLPVxk",
@@ -13,6 +14,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
 
 export const dbCollections = {
   users: collection(db, "users"),
@@ -28,6 +30,7 @@ export const dbCollections = {
   news: collection(db, "news"),
   roles: collection(db, "roles"),
   orgNodes: collection(db, "orgNodes"),
+  ranks: collection(db, "ranks"),
   jobPostings: collection(db, "jobPostings"),
   notifications: collection(db, "notifications"),
   messages: collection(db, "messages"),

@@ -8,12 +8,42 @@ const SettingsModal: React.FC = () => {
   const { user, isSettingsOpen, setSettingsOpen, logout } = useAuth();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [firstName, setFirstName] = useState(user?.firstName || '');
+  const [lastName, setLastName] = useState(user?.lastName || '');
+  const [birthDate, setBirthDate] = useState(user?.birthDate || '');
+  const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilePictureUrl || '');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   if (!isSettingsOpen || !user) return null;
 
+  const handleProfileUpdate = async () => {
+    try {
+      await updateDoc(doc(db, "users", user.id), {
+        firstName,
+        lastName,
+        birthDate,
+        profilePictureUrl
+      });
+      setStatus({ type: 'success', message: 'Profil erfolgreich aktualisiert.' });
+      setTimeout(() => setStatus(null), 2000);
+    } catch (e) {
+      console.error("Error updating profile:", e);
+      setStatus({ type: 'error', message: 'Fehler beim Speichern des Profils.' });
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePictureUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const handlePasswordChange = async () => {
     if (passwords.new !== passwords.confirm) {
       setStatus({ type: 'error', message: 'Passwörter stimmen nicht überein.' });
@@ -62,33 +92,55 @@ const SettingsModal: React.FC = () => {
           <button onClick={() => setSettingsOpen(false)} className="text-slate-500 hover:text-white transition-all text-2xl p-2 hover:rotate-90">✕</button>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-12 space-y-10 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
           {status && (
             <div className={`p-4 rounded-xl text-[10px] font-bold uppercase tracking-widest animate-in fade-in slide-in-from-top-2 ${status.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
               {status.message}
             </div>
           )}
           {!showLogoutConfirm ? (
-            <>
-              <div className="flex items-center gap-8">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl flex items-center justify-center text-4xl text-white font-black shadow-xl">
-                  {user.lastName[0]}
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tighter">{user.firstName} {user.lastName}</h2>
-                  <p className="text-blue-500 text-[10px] font-black uppercase tracking-widest mt-1">{user.badgeNumber} • {user.rank}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Left Column: Profile */}
+              <div className="space-y-6">
+                <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
+                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Profil</h3>
+                  <div className="flex flex-col items-center gap-6">
+                    <div className="relative group">
+                      <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl flex items-center justify-center text-5xl text-white font-black shadow-xl overflow-hidden">
+                        {profilePictureUrl ? (
+                          <img src={profilePictureUrl} alt="Profil" className="w-full h-full object-cover" />
+                        ) : (
+                          user.lastName[0]
+                        )}
+                      </div>
+                      {profilePictureUrl && (
+                        <button onClick={() => setProfilePictureUrl('')} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                      )}
+                      <label className="absolute -bottom-2 -left-2 bg-blue-600 text-white rounded-full p-3 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                        <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                        📷
+                      </label>
+                    </div>
+                    <div className="w-full space-y-3">
+                      <input value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="Vorname" />
+                      <input value={lastName} onChange={e => setLastName(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="Nachname" />
+                      <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none" />
+                      <button onClick={handleProfileUpdate} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Profil speichern</button>
+                    </div>
+                  </div>
                 </div>
               </div>
-              
+
+              {/* Right Column: Settings & Security */}
               <div className="space-y-6">
-                <div className="p-6 bg-white/5 border border-white/5 rounded-2xl">
+                <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
                   <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Design-Thema</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <button 
                       onClick={() => handleThemeChange('blue')}
                       className={`${user.theme === 'blue' || !user.theme ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500'} py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all`}
                     >
-                      Teamstadt Blau {(!user.theme || user.theme === 'blue') && '(Aktiv)'}
+                      Münster Blau {(!user.theme || user.theme === 'blue') && '(Aktiv)'}
                     </button>
                     <button 
                       onClick={() => handleThemeChange('dark')}
@@ -99,7 +151,7 @@ const SettingsModal: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="p-6 bg-white/5 border border-white/5 rounded-2xl">
+                <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
                   <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Sicherheit</h3>
                   {isChangingPassword ? (
                     <div className="space-y-4">
@@ -146,7 +198,7 @@ const SettingsModal: React.FC = () => {
                   )}
                 </div>
                 
-                <div className="p-6 bg-red-600/10 border border-red-600/20 rounded-2xl">
+                <div className="p-6 bg-red-600/10 border border-red-600/20 rounded-3xl">
                   <h3 className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-4">Gefahrenzone</h3>
                   <button 
                     onClick={() => setShowLogoutConfirm(true)} 
@@ -156,7 +208,7 @@ const SettingsModal: React.FC = () => {
                   </button>
                 </div>
               </div>
-            </>
+            </div>
           ) : (
             <div className="py-10 text-center space-y-8 animate-in fade-in zoom-in duration-300">
               <div className="w-24 h-24 bg-red-600/20 text-red-500 rounded-full flex items-center justify-center text-5xl mx-auto animate-bounce">

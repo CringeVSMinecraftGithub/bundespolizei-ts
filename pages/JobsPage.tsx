@@ -154,7 +154,7 @@ const JobsPage: React.FC = () => {
         <div className="flex justify-between items-end border-b border-white/5 pb-8">
           <div>
             <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">Stellen<span className="text-blue-500">ausschreibungen</span></h1>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Aktuelle Karrieremöglichkeiten innerhalb der Bundespolizei</p>
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Aktuelle Karrieremöglichkeiten innerhalb der Landespolizei</p>
           </div>
           {canManage && (
             <button 

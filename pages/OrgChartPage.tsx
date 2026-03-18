@@ -178,7 +178,7 @@ const OrgChartPage: React.FC = () => {
         <div className="max-w-7xl mx-auto mb-12 flex justify-between items-end border-b border-white/5 pb-8">
           <div>
             <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">Behörden <span className="text-blue-500">Struktur</span></h1>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">Hierarchische Rangabfolge der Bundespolizei</p>
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">Hierarchische Rangabfolge der Landespolizei</p>
           </div>
           {canManage && (
             <button 

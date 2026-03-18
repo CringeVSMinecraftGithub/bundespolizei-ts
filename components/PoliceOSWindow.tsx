@@ -133,7 +133,7 @@ const PoliceOSWindow: React.FC<PoliceOSWindowProps> = ({ title: propTitle, child
       {/* OS Taskbar (Internal Mini-Status) */}
       <footer className="h-8 bg-black/60 border-t border-white/5 flex items-center justify-between px-6 shrink-0 z-50">
         <div className="text-[9px] font-black text-slate-700 uppercase tracking-widest italic">
-          Zentrales Datenbanksystem der Bundespolizei Teamstadt • Autorisierte Sitzung
+          Zentrales Datenbanksystem der Landespolizei Münster • Autorisierte Sitzung
         </div>
         <div className="flex items-center gap-4 text-[9px] font-black text-slate-600 uppercase tracking-widest">
            Status: <span className="text-emerald-500">Live</span>

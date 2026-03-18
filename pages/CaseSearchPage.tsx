@@ -218,7 +218,7 @@ const CaseSearchPage: React.FC = () => {
           maxWidth="max-w-4xl"
           footer={
             <div className="flex items-center justify-between">
-              <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Vorgangsverwaltung • BPOL Teamstadt</div>
+              <div className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Vorgangsverwaltung • LPOL Münster</div>
               <div className="flex gap-4">
                 {canManage && (
                   <>

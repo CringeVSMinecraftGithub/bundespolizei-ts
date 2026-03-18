@@ -77,37 +77,37 @@ const InpasPage: React.FC = () => {
   };
 
   const renderStartView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mt-12">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
       <button 
         onClick={() => { setMode('CITIZEN'); resetSearch(); }}
-        className="group bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 hover:border-blue-500/40 p-10 rounded-[40px] transition-all hover:scale-105 flex flex-col items-center gap-6 shadow-2xl"
+        className="group bg-[#0f172a]/80 border border-white/10 p-8 rounded-3xl transition-all hover:border-blue-500/50 hover:bg-blue-950/20 flex flex-col items-center gap-4 shadow-lg"
       >
-        <div className="w-20 h-20 bg-blue-600/20 text-blue-500 rounded-3xl flex items-center justify-center text-4xl group-hover:bg-blue-600 group-hover:text-white transition-all">👤</div>
+        <div className="w-16 h-16 bg-blue-600/10 text-blue-500 rounded-2xl flex items-center justify-center text-3xl group-hover:bg-blue-600 group-hover:text-white transition-all">👤</div>
         <div className="text-center">
-          <div className="text-lg font-black text-white uppercase tracking-widest mb-2">Bürger</div>
-          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">Personenabfrage</div>
+          <div className="text-sm font-bold text-white uppercase tracking-wider mb-1">Bürger</div>
+          <div className="text-[10px] text-slate-500 font-medium uppercase tracking-[0.2em]">Personenabfrage</div>
         </div>
       </button>
 
       <button 
         onClick={() => { setMode('VEHICLE'); resetSearch(); }}
-        className="group bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 hover:border-amber-500/40 p-10 rounded-[40px] transition-all hover:scale-105 flex flex-col items-center gap-6 shadow-2xl"
+        className="group bg-[#0f172a]/80 border border-white/10 p-8 rounded-3xl transition-all hover:border-amber-500/50 hover:bg-amber-950/20 flex flex-col items-center gap-4 shadow-lg"
       >
-        <div className="w-20 h-20 bg-amber-600/20 text-amber-500 rounded-3xl flex items-center justify-center text-4xl group-hover:bg-amber-600 group-hover:text-white transition-all">🚓</div>
+        <div className="w-16 h-16 bg-amber-600/10 text-amber-500 rounded-2xl flex items-center justify-center text-3xl group-hover:bg-amber-600 group-hover:text-white transition-all">🚓</div>
         <div className="text-center">
-          <div className="text-lg font-black text-white uppercase tracking-widest mb-2">Fahrzeuge</div>
-          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">Registerabfrage</div>
+          <div className="text-sm font-bold text-white uppercase tracking-wider mb-1">Fahrzeuge</div>
+          <div className="text-[10px] text-slate-500 font-medium uppercase tracking-[0.2em]">Registerabfrage</div>
         </div>
       </button>
 
       <button 
         onClick={() => { setMode('WEAPON'); resetSearch(); }}
-        className="group bg-[#0f172a]/60 backdrop-blur-xl border border-white/5 hover:border-red-500/40 p-10 rounded-[40px] transition-all hover:scale-105 flex flex-col items-center gap-6 shadow-2xl"
+        className="group bg-[#0f172a]/80 border border-white/10 p-8 rounded-3xl transition-all hover:border-red-500/50 hover:bg-red-950/20 flex flex-col items-center gap-4 shadow-lg"
       >
-        <div className="w-20 h-20 bg-red-600/20 text-red-500 rounded-3xl flex items-center justify-center text-4xl group-hover:bg-red-600 group-hover:text-white transition-all">🔫</div>
+        <div className="w-16 h-16 bg-red-600/10 text-red-500 rounded-2xl flex items-center justify-center text-3xl group-hover:bg-red-600 group-hover:text-white transition-all">🔫</div>
         <div className="text-center">
-          <div className="text-lg font-black text-white uppercase tracking-widest mb-2">Waffen</div>
-          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">Seriennummern</div>
+          <div className="text-sm font-bold text-white uppercase tracking-wider mb-1">Waffen</div>
+          <div className="text-[10px] text-slate-500 font-medium uppercase tracking-[0.2em]">Seriennummern</div>
         </div>
       </button>
     </div>
@@ -670,10 +670,10 @@ const InpasPage: React.FC = () => {
   );
 
   return (
-    <div className="flex h-full w-full bg-[#020617] overflow-hidden">
+    <div className="flex h-full w-full bg-[#020617] overflow-hidden font-sans text-slate-200">
       {renderSidebar()}
       
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-10 lg:p-14">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-8 lg:p-12">
         <div className="max-w-7xl mx-auto">
           <AnimatePresence mode="wait">
             {mode === 'START' && (
@@ -682,20 +682,19 @@ const InpasPage: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
+                className="space-y-12"
               >
-                <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-8">
                   <div>
-                    <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">Willkommen im INPAS</h2>
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.4em]">Wählen Sie eine Kategorie aus der Seitenleiste oder unten aus.</p>
+                    <h2 className="text-4xl font-extrabold text-white tracking-tighter mb-2">INPAS <span className="text-blue-500">Terminal</span></h2>
+                    <p className="text-xs text-slate-400 font-medium uppercase tracking-[0.2em]">Polizei-Abfrage-System | Zugriffsberechtigt</p>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="bg-white/5 border border-white/5 px-6 py-3 rounded-2xl">
-                      <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Datenbank</div>
-                      <div className="flex gap-4">
-                        <div className="text-[10px] font-bold text-blue-500 uppercase tracking-tight">{stats.citizens} Bürger</div>
-                        <div className="text-[10px] font-bold text-amber-500 uppercase tracking-tight">{stats.vehicles} Fzg.</div>
-                        <div className="text-[10px] font-bold text-red-500 uppercase tracking-tight">{stats.weapons} Waffen</div>
-                      </div>
+                  <div className="bg-white/5 border border-white/10 px-6 py-3 rounded-2xl flex items-center gap-6">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Datenbank-Status:</div>
+                    <div className="flex gap-6">
+                      <div className="text-sm font-bold text-blue-400">{stats.citizens} Bürger</div>
+                      <div className="text-sm font-bold text-amber-400">{stats.vehicles} Fzg.</div>
+                      <div className="text-sm font-bold text-red-400">{stats.weapons} Waffen</div>
                     </div>
                   </div>
                 </div>
@@ -717,9 +716,9 @@ const InpasPage: React.FC = () => {
             {(selectedCitizen || selectedVehicle || selectedWeapon) && (
               <motion.div 
                 key="detail"
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                exit={{ opacity: 0, scale: 0.98 }}
               >
                 {renderDetailView()}
               </motion.div>

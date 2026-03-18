@@ -24,7 +24,7 @@ const Header: React.FC = () => {
       {/* Zentraler Bereich: Banner - Jetzt mit vertikaler Zentrierung */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none">
         <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight drop-shadow-2xl text-center whitespace-nowrap">
-          Bundespolizei Teamstadt
+          Landespolizei Münster
         </h1>
         <div className="h-1.5 w-40 bg-blue-600 rounded-full mt-2 shadow-[0_0_15px_rgba(37,99,235,0.8)]"></div>
       </div>
@@ -32,9 +32,9 @@ const Header: React.FC = () => {
       {/* Rechter Bereich: Profil & Actions */}
       <div className="flex items-center gap-6">
         <div className="text-right flex flex-col justify-center border-r border-white/10 pr-8">
-          <div className="text-xl font-black text-white uppercase tracking-tighter leading-none mb-1.5">
+          <Link to="/profile" className="text-xl font-black text-white uppercase tracking-tighter leading-none mb-1.5 hover:text-blue-400 transition-colors">
             {user.firstName} {user.lastName}
-          </div>
+          </Link>
           <div className="flex flex-col items-end gap-1">
              <div className="text-[10px] text-blue-500 font-black uppercase tracking-[0.2em] leading-none">
                 {user.rank} • {user.badgeNumber}

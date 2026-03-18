@@ -1,6 +1,6 @@
 {
-  "name": "Copy of Bundespolizei Teamstadt Intranet",
-  "description": "Ein hochmodernes, sicheres Intranet-System für die Bundespolizei Teamstadt mit Bürgerservices, Einsatzdokumentation und integrierter Rechteverwaltung.",
+  "name": "Copy of Landespolizei Münster Intranet",
+  "description": "Ein hochmodernes, sicheres Intranet-System für die Landespolizei Münster mit Bürgerservices, Einsatzdokumentation und integrierter Rechteverwaltung.",
   "requestFramePermissions": [
     "camera"
   ]

@@ -34,6 +34,14 @@ export interface UserRole {
   isSpecial: boolean;
 }
 
+export interface Rank {
+  id: string;
+  name: string;
+  group: 'Höherer Dienst' | 'Gehobener Dienst' | 'Mittlerer Dienst';
+  level: number;
+  short: string;
+}
+
 export interface User {
   id: string;
   firstName: string;
@@ -47,6 +55,8 @@ export interface User {
   password?: string;
   isLocked?: boolean;
   theme?: 'blue' | 'dark';
+  birthDate?: string;
+  profilePictureUrl?: string;
 }
 
 export interface PressRelease {

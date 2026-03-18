@@ -3,17 +3,17 @@ import React from 'react';
 import { Permission } from './types';
 
 // Permanenter Link für das Logo (Postimages)
-export const POLICE_LOGO_RAW = "https://i.postimg.cc/QtKgbk3m/bpoltssternv1.png"; 
+export const POLICE_LOGO_RAW = "https://upload.wikimedia.org/wikipedia/de/thumb/d/d8/Polizeistern_NRW.svg/960px-Polizeistern_NRW.svg.png"; 
 
 // Aktualisierte Hintergrundbilder mit permanentem Link
-export const DASHBOARD_BG = "https://i.postimg.cc/J4XrLyrV/bpolintranethintergrund.jpg"; 
-export const BPOL_STATION_BG = "https://i.postimg.cc/J4XrLyrV/bpolintranethintergrund.jpg"; 
+export const DASHBOARD_BG = "https://blaulicht-magazin.net/wp-content/uploads/2021/04/IMNRW-210408-038-scaled.jpg"; 
+export const BPOL_STATION_BG = "https://blaulicht-magazin.net/wp-content/uploads/2021/04/IMNRW-210408-038-scaled.jpg"; 
 
-export const APP_NAME = "BUNDESPOLIZEI TEAMSTADT";
+export const APP_NAME = "LANDESPOLIZEI MÜNSTER";
 
 export const POLICE_RANKS = [
-  { name: 'Bundespolizeipräsident', group: 'Höherer Dienst', level: 1, short: 'BPP' },
-  { name: 'Bundespolizeivizepräsident', group: 'Höherer Dienst', level: 2, short: 'BPVP' },
+  { name: 'Polizeipräsident', group: 'Höherer Dienst', level: 1, short: 'PP' },
+  { name: 'Polizeivizepräsident', group: 'Höherer Dienst', level: 2, short: 'PVP' },
   { name: 'Leitender Polizeidirektor B3', group: 'Höherer Dienst', level: 3, short: 'LPD B3' },
   { name: 'Leitender Polizeidirektor B2', group: 'Höherer Dienst', level: 4, short: 'LPD B2' },
   { name: 'Leitender Polizeidirektor', group: 'Höherer Dienst', level: 5, short: 'LPD' },
@@ -41,7 +41,7 @@ export const DEFAULT_ADMIN: any = {
   id: 'admin-1',
   firstName: 'Thomas',
   lastName: 'Mueller',
-  rank: 'Bundespolizeipräsident',
+  rank: 'Polizeipräsident',
   badgeNumber: 'Adler 51/01',
   role: 'LS',
   isAdmin: true,

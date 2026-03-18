@@ -435,7 +435,7 @@ const CommunicationPage: React.FC = () => {
           isOpen={isNewMessageModalOpen}
           onClose={() => setIsNewMessageModalOpen(false)}
           title="Neue Nachricht verfassen"
-          subtitle="Interne Kommunikation der Bundespolizei"
+          subtitle="Interne Kommunikation der Landespolizei"
           icon="✉️"
           maxWidth="max-w-2xl"
         >

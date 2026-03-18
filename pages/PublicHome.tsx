@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../App';
 import { POLICE_LOGO_RAW } from '../constants';
 import { dbCollections, addDoc, onSnapshot, query, orderBy, limit, getDocs, where, updateDoc, doc } from '../firebase';
 import { PressRelease, User, Appointment, AppointmentStatus } from '../types';
+import { Shield, FileText, Briefcase, Calendar, Search, Newspaper, LogIn, ChevronRight, Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 const PublicHome: React.FC = () => {
   const navigate = useNavigate();
@@ -265,22 +267,33 @@ const PublicHome: React.FC = () => {
     <div className="min-h-screen bg-[#0f172a] text-slate-100 overflow-x-hidden selection:bg-blue-500/30">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#334155,transparent)] pointer-events-none"></div>
 
-      {modalType && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/90 backdrop-blur-3xl animate-in fade-in">
-          <div className={`w-full ${(modalType === 'Bewerbung') || (modalType === 'Internetwache') ? 'max-w-6xl' : 'max-w-xl'} bg-[#1e293b] border border-white/10 rounded-[40px] p-0 shadow-2xl max-h-[95vh] flex flex-col relative overflow-hidden transition-all duration-500`}>
-            
-            <button 
-              onClick={() => { setModalType(null); setAppStep('Selection'); setIwStep('Selection'); setIsAnonymous(true); setCheckCode(''); setCheckResult(null); setCheckError(null); }} 
-              className="absolute top-8 right-8 w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-full text-slate-400 hover:text-white z-50 transition-colors"
+      <AnimatePresence>
+        {modalType && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className={`w-full ${(modalType === 'Bewerbung') || (modalType === 'Internetwache') ? 'max-w-6xl' : 'max-w-xl'} bg-[#0f172a] border border-white/10 rounded-[48px] p-0 shadow-[0_0_100px_rgba(0,0,0,0.5)] max-h-[95vh] flex flex-col relative overflow-hidden transition-all duration-500`}
             >
-              ✕
-            </button>
+              
+              <button 
+                onClick={() => { setModalType(null); setAppStep('Selection'); setIwStep('Selection'); setIsAnonymous(true); setCheckCode(''); setCheckResult(null); setCheckError(null); }} 
+                className="absolute top-8 right-8 w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-red-600 rounded-2xl text-slate-400 hover:text-white z-50 transition-all active:scale-90 border border-white/5"
+              >
+                ✕
+              </button>
 
             {submitted ? (
               <div className="flex-1 flex flex-col items-center justify-center p-20 text-center space-y-6">
                 <div className="w-24 h-24 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center text-5xl mx-auto border border-emerald-500/20">✓</div>
                 <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Übermittlung erfolgt</h2>
-                <p className="text-slate-400 uppercase text-[10px] font-black tracking-widest">Die Bundespolizei dankt für Ihre Mitarbeit.</p>
+                <p className="text-slate-400 uppercase text-[10px] font-black tracking-widest">Die Landespolizei dankt für Ihre Mitarbeit.</p>
               </div>
             ) : (
               <div className="flex flex-col h-full overflow-hidden">
@@ -334,7 +347,7 @@ const PublicHome: React.FC = () => {
                             </div>
                             
                             <div className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Informationen der Bundespolizei</h4>
+                              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Informationen der Landespolizei</h4>
                               <p className="text-sm text-slate-300 leading-relaxed font-medium">
                                 {checkResult.status === 'Eingegangen' && "Ihre Bewerbung ist erfolgreich bei uns eingegangen und wird in Kürze gesichtet."}
                                 {checkResult.status === 'In Prüfung' && "Ihre Unterlagen werden aktuell von unserer Personalabteilung geprüft. Bitte haben Sie etwas Geduld."}
@@ -392,7 +405,7 @@ const PublicHome: React.FC = () => {
                         <div className="p-10 bg-slate-800/60 border-b border-white/10 flex justify-between items-center shrink-0">
                           <div className="space-y-1">
                             <h3 className="text-4xl font-black text-white uppercase tracking-tighter">Termin <span className="text-blue-500">buchen</span></h3>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Offizielle Terminanfrage an die Bundespolizei</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Offizielle Terminanfrage an die Landespolizei</p>
                           </div>
                         </div>
 
@@ -615,7 +628,7 @@ const PublicHome: React.FC = () => {
                            <button onClick={() => setIwStep('Anzeige')} className="bg-slate-800/40 border border-white/5 p-10 rounded-[48px] text-left hover:border-blue-500/50 hover:bg-blue-600/5 transition-all group shadow-2xl">
                               <div className="w-16 h-16 bg-blue-600/10 text-blue-500 rounded-3xl flex items-center justify-center text-3xl mb-8 border border-blue-600/20 group-hover:scale-110 transition-transform">⚖️</div>
                               <h3 className="text-3xl font-black text-white uppercase mb-4 tracking-tighter">Strafanzeige <span className="text-blue-500">erstatten</span></h3>
-                              <p className="text-slate-400 text-[11px] leading-relaxed uppercase font-bold tracking-widest mb-6">Sie möchten eine Straftat melden, die in den Zuständigkeitsbereich der Bundespolizei fällt.</p>
+                              <p className="text-slate-400 text-[11px] leading-relaxed uppercase font-bold tracking-widest mb-6">Sie möchten eine Straftat melden, die in den Zuständigkeitsbereich der Landespolizei fällt.</p>
                               <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest pt-6 border-t border-white/5">Vorgang starten ➔</div>
                            </button>
 
@@ -683,7 +696,7 @@ const PublicHome: React.FC = () => {
                                  </div>
                                  <div className="space-y-2 md:col-span-2">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Anschrift (Straße, Hausnr, PLZ, Ort)</label>
-                                    <input name="address" required={!isAnonymous || iwStep === 'Anzeige'} placeholder="Musterstr. 1, 12345 Teamstadt" className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-blue-500 outline-none transition-all" />
+                                    <input name="address" required={!isAnonymous || iwStep === 'Anzeige'} placeholder="Musterstr. 1, 12345 Münster" className="w-full bg-slate-900/50 border border-white/10 p-5 rounded-2xl text-white font-bold focus:border-blue-500 outline-none transition-all" />
                                  </div>
                                  <div className="space-y-2">
                                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-4">Telefon / Kontakt</label>
@@ -741,7 +754,7 @@ const PublicHome: React.FC = () => {
                        <div className="flex-1 overflow-y-auto p-12 space-y-10 custom-scrollbar">
                         <div className="text-center space-y-4">
                           <h2 className="text-5xl font-black text-white uppercase tracking-tighter">Karriere<span className="text-emerald-500">portal</span></h2>
-                          <p className="text-slate-400 text-[10px] uppercase tracking-[0.4em] font-black">Ihre Zukunft bei der Bundespolizei</p>
+                          <p className="text-slate-400 text-[10px] uppercase tracking-[0.4em] font-black">Ihre Zukunft bei der Landespolizei</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                            <button onClick={() => { setCareerPath('Mittlerer Dienst'); setAppStep('Info'); }} className="bg-slate-800/40 border border-white/5 p-10 rounded-[48px] text-left hover:border-emerald-500/50 hover:bg-emerald-600/5 transition-all group shadow-2xl">
@@ -798,7 +811,7 @@ const PublicHome: React.FC = () => {
                                        { step: "02", title: "Vorauswahl", desc: "Prüfung Ihrer Daten durch unsere Personalabteilung." },
                                        { step: "03", title: "Eignungstest", desc: "Sporttest und persönliches Auswahlgespräch." },
                                        { step: "04", title: "Ärztliche Untersuchung", desc: "Feststellung der Polizeidiensttauglichkeit." },
-                                       { step: "05", title: "Einstellung", desc: "Beginn Ihrer Karriere bei der Bundespolizei." }
+                                       { step: "05", title: "Einstellung", desc: "Beginn Ihrer Karriere bei der Landespolizei." }
                                     ].map((item, idx) => (
                                        <div key={idx} className="flex gap-6 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                                           <div className="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-500 flex items-center justify-center font-black text-xs shrink-0">{item.step}</div>
@@ -969,7 +982,7 @@ const PublicHome: React.FC = () => {
                         <div className="w-32 h-32 bg-emerald-500/10 text-emerald-500 rounded-[40px] flex items-center justify-center text-6xl mx-auto border border-emerald-500/20 shadow-2xl shadow-emerald-900/20">✓</div>
                         <div className="space-y-2">
                            <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Bewerbung übermittelt</h2>
-                           <p className="text-slate-400 uppercase text-[10px] font-black tracking-[0.3em]">Vielen Dank für Ihr Interesse an der Bundespolizei.</p>
+                           <p className="text-slate-400 uppercase text-[10px] font-black tracking-[0.3em]">Vielen Dank für Ihr Interesse an der Landespolizei.</p>
                         </div>
                         
                         <div className="bg-black/40 border border-white/10 p-10 rounded-[40px] w-full max-w-md space-y-6 shadow-2xl">
@@ -1019,88 +1032,219 @@ const PublicHome: React.FC = () => {
                     ))}
                   </div>
                 )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <nav className="h-28 bg-[#1e293b]/95 backdrop-blur-xl border-b border-blue-800/40 flex items-center justify-between px-12 shadow-2xl relative z-[100] shrink-0">
-        <img src={POLICE_LOGO_RAW} alt="BPOL" className="h-20 w-auto" />
+      <nav className="h-28 bg-[#0f172a]/90 backdrop-blur-2xl border-b border-blue-900/30 flex items-center justify-between px-12 shadow-2xl fixed top-0 left-0 right-0 z-[100] shrink-0">
+        <img src={POLICE_LOGO_RAW} alt="BPOL" className="h-20 w-auto drop-shadow-[0_0_15px_rgba(59,130,246,0.2)]" />
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none">
           <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight drop-shadow-2xl text-center whitespace-nowrap">
-            Bundespolizei Teamstadt
+            Landespolizei Münster
           </h1>
-          <div className="h-1.5 w-40 bg-blue-500 rounded-full mt-2 shadow-[0_0_15px_rgba(59,130,246,0.6)]"></div>
+          <div className="h-1.5 w-40 bg-blue-500 rounded-full mt-2 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
         </div>
-        <button onClick={() => setModalType('Login')} className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all">Dienst-Login</button>
+        <button 
+          onClick={() => setModalType('Login')} 
+          className="group flex items-center gap-3 bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20 active:scale-95"
+        >
+          <LogIn className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          Dienst-Login
+        </button>
       </nav>
 
-      <section className="pt-32 pb-40 px-6 max-w-7xl mx-auto text-center relative z-10">
-        <h1 className="text-8xl lg:text-[10rem] font-black tracking-tighter text-white mb-10 leading-[0.8] uppercase">
-          Sicherheit für <br/>
-          <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Teamstadt.</span>
-        </h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mt-24">
-           <div onClick={() => setModalType('News')} className="group p-10 bg-slate-800/40 border border-white/10 rounded-[48px] hover:bg-blue-600/10 transition-all text-left cursor-pointer">
-              <div className="text-4xl mb-6">📰</div>
-              <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Presse</h3>
-              <p className="text-slate-400 text-xs leading-relaxed uppercase font-bold tracking-widest">Berichte & News</p>
-           </div>
-           <div onClick={() => {setModalType('Internetwache'); setIwStep('Selection');}} className="group p-10 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 rounded-[48px] hover:scale-105 transition-all text-left cursor-pointer shadow-[0_20px_60px_rgba(59,130,246,0.1)]">
-              <div className="text-4xl mb-6">🏛️</div>
-              <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2 italic">Internetwache</h3>
-              <p className="text-blue-400 text-xs uppercase font-black tracking-widest">Anzeigen & Meldungen</p>
-           </div>
-           <div onClick={() => {setModalType('Bewerbung'); setAppStep('Selection');}} className="group p-10 bg-slate-800/40 border border-white/10 rounded-[48px] hover:bg-indigo-600/10 transition-all text-left cursor-pointer">
-              <div className="text-4xl mb-6">👨‍✈️</div>
-              <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Karriere</h3>
-              <p className="text-slate-400 text-xs leading-relaxed uppercase font-bold tracking-widest">Bewerbungsportal</p>
-           </div>
-        </div>
+      <main className="pt-24">
+        {/* Hero Section */}
+        <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 overflow-hidden">
+          {/* Background Elements */}
+          <div className="absolute inset-0 z-0">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] animate-pulse delay-700"></div>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+          </div>
 
-        <div className="mt-12 flex flex-wrap justify-center gap-6">
-           <button 
-             onClick={() => { setModalType('TerminBuchung'); setAppStep('Selection'); }}
-             className="bg-blue-600 hover:bg-blue-500 text-white px-12 py-6 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/40 transition-all active:scale-95 flex items-center gap-4"
-           >
-             <span className="text-2xl">📅</span>
-             Termin buchen
-           </button>
-           <button 
-             onClick={() => { setModalType('TerminStatus'); setCheckCode(''); setCheckResult(null); }}
-             className="bg-white/5 hover:bg-white/10 text-slate-300 px-12 py-6 rounded-3xl font-black text-xs uppercase tracking-[0.2em] border border-white/10 transition-all active:scale-95 flex items-center gap-4"
-           >
-             <span className="text-2xl">🔍</span>
-             Terminstatus prüfen
-           </button>
-        </div>
-      </section>
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="relative z-10 text-center max-w-5xl mx-auto"
+          >
+            <div className="inline-flex items-center gap-3 bg-blue-600/10 border border-blue-500/20 px-6 py-2 rounded-full mb-8 backdrop-blur-md">
+              <Shield className="w-4 h-4 text-blue-500" />
+              <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em]">Offizielles Bürgerportal</span>
+            </div>
+            
+            <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-white mb-8 leading-[0.85] uppercase">
+              Sicherheit für <br/>
+              <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">Teamstadt.</span>
+            </h1>
+            
+            <p className="text-slate-400 text-lg md:text-xl font-medium max-w-2xl mx-auto mb-16 leading-relaxed">
+              Ihr direkter Draht zur Landespolizei. Melden Sie Vorfälle, bewerben Sie sich für den Dienst oder verwalten Sie Ihre Termine – sicher und digital.
+            </p>
 
-      <section className="bg-slate-900/50 border-y border-white/10 py-24 relative z-10">
-        <div className="max-w-7xl mx-auto px-12">
-           <div className="flex justify-between items-end mb-12">
-              <div>
-                 <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Aktuelle <span className="text-blue-400">Meldungen</span></h2>
-                 <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-2">Informationen direkt aus der Pressestelle</p>
-              </div>
-           </div>
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {news.slice(0, 3).map(n => (
-                <div key={n.id} className="bg-[#1e293b] border border-white/10 p-8 rounded-[40px] text-left shadow-xl">
-                   <div className="text-[10px] font-black text-slate-500 mb-4">{new Date(n.timestamp).toLocaleDateString('de-DE')}</div>
-                   <h3 className="text-xl font-black text-white uppercase mb-4 line-clamp-2">{n.title}</h3>
-                   <p className="text-slate-400 text-xs line-clamp-3 leading-relaxed">{n.content}</p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {[
+                { 
+                  type: 'News', 
+                  icon: <Newspaper className="w-8 h-8" />, 
+                  title: 'Presse', 
+                  desc: 'Aktuelle Berichte', 
+                  color: 'blue',
+                  onClick: () => setModalType('News')
+                },
+                { 
+                  type: 'Internetwache', 
+                  icon: <Shield className="w-8 h-8" />, 
+                  title: 'Internetwache', 
+                  desc: 'Anzeigen & Meldungen', 
+                  color: 'emerald',
+                  featured: true,
+                  onClick: () => {setModalType('Internetwache'); setIwStep('Selection');}
+                },
+                { 
+                  type: 'Bewerbung', 
+                  icon: <Briefcase className="w-8 h-8" />, 
+                  title: 'Karriere', 
+                  desc: 'Bewerbungsportal', 
+                  color: 'indigo',
+                  onClick: () => {setModalType('Bewerbung'); setAppStep('Selection');}
+                }
+              ].map((item, idx) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + idx * 0.1 }}
+                  onClick={item.onClick}
+                  className={`group relative p-8 rounded-[32px] border transition-all cursor-pointer overflow-hidden ${
+                    item.featured 
+                      ? 'bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border-blue-500/40 shadow-[0_20px_50px_rgba(59,130,246,0.15)] scale-105 z-10' 
+                      : 'bg-slate-900/40 border-white/5 hover:border-white/20 hover:bg-slate-800/60'
+                  }`}
+                >
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border transition-transform group-hover:scale-110 duration-500 ${
+                    item.color === 'blue' ? 'bg-blue-600/10 text-blue-500 border-blue-500/20' :
+                    item.color === 'emerald' ? 'bg-emerald-600/10 text-emerald-500 border-emerald-500/20' :
+                    'bg-indigo-600/10 text-indigo-500 border-indigo-500/20'
+                  }`}>
+                    {item.icon}
+                  </div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">{item.title}</h3>
+                  <p className="text-slate-400 text-[10px] uppercase font-black tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">{item.desc}</p>
+                  
+                  <div className="absolute bottom-8 right-8 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all">
+                    <ChevronRight className="w-6 h-6 text-white" />
+                  </div>
+                </motion.div>
               ))}
-           </div>
-        </div>
-      </section>
+            </div>
 
-      <footer className="py-20 text-center opacity-40">
-         <p className="text-[9px] font-black uppercase tracking-[0.5em]">© 2026 Bundespolizei Teamstadt Intranet V3.0</p>
-      </footer>
+            <div className="mt-16 flex flex-wrap justify-center gap-4">
+              <button 
+                onClick={() => { setModalType('TerminBuchung'); setAppStep('Selection'); }}
+                className="group bg-blue-600 hover:bg-blue-500 text-white px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/40 transition-all active:scale-95 flex items-center gap-4"
+              >
+                <Calendar className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                Termin buchen
+              </button>
+              <button 
+                onClick={() => { setModalType('TerminStatus'); setCheckCode(''); setCheckResult(null); }}
+                className="group bg-white/5 hover:bg-white/10 text-slate-300 px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] border border-white/10 transition-all active:scale-95 flex items-center gap-4"
+              >
+                <Search className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                Terminstatus prüfen
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Scroll Indicator */}
+          <motion.div 
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30"
+          >
+            <div className="w-px h-12 bg-gradient-to-b from-transparent via-white to-transparent"></div>
+          </motion.div>
+        </section>
+
+        {/* News Section */}
+        <section className="bg-slate-950/50 border-y border-white/5 py-32 relative">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 gap-6">
+              <div className="text-center md:text-left">
+                <div className="inline-flex items-center gap-2 text-blue-500 font-black text-[10px] uppercase tracking-[0.3em] mb-4">
+                  <div className="w-8 h-px bg-blue-500"></div>
+                  Aktuelle Meldungen
+                </div>
+                <h2 className="text-5xl font-black text-white uppercase tracking-tighter">
+                  Presse <span className="text-blue-500">Portal</span>
+                </h2>
+              </div>
+              <button 
+                onClick={() => setModalType('News')}
+                className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors flex items-center gap-2 group"
+              >
+                Alle Meldungen ansehen
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {news.slice(0, 3).map((n, idx) => (
+                <motion.div 
+                  key={n.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="group bg-slate-900/40 border border-white/5 p-10 rounded-[40px] text-left hover:bg-slate-800/60 transition-all hover:border-white/10 shadow-xl flex flex-col h-full"
+                >
+                  <div className="flex justify-between items-center mb-8">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                      {new Date(n.timestamp).toLocaleDateString('de-DE')}
+                    </span>
+                    <span className="bg-blue-600/10 text-blue-500 border border-blue-500/20 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">
+                      {n.category}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-black text-white uppercase mb-6 line-clamp-2 tracking-tight group-hover:text-blue-400 transition-colors">
+                    {n.title}
+                  </h3>
+                  <p className="text-slate-400 text-sm line-clamp-4 leading-relaxed font-medium mb-8 flex-1">
+                    {n.content}
+                  </p>
+                  <button 
+                    onClick={() => setModalType('News')}
+                    className="text-[10px] font-black text-blue-500 uppercase tracking-widest flex items-center gap-2 group/btn"
+                  >
+                    Weiterlesen
+                    <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-32 px-6 border-t border-white/5 bg-slate-950">
+          <div className="max-w-7xl mx-auto flex flex-col items-center">
+            <img src={POLICE_LOGO_RAW} alt="BPOL" className="h-24 w-auto mb-12 opacity-20 grayscale" />
+            <div className="flex flex-wrap justify-center gap-12 mb-16">
+              {['Datenschutz', 'Impressum', 'Kontakt', 'Barrierefreiheit'].map(item => (
+                <a key={item} href="#" className="text-[10px] font-black text-slate-600 hover:text-white uppercase tracking-[0.3em] transition-colors">{item}</a>
+              ))}
+            </div>
+            <p className="text-[9px] font-black text-slate-700 uppercase tracking-[0.5em]">
+              © 2026 Landespolizei Münster • Zentrales Bürgerportal V4.0
+            </p>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { useAuth } from '../App';
 import { Permission, User, Law, UserRole } from '../types';
 import { POLICE_LOGO_RAW, POLICE_RANKS } from '../constants';
 import { dbCollections, onSnapshot, query, setDoc, doc, db, deleteDoc, addDoc, updateDoc } from '../firebase';
+import RanksManagement from '../components/RanksManagement';
 
 const LEGACY_PERMISSION_MAP: Record<string, Permission> = {
   'view_reports': Permission.VIEW_REPORTS,
@@ -34,7 +35,7 @@ const LAW_ABBREVIATIONS = [
 
 const AdminPanel: React.FC = () => {
   const { roles: allRoles, hasPermission, user: currentUser } = useAuth();
-  const [tab, setTab] = useState<'Users' | 'Roles' | 'Laws'>('Users');
+  const [tab, setTab] = useState<'Users' | 'Ranks' | 'Roles' | 'Laws'>('Users');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [isLawModalOpen, setIsLawModalOpen] = useState(false);
@@ -227,6 +228,7 @@ const AdminPanel: React.FC = () => {
           <button onClick={() => setTab('Users')} className={`px-8 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${tab === 'Users' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Mitarbeiter</button>
           {(currentUser?.isAdmin || hasPermission(Permission.ADMIN_ACCESS)) && (
             <>
+              <button onClick={() => setTab('Ranks')} className={`px-8 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${tab === 'Ranks' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Dienstgrade</button>
               <button onClick={() => setTab('Roles')} className={`px-8 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${tab === 'Roles' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Rollen & Rechte</button>
               <button onClick={() => setTab('Laws')} className={`px-8 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${tab === 'Laws' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Gesetzestexte</button>
             </>
@@ -307,6 +309,8 @@ const AdminPanel: React.FC = () => {
             </div>
           </div>
         )}
+
+        {tab === 'Ranks' && <RanksManagement />}
 
         {tab === 'Roles' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-right-2">

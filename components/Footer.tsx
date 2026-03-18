@@ -120,12 +120,17 @@ const Footer: React.FC = () => {
       {isStartMenuOpen && (
         <div className="fixed bottom-14 left-2 w-80 bg-[#0f172a] border border-white/10 rounded-3xl p-4 z-[150] shadow-2xl animate-in slide-in-from-bottom-4 backdrop-blur-3xl">
           <div className="p-6 border-b border-white/5 mb-4 flex items-center gap-5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center font-black text-white text-xl shadow-lg border border-white/10">
-              {user.lastName[0]}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center font-black text-white text-xl shadow-lg border border-white/10 overflow-hidden">
+              {user.profilePictureUrl ? (
+                <img src={user.profilePictureUrl} alt="Profil" className="w-full h-full object-cover" />
+              ) : (
+                user.lastName[0]
+              )}
             </div>
             <div className="flex flex-col">
-              <div className="text-[11px] font-black uppercase text-white tracking-tighter">{user.rank} {user.lastName}</div>
-              <div className="text-[8px] text-blue-500 font-bold uppercase tracking-widest mt-1">{mainRole?.name || user.role}</div>
+              <div className="text-[11px] font-black uppercase text-white tracking-tighter">{user.firstName} {user.lastName}</div>
+              <div className="text-[9px] text-blue-400 font-black uppercase tracking-widest mt-0.5">{user.rank}</div>
+              <div className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{mainRole?.name || user.role}</div>
             </div>
           </div>
           

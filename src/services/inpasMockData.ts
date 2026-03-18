@@ -339,7 +339,7 @@ export const MOCK_VEHICLES: InpasVehicle[] = [
     insuranceCompany: 'Allianz',
     insuranceExpiry: '01.01.2027',
     wantedStatus: 'Keine Fahndung',
-    lastLocation: 'Hauptstraße 12, Teamstadt',
+    lastLocation: 'Hauptstraße 12, Münster',
     notes: 'Keine Besonderheiten.'
   },
   {

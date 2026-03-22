@@ -26,6 +26,7 @@ import CareerPage from '../pages/CareerPage';
 import AppointmentsPage from '../pages/AppointmentsPage';
 import NotesPage from '../pages/NotesPage';
 import InpasPage from '../pages/InpasPage';
+import WarrantDashboardPage from '../pages/WarrantDashboardPage';
 import ProfilePage from '../pages/ProfilePage';
 
 import Header from './Header';
@@ -53,6 +54,7 @@ const DesktopView: React.FC<{ desktopId: string; isActive: boolean }> = ({ deskt
                 <Route path="/fleet" element={user && hasPermission(Permission.MANAGE_FLEET) ? <FleetPage /> : <Navigate to="/dashboard" />} />
                 <Route path="/evidence" element={user && hasPermission(Permission.MANAGE_EVIDENCE) ? <EvidencePage /> : <Navigate to="/dashboard" />} />
                 <Route path="/warrants" element={user && hasPermission(Permission.VIEW_WARRANTS) ? <WarrantPage /> : <Navigate to="/dashboard" />} />
+                <Route path="/warrant-dashboard" element={user && hasPermission(Permission.VIEW_WARRANTS) ? <WarrantDashboardPage /> : <Navigate to="/dashboard" />} />
                 <Route path="/cases" element={user && hasPermission(Permission.VIEW_REPORTS) ? <CaseSearchPage /> : <Navigate to="/dashboard" />} />
                 <Route path="/calendar" element={user && hasPermission(Permission.VIEW_CALENDAR) ? <CalendarPage /> : <Navigate to="/dashboard" />} />
                 <Route path="/press" element={user && hasPermission(Permission.MANAGE_NEWS) ? <PressPage /> : <Navigate to="/dashboard" />} />

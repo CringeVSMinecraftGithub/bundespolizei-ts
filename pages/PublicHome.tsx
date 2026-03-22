@@ -1079,7 +1079,7 @@ const PublicHome: React.FC = () => {
             
             <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-white mb-8 leading-[0.85] uppercase">
               Sicherheit für <br/>
-              <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">Teamstadt.</span>
+              <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">Münster.</span>
             </h1>
             
             <p className="text-slate-400 text-lg md:text-xl font-medium max-w-2xl mx-auto mb-16 leading-relaxed">
@@ -1159,15 +1159,6 @@ const PublicHome: React.FC = () => {
                 Terminstatus prüfen
               </button>
             </div>
-          </motion.div>
-
-          {/* Scroll Indicator */}
-          <motion.div 
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30"
-          >
-            <div className="w-px h-12 bg-gradient-to-b from-transparent via-white to-transparent"></div>
           </motion.div>
         </section>
 

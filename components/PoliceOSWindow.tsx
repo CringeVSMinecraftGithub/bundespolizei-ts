@@ -20,6 +20,7 @@ export const sidebarItems = [
   { label: 'INPAS', icon: '🗂️', path: '/inpas', group: 'Ermittlungen' },
   { label: 'Vorgangssuche', icon: '🔍', path: '/cases', group: 'Ermittlungen', perm: Permission.VIEW_REPORTS },
   { label: 'Fahndungen', icon: '👤', path: '/warrants', group: 'Ermittlungen', perm: Permission.VIEW_WARRANTS },
+  { label: 'Fahndungs-Dashboard', icon: '📊', path: '/warrant-dashboard', group: 'Ermittlungen', perm: Permission.VIEW_WARRANTS },
   { label: 'Asservaten', icon: '📦', path: '/evidence', group: 'Ermittlungen', perm: Permission.MANAGE_EVIDENCE },
   { label: 'Bürgerhinweise', icon: '💡', path: '/tips', group: 'Ermittlungen', perm: Permission.VIEW_TIPS },
   

@@ -257,25 +257,25 @@ const CareerPage: React.FC = () => {
         )}
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-4 p-4 bg-[#1a1c23]/50 border border-white/5 rounded-[32px] shadow-xl">
+        <div className="flex flex-wrap gap-4 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
           <div className="flex flex-col gap-2">
-            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest ml-2">Beamte</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-2">Beamte</span>
             <div className="flex gap-2">
               <button 
                 onClick={() => setActiveTab('MyCareer')}
-                className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'MyCareer' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'MyCareer' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
               >
                 Meine Karriere
               </button>
               <button 
                 onClick={() => setActiveTab('Trainings')}
-                className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'Trainings' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'Trainings' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
               >
                 Ausbildungen
               </button>
               <button 
                 onClick={() => setActiveTab('Courses')}
-                className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'Courses' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'Courses' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
               >
                 Fortbildungen
               </button>
@@ -283,13 +283,13 @@ const CareerPage: React.FC = () => {
           </div>
 
           {(canManageCareer || canManageTrainings || canManageCourses) && (
-            <div className="flex flex-col gap-2 border-l border-white/10 pl-4">
-              <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest ml-2">Ausbilder</span>
+            <div className="flex flex-col gap-2 border-l border-slate-200 pl-4">
+              <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider ml-2">Ausbilder</span>
               <div className="flex gap-2">
                 {canManageCareer && (
                   <button 
                     onClick={() => setActiveTab('ManageCareers')}
-                    className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'ManageCareers' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                    className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'ManageCareers' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'}`}
                   >
                     Karrieren verwalten
                   </button>
@@ -297,7 +297,7 @@ const CareerPage: React.FC = () => {
                 {canManageTrainings && (
                   <button 
                     onClick={() => setActiveTab('ManageTrainings')}
-                    className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'ManageTrainings' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                    className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'ManageTrainings' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'}`}
                   >
                     Ausbildungen verwalten
                   </button>
@@ -305,7 +305,7 @@ const CareerPage: React.FC = () => {
                 {canManageCourses && (
                   <button 
                     onClick={() => setActiveTab('ManageCourses')}
-                    className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'ManageCourses' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}
+                    className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'ManageCourses' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'}`}
                   >
                     Fortbildungen verwalten
                   </button>
@@ -324,21 +324,21 @@ const CareerPage: React.FC = () => {
                 {activeTab === 'ManageCareers' && (
                   <button 
                     onClick={() => { setEditingProfile({}); setIsProfileModalOpen(true); }}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20 mb-2"
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl text-sm font-semibold transition-all mb-2"
                   >
                     Neues Karriereprofil
                   </button>
                 )}
 
-                <div className="bg-[#1a1c23]/50 border border-white/5 rounded-[32px] flex flex-col overflow-hidden shadow-2xl flex-1">
-                  <div className="p-6 border-b border-white/5">
-                    <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-widest">
+                <div className="bg-white border border-slate-200 rounded-2xl flex flex-col overflow-hidden shadow-sm flex-1">
+                  <div className="p-4 border-b border-slate-100">
+                    <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
                       {activeTab === 'ManageCareers' ? 'Alle Profile' : 'Mein Profil'}
                     </h3>
                   </div>
                   <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
                     {profiles.length === 0 ? (
-                      <div className="py-10 text-center opacity-20 text-[10px] font-black uppercase tracking-widest">
+                      <div className="py-10 text-center text-slate-400 text-sm">
                         Keine Profile
                       </div>
                     ) : (
@@ -346,21 +346,21 @@ const CareerPage: React.FC = () => {
                         <div 
                           key={p.id}
                           onClick={() => setSelectedProfile(p)}
-                          className={`p-4 rounded-2xl cursor-pointer transition-all border ${selectedProfile?.id === p.id ? 'bg-blue-600 border-blue-500 text-white shadow-lg' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}`}
+                          className={`p-4 rounded-xl cursor-pointer transition-all border ${selectedProfile?.id === p.id ? 'bg-slate-900 border-slate-900 text-white shadow-sm' : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'}`}
                         >
-                          <div className="text-[10px] font-black uppercase truncate">{p.userName}</div>
-                          <div className="text-[8px] font-bold uppercase opacity-60 mt-1">{p.goal} • {p.userRank}</div>
+                          <div className="text-sm font-semibold truncate">{p.userName}</div>
+                          <div className="text-xs text-slate-500 mt-1">{p.goal} • {p.userRank}</div>
                           {activeTab === 'ManageCareers' && (
-                            <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
+                            <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); setEditingProfile(p); setIsProfileModalOpen(true); }}
-                                className="text-[8px] font-black uppercase hover:text-white"
+                                className="text-xs font-semibold text-slate-500 hover:text-slate-900"
                               >
                                 Edit
                               </button>
                               <button 
                                 onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ id: p.id, type: 'profile' }); }}
-                                className="text-[8px] font-black uppercase hover:text-red-400"
+                                className="text-xs font-semibold text-red-500 hover:text-red-700"
                               >
                                 Löschen
                               </button>
@@ -377,77 +377,77 @@ const CareerPage: React.FC = () => {
               <div className="flex-1 flex flex-col gap-6 overflow-hidden">
                 {selectedProfile ? (
                   <>
-                    <div className="bg-[#1a1c23]/50 border border-white/5 rounded-[40px] p-8 shadow-2xl animate-in fade-in duration-500">
-                      <div className="flex justify-between items-start mb-8">
-                        <div className="flex items-center gap-6">
-                          <div className="w-20 h-20 bg-blue-600/20 text-blue-500 rounded-3xl flex items-center justify-center text-4xl border border-blue-500/20 shadow-inner">
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm animate-in fade-in duration-500">
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl border border-blue-100">
                             🎓
                           </div>
                           <div>
-                            <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Karriereziel</div>
-                            <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-tight">{selectedProfile.goal}</h2>
-                            <div className="flex items-center gap-4 mt-2">
-                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{selectedProfile.type}</span>
-                              <span className="w-1 h-1 bg-slate-700 rounded-full"></span>
-                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start: {new Date(selectedProfile.startDate).toLocaleDateString('de-DE')}</span>
+                            <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Karriereziel</div>
+                            <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight">{selectedProfile.goal}</h2>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-xs font-medium text-slate-500">{selectedProfile.type}</span>
+                              <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                              <span className="text-xs font-medium text-slate-500">Start: {new Date(selectedProfile.startDate).toLocaleDateString('de-DE')}</span>
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2">Status</div>
-                          <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border ${selectedProfile.status === 'Abgeschlossen' ? 'bg-emerald-600/20 border-emerald-500 text-emerald-500' : 'bg-blue-600/20 border-blue-500 text-blue-500'}`}>
+                          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Status</div>
+                          <div className={`px-3 py-1 rounded-full text-xs font-semibold border ${selectedProfile.status === 'Abgeschlossen' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
                             {selectedProfile.status}
                           </div>
                         </div>
                       </div>
 
-                      <div className="space-y-4">
+                      <div className="space-y-2">
                         <div className="flex justify-between items-end">
-                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gesamtfortschritt</div>
-                          <div className="text-2xl font-black text-white">{progress}%</div>
+                          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Gesamtfortschritt</div>
+                          <div className="text-xl font-bold text-slate-900">{progress}%</div>
                         </div>
-                        <div className="h-4 bg-black/40 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+                            className="h-full bg-slate-900 transition-all duration-1000 ease-out"
                             style={{ width: `${progress}%` }}
                           ></div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex-1 bg-[#1a1c23]/50 border border-white/5 rounded-[40px] flex flex-col overflow-hidden shadow-2xl">
-                      <div className="p-8 border-b border-white/5 flex justify-between items-center">
-                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ausbildungsbestandteile</h3>
+                    <div className="flex-1 bg-white border border-slate-200 rounded-2xl flex flex-col overflow-hidden shadow-sm">
+                      <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                        <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Ausbildungsbestandteile</h3>
                         {activeTab === 'ManageCareers' && (
                           <button 
                             onClick={() => { setEditingComponent({}); setIsComponentModalOpen(true); }}
-                            className="bg-white/5 hover:bg-white/10 text-white px-6 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-white/5"
+                            className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-all"
                           >
                             Bestandteil hinzufügen
                           </button>
                         )}
                       </div>
-                      <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
-                        <div className="grid grid-cols-1 gap-4">
+                      <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                        <div className="grid grid-cols-1 gap-3">
                           {profileComponents.map((comp, idx) => (
-                            <div key={comp.id} className="bg-black/20 border border-white/5 rounded-3xl p-6 flex items-center justify-between group hover:border-white/10 transition-all">
-                              <div className="flex items-center gap-6">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border shadow-xl ${comp.status === 'Abgeschlossen' ? 'bg-emerald-600/20 border-emerald-500/30 text-emerald-500' : comp.status === 'In Bearbeitung' ? 'bg-amber-600/20 border-amber-500/30 text-amber-500' : 'bg-slate-800/50 border-white/5 text-slate-600'}`}>
+                            <div key={comp.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between group hover:border-slate-300 transition-all">
+                              <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border ${comp.status === 'Abgeschlossen' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : comp.status === 'In Bearbeitung' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-slate-100 border-slate-200 text-slate-600'}`}>
                                   {idx + 1}
                                 </div>
                                 <div>
-                                  <h4 className="text-sm font-black text-white uppercase tracking-tight">{comp.title}</h4>
-                                  {comp.description && <p className="text-[10px] text-slate-500 mt-1">{comp.description}</p>}
+                                  <h4 className="text-sm font-semibold text-slate-900">{comp.title}</h4>
+                                  {comp.description && <p className="text-xs text-slate-500 mt-0.5">{comp.description}</p>}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-6">
-                                <div className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border ${comp.status === 'Abgeschlossen' ? 'bg-emerald-600/20 border-emerald-500/30 text-emerald-500' : comp.status === 'In Bearbeitung' ? 'bg-amber-600/20 border-amber-500/30 text-amber-500' : 'bg-white/5 border-white/10 text-slate-600'}`}>
+                              <div className="flex items-center gap-4">
+                                <div className={`px-3 py-1 rounded-full text-xs font-semibold border ${comp.status === 'Abgeschlossen' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : comp.status === 'In Bearbeitung' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-slate-100 border-slate-200 text-slate-600'}`}>
                                   {comp.status}
                                 </div>
                                 {activeTab === 'ManageCareers' && (
                                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                    <button onClick={() => { setEditingComponent(comp); setIsComponentModalOpen(true); }} className="p-2 bg-white/5 hover:bg-blue-600/20 text-slate-500 hover:text-blue-500 rounded-lg transition-all">✏️</button>
-                                    <button onClick={() => setDeleteConfirm({ id: comp.id, type: 'component' })} className="p-2 bg-white/5 hover:bg-red-600/20 text-slate-500 hover:text-red-500 rounded-lg transition-all">🗑️</button>
+                                    <button onClick={() => { setEditingComponent(comp); setIsComponentModalOpen(true); }} className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg transition-all">✏️</button>
+                                    <button onClick={() => setDeleteConfirm({ id: comp.id, type: 'component' })} className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg transition-all">🗑️</button>
                                   </div>
                                 )}
                               </div>
@@ -458,9 +458,9 @@ const CareerPage: React.FC = () => {
                     </div>
                   </>
                 ) : (
-                  <div className="flex-1 bg-[#1a1c23]/30 border border-dashed border-white/10 rounded-[40px] flex flex-col items-center justify-center opacity-20">
-                    <div className="text-8xl mb-6">🎓</div>
-                    <div className="text-xs font-black uppercase tracking-[0.5em]">Profil auswählen um Fortschritt zu sehen</div>
+                  <div className="flex-1 bg-slate-50 border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400">
+                    <div className="text-6xl mb-4">🎓</div>
+                    <div className="text-sm font-semibold uppercase tracking-wider">Profil auswählen um Fortschritt zu sehen</div>
                   </div>
                 )}
               </div>
@@ -471,7 +471,7 @@ const CareerPage: React.FC = () => {
           {(activeTab === 'Trainings' || activeTab === 'Courses' || activeTab === 'ManageTrainings' || activeTab === 'ManageCourses') && (
             <div className="flex-1 flex flex-col gap-6 overflow-hidden">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-black text-white uppercase tracking-tighter">
+                <h3 className="text-xl font-bold text-slate-900 tracking-tight">
                   {activeTab === 'Trainings' ? 'Verfügbare Ausbildungen' : 
                    activeTab === 'Courses' ? 'Verfügbare Fortbildungen' :
                    activeTab === 'ManageTrainings' ? 'Ausbildungen verwalten' : 'Fortbildungen verwalten'}
@@ -479,7 +479,7 @@ const CareerPage: React.FC = () => {
                 {(activeTab === 'ManageTrainings' || activeTab === 'ManageCourses') && (
                   <button 
                     onClick={() => { setEditingTraining({ type: activeTab === 'ManageTrainings' ? 'Ausbildung' : 'Fortbildung' }); setIsTrainingModalOpen(true); }}
-                    className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20"
+                    className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-2 rounded-xl text-xs font-semibold transition-all"
                   >
                     {activeTab === 'ManageTrainings' ? 'Ausbildung erstellen' : 'Fortbildung erstellen'}
                   </button>
@@ -499,73 +499,73 @@ const CareerPage: React.FC = () => {
                       const isAdminView = activeTab === 'ManageTrainings' || activeTab === 'ManageCourses';
 
                       return (
-                        <div key={training.id} className="bg-[#1a1c23]/50 border border-white/5 rounded-[40px] p-8 space-y-6 shadow-2xl hover:border-white/10 transition-all group">
+                        <div key={training.id} className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm hover:border-slate-300 transition-all group">
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl border ${training.type === 'Ausbildung' ? 'bg-blue-600/20 border-blue-500/30 text-blue-500' : 'bg-indigo-600/20 border-indigo-500/30 text-indigo-500'}`}>
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl border ${training.type === 'Ausbildung' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-indigo-50 border-indigo-200 text-indigo-600'}`}>
                                 {training.type === 'Ausbildung' ? '👮' : '📚'}
                               </div>
                               <div>
-                                <h4 className="text-lg font-black text-white uppercase tracking-tight">{training.title}</h4>
-                                <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">Leitung: {training.instructorName}</div>
+                                <h4 className="text-sm font-semibold text-slate-900">{training.title}</h4>
+                                <div className="text-xs font-medium text-slate-500 mt-0.5">Leitung: {training.instructorName}</div>
                               </div>
                             </div>
-                            <div className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${training.status === 'Geplant' ? 'bg-blue-600/10 border-blue-500/20 text-blue-500' : 'bg-emerald-600/10 border-emerald-500/20 text-emerald-500'}`}>
+                            <div className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${training.status === 'Geplant' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
                               {training.status}
                             </div>
                           </div>
 
-                          <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">{training.description}</p>
+                          <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">{training.description}</p>
 
-                          <div className="grid grid-cols-2 gap-4 bg-black/20 p-4 rounded-2xl border border-white/5">
+                          <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                             <div>
-                              <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">Datum & Zeit</div>
-                              <div className="text-[10px] font-bold text-white uppercase">{new Date(training.date).toLocaleDateString('de-DE')} • {training.time}</div>
+                              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Datum & Zeit</div>
+                              <div className="text-sm font-medium text-slate-900">{new Date(training.date).toLocaleDateString('de-DE')} • {training.time}</div>
                             </div>
                             <div>
-                              <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">Ort</div>
-                              <div className="text-[10px] font-bold text-white uppercase">{training.location}</div>
+                              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Ort</div>
+                              <div className="text-sm font-medium text-slate-900">{training.location}</div>
                             </div>
                           </div>
 
-                          <div className="space-y-2">
+                          <div className="space-y-1">
                             <div className="flex justify-between items-end">
-                              <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Teilnehmer</div>
-                              <div className="text-[10px] font-black text-white">{training.participants.length} / {training.maxParticipants}</div>
+                              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Teilnehmer</div>
+                              <div className="text-xs font-semibold text-slate-900">{training.participants.length} / {training.maxParticipants}</div>
                             </div>
-                            <div className="h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                               <div 
-                                className={`h-full transition-all duration-500 ${isFull ? 'bg-red-500' : 'bg-blue-600'}`}
+                                className={`h-full transition-all duration-500 ${isFull ? 'bg-red-500' : 'bg-slate-900'}`}
                                 style={{ width: `${(training.participants.length / training.maxParticipants) * 100}%` }}
                               ></div>
                             </div>
                           </div>
 
                           {isAdminView ? (
-                            <div className="space-y-4 pt-4 border-t border-white/5">
-                              <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2">Angemeldete Beamte</div>
+                            <div className="space-y-3 pt-4 border-t border-slate-100">
+                              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Angemeldete Beamte</div>
                               <div className="flex flex-wrap gap-2">
                                 {training.participants.map(pId => {
                                   const pUser = users.find(u => u.id === pId);
                                   return (
-                                    <span key={pId} className="bg-white/5 border border-white/5 px-2 py-1 rounded-lg text-[8px] font-bold text-slate-300 uppercase">
+                                    <span key={pId} className="bg-slate-100 border border-slate-200 px-2 py-1 rounded-lg text-xs font-medium text-slate-700">
                                       {pUser ? `${pUser.rank} ${pUser.lastName}` : 'Unbekannt'}
                                     </span>
                                   );
                                 })}
-                                {training.participants.length === 0 && <span className="text-[8px] text-slate-600 italic">Keine Anmeldungen</span>}
+                                {training.participants.length === 0 && <span className="text-xs text-slate-400 italic">Keine Anmeldungen</span>}
                               </div>
                               <div className="flex gap-2 pt-2">
-                                <button onClick={() => { setEditingTraining(training); setIsTrainingModalOpen(true); }} className="flex-1 bg-white/5 hover:bg-blue-600/20 text-blue-500 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-white/5">Bearbeiten</button>
-                                <button onClick={() => deleteTraining(training.id)} className="flex-1 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-red-500/20">Löschen</button>
+                                <button onClick={() => { setEditingTraining(training); setIsTrainingModalOpen(true); }} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl text-xs font-semibold transition-all">Bearbeiten</button>
+                                <button onClick={() => deleteTraining(training.id)} className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 py-2 rounded-xl text-xs font-semibold transition-all">Löschen</button>
                               </div>
                             </div>
                           ) : (
-                            <div className="pt-4 border-t border-white/5">
+                            <div className="pt-4 border-t border-slate-100">
                               {isParticipant ? (
                                 <button 
                                   onClick={() => leaveTraining(training.id)}
-                                  className="w-full bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-red-500/20 shadow-xl shadow-red-900/10"
+                                  className="w-full bg-red-50 hover:bg-red-100 text-red-700 py-2 rounded-xl text-xs font-semibold transition-all"
                                 >
                                   Abmelden
                                 </button>
@@ -573,7 +573,7 @@ const CareerPage: React.FC = () => {
                                 <button 
                                   onClick={() => joinTraining(training.id)}
                                   disabled={isFull || training.status !== 'Geplant'}
-                                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20"
+                                  className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white py-2 rounded-xl text-xs font-semibold transition-all"
                                 >
                                   {isFull ? 'Vollbesetzt' : training.status !== 'Geplant' ? 'Nicht verfügbar' : 'Anmelden'}
                                 </button>
@@ -587,9 +587,9 @@ const CareerPage: React.FC = () => {
                     const type = (activeTab === 'Trainings' || activeTab === 'ManageTrainings') ? 'Ausbildung' : 'Fortbildung';
                     return t.type === type;
                   }).length === 0 && (
-                    <div className="col-span-full py-20 text-center opacity-20 flex flex-col items-center">
-                      <div className="text-8xl mb-6">📅</div>
-                      <div className="text-xs font-black uppercase tracking-[0.5em]">Keine Einträge gefunden</div>
+                    <div className="col-span-full py-20 text-center text-slate-400">
+                      <div className="text-6xl mb-4">📅</div>
+                      <div className="text-sm font-semibold uppercase tracking-wider">Keine Einträge gefunden</div>
                     </div>
                   )}
                 </div>
@@ -608,14 +608,14 @@ const CareerPage: React.FC = () => {
           maxWidth="max-w-md"
         >
           <div className="space-y-6">
-            <p className="text-slate-400 text-xs text-center leading-relaxed">
+            <p className="text-slate-600 text-sm text-center leading-relaxed">
               Möchten Sie diesen Eintrag wirklich unwiderruflich aus dem System löschen?
               Diese Aktion kann nicht rückgängig gemacht werden.
             </p>
             <div className="flex gap-3">
               <button 
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-white/5"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl text-xs font-semibold transition-all"
               >
                 Abbrechen
               </button>
@@ -624,7 +624,7 @@ const CareerPage: React.FC = () => {
                   if (deleteConfirm?.type === 'profile') deleteProfile(deleteConfirm.id);
                   else if (deleteConfirm?.type === 'component') deleteComponent(deleteConfirm.id);
                 }}
-                className="flex-1 bg-red-600 hover:bg-red-500 text-white py-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-xl shadow-red-900/20"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl text-xs font-semibold transition-all"
               >
                 Löschen bestätigen
               </button>
@@ -643,17 +643,17 @@ const CareerPage: React.FC = () => {
           <div className="space-y-6">
             {!editingProfile?.id && (
               <div className="space-y-2">
-                <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Beamter auswählen</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Beamter auswählen</label>
                 <div className="relative">
                   <input 
                     type="text"
                     placeholder="Name oder Dienstnummer suchen..."
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
                   />
                   {userSearch && filteredUsers.length > 0 && (
-                    <div className="absolute top-full left-0 w-full mt-2 bg-[#1a1c23] border border-white/10 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto custom-scrollbar">
+                    <div className="absolute top-full left-0 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto custom-scrollbar">
                       {filteredUsers.map(u => (
                         <div 
                           key={u.id}
@@ -661,13 +661,13 @@ const CareerPage: React.FC = () => {
                             setEditingProfile({ ...editingProfile, userId: u.id });
                             setUserSearch(`${u.firstName} ${u.lastName} (${u.badgeNumber})`);
                           }}
-                          className="p-4 hover:bg-white/5 cursor-pointer flex items-center justify-between border-b border-white/5 last:border-0"
+                          className="p-3 hover:bg-slate-50 cursor-pointer flex items-center justify-between border-b border-slate-100 last:border-0"
                         >
                           <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-white uppercase">{u.firstName} {u.lastName}</span>
-                            <span className="text-[8px] font-bold text-slate-500 uppercase">{u.rank} • {u.badgeNumber}</span>
+                            <span className="text-sm font-semibold text-slate-900">{u.firstName} {u.lastName}</span>
+                            <span className="text-xs text-slate-500">{u.rank} • {u.badgeNumber}</span>
                           </div>
-                          {editingProfile?.userId === u.id && <span className="text-blue-500 text-xs">✓</span>}
+                          {editingProfile?.userId === u.id && <span className="text-slate-900 text-sm">✓</span>}
                         </div>
                       ))}
                     </div>
@@ -677,54 +677,54 @@ const CareerPage: React.FC = () => {
             )}
 
             <div className="space-y-2">
-              <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Karriereziel</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Karriereziel</label>
               <input 
                 type="text"
                 value={editingProfile?.goal || ''}
                 onChange={(e) => setEditingProfile({ ...editingProfile, goal: e.target.value })}
                 placeholder="z.B. Polizeimeister, Polizeikommissar..."
-                className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Ausbildungsart</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Ausbildungsart</label>
               <input 
                 type="text"
                 value={editingProfile?.type || ''}
                 onChange={(e) => setEditingProfile({ ...editingProfile, type: e.target.value })}
                 placeholder="z.B. Studium, Ausbildung mD..."
-                className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Startdatum</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Startdatum</label>
                 <input 
                   type="date"
                   value={editingProfile?.startDate || ''}
                   onChange={(e) => setEditingProfile({ ...editingProfile, startDate: e.target.value })}
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Geplantes Ende</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Geplantes Ende</label>
                 <input 
                   type="date"
                   value={editingProfile?.endDate || ''}
                   onChange={(e) => setEditingProfile({ ...editingProfile, endDate: e.target.value })}
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Status</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Status</label>
               <select 
                 value={editingProfile?.status || 'Aktiv'}
                 onChange={(e) => setEditingProfile({ ...editingProfile, status: e.target.value as any })}
-                className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all appearance-none"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
               >
                 <option value="Aktiv">Aktiv</option>
                 <option value="Abgeschlossen">Abgeschlossen</option>
@@ -734,13 +734,13 @@ const CareerPage: React.FC = () => {
             <div className="pt-4 flex gap-3">
               <button 
                 onClick={() => setIsProfileModalOpen(false)}
-                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl text-xs font-semibold transition-all"
               >
                 Abbrechen
               </button>
               <button 
                 onClick={saveProfile}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20"
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl text-xs font-semibold transition-all"
               >
                 Profil speichern
               </button>
@@ -758,75 +758,75 @@ const CareerPage: React.FC = () => {
         >
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Titel</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Titel</label>
               <input 
                 type="text"
                 value={editingTraining?.title || ''}
                 onChange={(e) => setEditingTraining({ ...editingTraining, title: e.target.value })}
                 placeholder="z.B. Modul 1: Grundlagen..."
-                className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Beschreibung</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Beschreibung</label>
               <textarea 
                 value={editingTraining?.description || ''}
                 onChange={(e) => setEditingTraining({ ...editingTraining, description: e.target.value })}
                 placeholder="Details zum Inhalt..."
-                className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white h-32 outline-none focus:border-blue-500 transition-all resize-none"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 h-32 outline-none focus:border-slate-900 transition-all resize-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Datum</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Datum</label>
                 <input 
                   type="date"
                   value={editingTraining?.date || ''}
                   onChange={(e) => setEditingTraining({ ...editingTraining, date: e.target.value })}
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Uhrzeit</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Uhrzeit</label>
                 <input 
                   type="time"
                   value={editingTraining?.time || ''}
                   onChange={(e) => setEditingTraining({ ...editingTraining, time: e.target.value })}
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Ort</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Ort</label>
                 <input 
                   type="text"
                   value={editingTraining?.location || ''}
                   onChange={(e) => setEditingTraining({ ...editingTraining, location: e.target.value })}
                   placeholder="z.B. Schulungsraum 1"
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Max. Teilnehmer</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Max. Teilnehmer</label>
                 <input 
                   type="number"
                   value={editingTraining?.maxParticipants || ''}
                   onChange={(e) => setEditingTraining({ ...editingTraining, maxParticipants: parseInt(e.target.value) })}
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Status</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Status</label>
               <select 
                 value={editingTraining?.status || 'Geplant'}
                 onChange={(e) => setEditingTraining({ ...editingTraining, status: e.target.value as any })}
-                className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all appearance-none"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
               >
                 <option value="Geplant">Geplant</option>
                 <option value="Laufend">Laufend</option>
@@ -838,13 +838,13 @@ const CareerPage: React.FC = () => {
             <div className="pt-4 flex gap-3">
               <button 
                 onClick={() => setIsTrainingModalOpen(false)}
-                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl text-xs font-semibold transition-all"
               >
                 Abbrechen
               </button>
               <button 
                 onClick={saveTraining}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20"
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl text-xs font-semibold transition-all"
               >
                 Speichern
               </button>
@@ -862,42 +862,42 @@ const CareerPage: React.FC = () => {
         >
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Bezeichnung</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Bezeichnung</label>
               <input 
                 type="text"
                 value={editingComponent?.title || ''}
                 onChange={(e) => setEditingComponent({ ...editingComponent, title: e.target.value })}
                 placeholder="z.B. Modul 1: Grundlagen..."
-                className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Beschreibung</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Beschreibung</label>
               <textarea 
                 value={editingComponent?.description || ''}
                 onChange={(e) => setEditingComponent({ ...editingComponent, description: e.target.value })}
                 placeholder="Optionale Details zum Modul..."
-                className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white h-32 outline-none focus:border-blue-500 transition-all resize-none"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 h-32 outline-none focus:border-slate-900 transition-all resize-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Reihenfolge</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Reihenfolge</label>
                 <input 
                   type="number"
                   value={editingComponent?.order || ''}
                   onChange={(e) => setEditingComponent({ ...editingComponent, order: parseInt(e.target.value) })}
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Status</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Status</label>
                 <select 
                   value={editingComponent?.status || 'Offen'}
                   onChange={(e) => setEditingComponent({ ...editingComponent, status: e.target.value as any })}
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all appearance-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
                 >
                   <option value="Offen">Offen</option>
                   <option value="In Bearbeitung">In Bearbeitung</option>
@@ -908,12 +908,12 @@ const CareerPage: React.FC = () => {
 
             {editingComponent?.status === 'Abgeschlossen' && (
               <div className="space-y-2">
-                <label className="text-[8px] font-black text-slate-500 uppercase ml-2">Abschlussdatum</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase ml-1">Abschlussdatum</label>
                 <input 
                   type="date"
                   value={editingComponent?.completionDate || ''}
                   onChange={(e) => setEditingComponent({ ...editingComponent, completionDate: e.target.value })}
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-blue-500 transition-all"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-900 transition-all"
                 />
               </div>
             )}
@@ -921,13 +921,13 @@ const CareerPage: React.FC = () => {
             <div className="pt-4 flex gap-3">
               <button 
                 onClick={() => setIsComponentModalOpen(false)}
-                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl text-xs font-semibold transition-all"
               >
                 Abbrechen
               </button>
               <button 
                 onClick={saveComponent}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20"
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl text-xs font-semibold transition-all"
               >
                 Speichern
               </button>
